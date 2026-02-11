@@ -2,15 +2,19 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 
 const routes = [
+  // {
+  //   path: '/',
+  //   redirect: '/login'
+  // },
+  // {
+  //   path: '/login',
+  //   name: 'login',
+  //   component: Login,
+  // },
   {
     path: '/',
-    redirect: '/login'
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: Login,
-  },
+    component: () => import('@/views/Masyarakat.vue')
+  }
 ]
 
 const router = createRouter({

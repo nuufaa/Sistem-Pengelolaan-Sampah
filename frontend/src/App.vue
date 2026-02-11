@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <router-view />
 </template>
 
@@ -7,4 +7,13 @@
 
 <style>
 /* global style kalau perlu */
-</style>
+</style> -->
+
+<template>
+  <Masyarakat />
+</template>
+
+<script setup>
+import Masyarakat from './views/Masyarakat.vue'
+</script>
+
