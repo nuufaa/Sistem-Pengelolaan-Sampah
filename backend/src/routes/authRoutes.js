@@ -1,8 +1,8 @@
-import express from 'express'
-import login from '../controllers/authController.js'
-import { validate } from '../middlewares/validateMiddleware.js'
-
+const express = require("express");
 const router = express.Router()
+
+const login = require("../controllers/AuthController");
+const validate = require("../middlewares/ValidateMiddleware");
 
 router.post('/login', validate(['username', 'password']), login)
 
