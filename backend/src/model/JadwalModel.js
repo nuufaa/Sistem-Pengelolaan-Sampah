@@ -1,0 +1,72 @@
+const db = require("../config/db");
+
+async function create(data) {
+  const {
+    id_petugas,
+    id_tps,
+    id_admin,
+    hari_pengambilan
+  } = data;
+
+  const [result] = await db.query(
+    `INSERT INTO jadwal_pengambilan
+     (id_petugas, id_tps, id_admin, hari_pengambilan)
+     VALUES (?, ?, ?, ?)`,
+    [id_petugas, id_tps, id_admin, hari_pengambilan]
+  );
+
+  return result.insertId;
+}
+
+async function findAll() {
+  const [rows] = await db.query(`
+    SELECT jp.*, 
+           p.nama_petugas,
+           t.nama_tps
+    FROM jadwal_pengambilan jp
+    JOIN petugas p ON jp.id_petugas = p.id_petugas
+    JOIN tps t ON jp.id_tps = t.id_tps
+    ORDER BY jp.id_jadwal DESC
+  `);
+
+  return rows;
+}
+
+async function findById(id) {
+  const [rows] = await db.query(
+    "SELECT * FROM jadwal_pengambilan WHERE id_jadwal = ?",
+    [id]
+  );
+
+  return rows[0];
+}
+
+async function update(id, data) {
+  const {
+    id_petugas,
+    id_tps,
+    hari_pengambilan
+  } = data;
+
+  await db.query(
+    `UPDATE jadwal_pengambilan
+     SET id_petugas = ?, id_tps = ?, hari_pengambilan = ?
+     WHERE id_jadwal = ?`,
+    [id_petugas, id_tps, hari_pengambilan, id]
+  );
+}
+
+async function remove(id) {
+  await db.query(
+    "DELETE FROM jadwal_pengambilan WHERE id_jadwal = ?",
+    [id]
+  );
+}
+
+module.exports = {
+  create,
+  findAll,
+  findById,
+  update,
+  remove
+};

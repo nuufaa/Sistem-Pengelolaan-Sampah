@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const admin = require("../model/admin");
-const petugas = require("../model/petugas");
+const admin = require("../model/AdminModel");
+const petugas = require("../model/PetugasModel");
 
 async function login(req, res){
     const { username, password} = req.body
