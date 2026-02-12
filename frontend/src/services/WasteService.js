@@ -100,17 +100,17 @@ export const wastePoints = [
 
 export const scheduleData = [
     {
-        desa: 'Desa A',
+        desa: 'Desa Sembalun Bumbung',
         desaCode: 'A',
         icon: 'location_city',
         tpsCount: 3
     },
-    {
-        desa: 'Desa B',
-        desaCode: 'B',
-        icon: 'location_city',
-        tpsCount: 2
-    }
+    // {
+    //     desa: 'Desa B',
+    //     desaCode: 'B',
+    //     icon: 'location_city',
+    //     tpsCount: 2
+    // }
 ];
 
 // Data TPS per Desa dengan interval dan status pengambilan

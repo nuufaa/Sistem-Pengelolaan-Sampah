@@ -1,25 +1,28 @@
 <template>
-    <!-- Header -->
+    <!-- Header
 
     <div class="map-container">
     <div id="map"></div>
-  </div>
+  </div> -->
 
     <header class="header">
         <div class="header-left">
             <div class="logo-container">
                 <span class="material-icons logo-icon">domain</span>
                 <div class="logo-text">
-                    <h1>Desa Utara & Selatan</h1>
-                    <p>Sistem Pengelolaan Sampah</p>
+                    <h1>Sistem Pengelolaan Sampah</h1>
+                    <p>Desa Sembalun Bumbung</p>
                 </div>
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-login-header" id="btnOpenLogin">
+            <button class="btn-login-header" @click="loginRef.open()">
                 <span class="material-icons">login</span>
                 <span>Masuk</span>
             </button>
+
+            <LoginModal ref="loginRef" />
+
             <button class="btn-report" id="btnReport">
                 <span class="material-icons">report_problem</span>
                 <span>Lapor Sampah Penuh</span>
@@ -36,22 +39,35 @@
             </button>
 
             <div class="sidebar-content">
-                <!-- Schedule Card -->
+                <!-- Schedule Card - Desa List -->
                 <div class="card schedule-card">
                     <div class="card-header">
                         <span class="material-icons">event</span>
                         <h2>Jadwal Pengambilan Sampah</h2>
                     </div>
                     <div class="card-body">
+                        <!-- Current Date Info -->
                         <div class="schedule-info">
                             <div class="info-item">
-                                <span class="material-icons">today</span>
-                                <span id="currentDate">Senin, 16 Januari 2026</span>
+                                <span class="material-icons">event</span>
+                                <span>{{ currentDate }}</span>
                             </div>
                         </div>
 
-                        <div class="schedule-list" id="scheduleList">
-                            <!-- Dynamic schedule items -->
+                        <!-- Desa Cards -->
+                        <div v-for="desa in desaList" :key="desa.desaCode" class="desa-card">
+                            <div class="desa-header">
+                                <span class="material-icons">{{ desa.icon }}</span>
+                                <h3>{{ desa.desa }}</h3>
+                            </div>
+                            <div class="desa-tps-info">
+                                <span class="material-icons">delete</span>
+                                <span class="tps-count">{{ getTpsCountByDesa(desa.desaCode) }} TPS Terdaftar</span>
+                            </div>
+                            <button class="btn-lihat-jadwal" @click="openScheduleModal(desa)">
+                                <span class="material-icons">event_note</span>
+                                <span>Lihat Jadwal Lengkap TPS {{ desa.desa }}</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -63,7 +79,7 @@
                         <h2>Filter Tampilan</h2>
                     </div>
                     <div class="card-body">
-                        <div class="filter-group">
+                        <!-- <div class="filter-group">
                             <label class="filter-label">Pilih Desa:</label>
                             <div class="radio-group">
                                 <label class="radio-label">
@@ -79,7 +95,7 @@
                                     <span>Semua Desa</span>
                                 </label>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="filter-group">
                             <label class="filter-label">Status Titik Sampah:</label>
@@ -114,10 +130,10 @@
                                 <span class="legend-dot danger"></span>
                                 <span>Penuh - Perlu Segera</span>
                             </div>
-                            <div class="legend-item">
+                            <!-- <div class="legend-item">
                                 <span class="material-icons legend-icon">person_pin_circle</span>
                                 <span>Lokasi Anda</span>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -432,28 +448,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import LoginModal from '@/components/LoginModal.vue'
 
+import { ref, onMounted, computed } from 'vue'
 import L from 'leaflet'
-// import 'leaflet/dist/leaflet.css'
-
-// import 'leaflet.markercluster'
-// import 'leaflet.markercluster/dist/MarkerCluster.css'
-// import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-
 import 'leaflet/dist/leaflet.css'
-
 import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { wastePoints } from '@/services/waste.service'
+import { wastePoints, scheduleData, tpsData } from '@/services/WasteService.js'
 
 // Simulasi role user (ubah ke true untuk mode petugas)
-let isOfficer = ref(false); // false = masyarakat, true = petugas
+// let isOfficer = ref(false); // false = masyarakat, true = petugas
 
 // Mobile detection
 let isMobile = ref(window.innerWidth <= 768);
+
+// Date and Schedule
+const currentDate = ref('')
+const todaySchedules = ref([])
+const desaList = ref(scheduleData)
+const selectedDesa = ref(null)
+const isModalScheduleOpen = ref(false)
 
 // // Bottom sheet state
 // let isBottomSheetOpen = false;
@@ -463,50 +480,257 @@ let isMobile = ref(window.innerWidth <= 768);
 
 const map = ref(null)
 const markerCluster = ref(null)
+let markers = ref([]);
 
 const selectedVillage = ref('all')
 const selectedStatus = ref(['normal', 'warning', 'danger'])
 
-// ===== Initialize Map =====
-// let map;
-// let markers = [];
-// let markerCluster;
-// let userMarker;
+const loginRef = ref(null)
+
+// ===== Date and Schedule Functions =====
+function formatDate(date = new Date()) {
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+    
+    const dayName = days[date.getDay()]
+    const dayNum = date.getDate()
+    const monthName = months[date.getMonth()]
+    const year = date.getFullYear()
+    
+    return `${dayName}, ${dayNum} ${monthName} ${year}`
+}
+
+function getCurrentDayName(date = new Date()) {
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+    return days[date.getDay()]
+}
+
+function getTodaySchedules() {
+    const today = new Date()
+    const todayName = getCurrentDayName(today)
+    
+    const schedules = wastePoints
+        .filter(point => {
+            // Cek apakah jadwal mengandung hari ini
+            return point.schedule.includes(todayName)
+        })
+        .map(point => {
+            // Ekstrak waktu dari schedule (format: "Hari1 & Hari2, HH.MM WIB")
+            const timeMatch = point.schedule.match(/(\d{2}\.\d{2})/)
+            const time = timeMatch ? timeMatch[1] : '-'
+            
+            return {
+                id: point.id,
+                name: point.name,
+                time: time + ' WIB',
+                address: point.address
+            }
+        })
+    
+    // Sort by time
+    schedules.sort((a, b) => {
+        const timeA = a.time.replace('.', ':').replace(' WIB', '')
+        const timeB = b.time.replace('.', ':').replace(' WIB', '')
+        return timeA.localeCompare(timeB)
+    })
+    
+    return schedules
+}
+
+// ===== Desa and TPS Functions =====
+function getTpsCountByDesa(desaCode) {
+    return tpsData.filter(tps => tps.desa === desaCode).length
+}
+
+function getTpsListByDesa(desaCode) {
+    return tpsData.filter(tps => tps.desa === desaCode)
+}
+
+function getStatusLabel(status) {
+    const statusMap = {
+        'pending': 'Belum Dimulai',
+        'active': 'Sedang Berlangsung',
+        'completed': 'Selesai'
+    }
+    return statusMap[status] || status
+}
+
+function getStatusClass(status) {
+    const classMap = {
+        'pending': 'status-pending',
+        'active': 'status-active',
+        'completed': 'status-completed'
+    }
+    return classMap[status] || ''
+}
+
+function openScheduleModal(desa) {
+    selectedDesa.value = desa
+    isModalScheduleOpen.value = true
+    
+    // Render modal content
+    const tpsList = getTpsListByDesa(desa.desaCode)
+    const modalContent = document.getElementById('tpsScheduleContent')
+    
+    let html = ''
+    tpsList.forEach(tps => {
+        const statusLabel = getStatusLabel(tps.status)
+        const statusClass = getStatusClass(tps.status)
+        
+        html += `
+            <div class="tps-schedule-item ${statusClass}">
+                <div class="tps-item-header">
+                    <span class="material-icons">delete</span>
+                    <span class="tps-item-name">${tps.name}</span>
+                </div>
+                <div class="tps-item-body">
+                    <div class="tps-item-info">
+                        <span class="material-icons">schedule</span>
+                        <span>Pengambilan setiap ${tps.interval} hari</span>
+                    </div>
+                    <div class="tps-item-status">
+                        <span class="status-badge ${statusClass}">${statusLabel}</span>
+                    </div>
+                </div>
+            </div>
+        `
+    })
+    
+    html += `
+        <div class="schedule-footer-info">
+            <span class="material-icons">info</span>
+            <span>Status pengambilan hanya dapat diubah oleh petugas.</span>
+        </div>
+    `
+    
+    modalContent.innerHTML = html
+    
+    // Update modal title
+    document.getElementById('scheduleModalTitle').textContent = `Jadwal Lengkap TPS ${desa.desa}`
+    
+    // Show modal with centered display
+    const modalSchedule = document.getElementById('modalSchedule')
+    modalSchedule.style.display = 'flex'
+}
+
+function closeScheduleModal() {
+    isModalScheduleOpen.value = false
+    document.getElementById('modalSchedule').style.display = 'none'
+}
 
 
-//   let map
-//   let markerCluster
+function initializeDateTime() {
+    currentDate.value = formatDate()
+    todaySchedules.value = getTodaySchedules()
+}
 
 onMounted(() => {
-  initMap()
+    initializeDateTime()
+    
+    // Modal schedule event listeners
+    const modalSchedule = document.getElementById('modalSchedule')
+    const modalScheduleClose = document.getElementById('modalScheduleClose')
+    const modalScheduleOverlay = document.getElementById('modalScheduleOverlay')
+    
+    if (modalScheduleClose) {
+        modalScheduleClose.addEventListener('click', closeScheduleModal)
+    }
+    
+    if (modalScheduleOverlay) {
+        modalScheduleOverlay.addEventListener('click', closeScheduleModal)
+    }
+    
+    initMap()
 })
 
 function initMap() {
-  map.value = L.map('map').setView([-8.5833, 116.1167], 14)
+    map.value = L.map('map').setView([-8.5833, 116.1167], 14)
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    //kordinat desa bumbung
+    // map.value = L.map('map').setView([-8.384399, 116.542617], 14)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
-  }).addTo(map.value)
+    }).addTo(map.value)
 
-  markerCluster.value = L.markerClusterGroup()
-  updateMarkers()
-  map.value.addLayer(markerCluster.value)
+    markerCluster.value = L.markerClusterGroup()
+    updateMarkers()
+    map.value.addLayer(markerCluster.value)
+}
+
+// ===== Create Popup Content =====
+function createPopupContent(point) {
+    const statusClass = point.status;
+    const statusText = {
+        normal: 'Normal',
+        warning: 'Hampir Penuh',
+        danger: 'Penuh'
+    }[point.status];
+
+    return `
+        <div class="popup-content">
+            <div class="popup-header">
+                <span class="material-icons">delete</span>
+                <div class="popup-title">${point.name}</div>
+            </div>
+            <div class="popup-body">
+                <div class="popup-info">
+                    <div class="popup-status ${statusClass}">
+                        <span style="font-size: 10px;">●</span>
+                        ${statusText} (${point.capacity}%)
+                    </div>
+                </div>
+                <div class="popup-info">
+                    <span class="material-icons">location_on</span>
+                    <span>${point.address}</span>
+                </div>
+                <div class="popup-info">
+                    <span class="material-icons">schedule</span>
+                    <span>${point.schedule}</span>
+                </div>
+                <div class="popup-info">
+                    <span class="material-icons">update</span>
+                    <span>Update: ${point.lastUpdate}</span>
+                </div>
+            </div>
+            <div class="popup-footer">
+                <button class="popup-btn popup-btn-secondary" onclick="viewDetail(${point.id})">
+                    Lihat Detail
+                </button>
+                <button class="popup-btn popup-btn-primary" onclick="reportFromMap(${point.id})">
+                    Laporkan
+                </button>
+            </div>
+        </div>
+    `;
 }
 
 function updateMarkers() {
-  markerCluster.value.clearLayers()
+    markerCluster.value.clearLayers()
 
-  const filtered = wastePoints.filter(p =>
+    const filtered = wastePoints.filter(p =>
     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
     selectedStatus.value.includes(p.status)
-  )
+    )
 
-  filtered.forEach(point => {
+    filtered.forEach(point => {
     const marker = L.marker([point.lat, point.lng])
     markerCluster.value.addLayer(marker)
-  })
+
+    // Use popup for both desktop and mobile
+    marker.bindPopup(createPopupContent(point), {
+        maxWidth: isMobile.value ? 280 : 300,
+        className: 'custom-popup',
+        autoPan: true,
+        autoPanPadding: [10, 10]
+    });
+
+    markerCluster.value.addLayer(marker);
+    markers.value.push({ marker, point });
+
+    });
 }
 
 </script>
 
-<style src="@/assets/styles/masyarakat.css"></style>
+<style src="@/assets/styles/home.css"></style>

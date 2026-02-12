@@ -33,7 +33,7 @@
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
-    --spacing-lg: 24px;
+    --spacing-lg: 20px;
     --spacing-xl: 32px;
     
     /* Border Radius */
@@ -280,10 +280,10 @@ input, select, textarea {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-    padding: var(--spacing-md);
-    background: var(--bg-primary);
-    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: #F5F5F5;
+    border-radius: var(--radius-md);
 }
 
 .info-item {
@@ -291,11 +291,11 @@ input, select, textarea {
     align-items: center;
     gap: var(--spacing-sm);
     font-size: 14px;
-    color: var(--text-secondary);
+    color: #757575;
 }
 
 .info-item .material-icons {
-    font-size: 18px;
+    font-size: 20px;
     color: var(--primary);
 }
 
@@ -749,6 +749,8 @@ input, select, textarea {
     bottom: 0;
     z-index: 2000;
     animation: fadeIn 0.3s ease;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal.show {
@@ -786,6 +788,7 @@ input, select, textarea {
     box-shadow: var(--shadow-xl);
     overflow: hidden;
     animation: slideUp 0.3s ease;
+    z-index: 1;
 }
 
 .modal-schedule {
@@ -1027,6 +1030,207 @@ input, select, textarea {
 .btn-status.btn-completed:not(:disabled):hover {
     background: var(--status-normal);
     color: white;
+}
+
+/* ===== Desa Card ===== */
+.desa-card {
+    padding: var(--spacing-lg);
+    border: 1px solid #E0E0E0;
+    border-radius: var(--radius-lg);
+    background: white;
+    transition: var(--transition);
+    margin-bottom: var(--spacing-lg);
+}
+
+.desa-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+}
+
+.desa-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.desa-header .material-icons {
+    font-size: 24px;
+    color: var(--primary);
+}
+
+.desa-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #212121;
+}
+
+.desa-tps-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 13px;
+    color: #757575;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: #F5F5F5;
+    border-radius: var(--radius-sm);
+}
+
+.desa-tps-info .material-icons {
+    font-size: 20px;
+    color: #999999;
+}
+
+.tps-count {
+    font-weight: 500;
+    color: #757575;
+}
+
+.btn-lihat-jadwal {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: #E8F5E9;
+    color: var(--primary);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    transition: var(--transition);
+    cursor: pointer;
+    border: none;
+}
+
+.btn-lihat-jadwal:hover {
+    background: #C8E6C9;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-lihat-jadwal .material-icons {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+/* ===== TPS Schedule Item (Modal) ===== */
+.tps-schedule-item {
+    padding: var(--spacing-lg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    background: white;
+    transition: var(--transition);
+    margin-bottom: var(--spacing-lg);
+}
+
+.tps-schedule-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.tps-schedule-item.status-pending {
+    border-left: 4px solid var(--text-secondary);
+}
+
+.tps-schedule-item.status-active {
+    border-left: 4px solid var(--secondary);
+    background: rgba(255, 167, 38, 0.02);
+}
+
+.tps-schedule-item.status-completed {
+    border-left: 4px solid var(--status-normal);
+    background: rgba(76, 175, 80, 0.02);
+}
+
+.tps-item-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.tps-item-header .material-icons {
+    font-size: 24px;
+    color: var(--primary);
+}
+
+.tps-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.tps-item-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.tps-item-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: var(--spacing-sm) 0;
+}
+
+.tps-item-info .material-icons {
+    font-size: 18px;
+    color: var(--primary);
+    opacity: 0.7;
+}
+
+.tps-item-status {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge.status-pending {
+    background: var(--border);
+    color: var(--text-secondary);
+}
+
+.status-badge.status-active {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    color: var(--secondary-dark);
+}
+
+.status-badge.status-completed {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    color: var(--status-normal);
+}
+
+.schedule-footer-info {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-md);
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.schedule-footer-info .material-icons {
+    font-size: 18px;
+    color: var(--text-disabled);
+    margin-top: 2px;
+    flex-shrink: 0;
 }
 
 .officer-note {
@@ -2343,3 +2547,4 @@ input, select, textarea {
     color: var(--text-secondary);
     margin-top: 4px;
 }
+
