@@ -14,6 +14,6 @@
 </template>
 
 <script setup>
-import Masyarakat from './views/Masyarakat.vue'
+import Masyarakat from './views/Home.vue'
 </script>
 
