@@ -23,10 +23,12 @@
 
             <LoginModal ref="loginRef" />
 
-            <button class="btn-report" id="btnReport">
+            <button class="btn-report" @click="openReport()">
                 <span class="material-icons">report_problem</span>
                 <span>Lapor Sampah Penuh</span>
             </button>
+
+            <ReportModal ref="reportRef" />
         </div>
     </header>
 
@@ -253,87 +255,7 @@
         </div>
     </div>
 
-    <!-- Modal Report -->
-    <div class="modal" id="modalReport">
-        <div class="modal-overlay" id="modalOverlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>
-                    <span class="material-icons">edit_note</span>
-                    Laporan Kondisi Sampah
-                </h2>
-                <button class="modal-close" id="modalClose">
-                    <span class="material-icons">close</span>
-                </button>
-            </div>
-            <form class="modal-body" id="reportForm">
-                <div class="form-group">
-                    <label for="locationSelect">Lokasi Titik Sampah <span class="required">*</span></label>
-                    <select id="locationSelect" required>
-                        <option value="">Pilih lokasi...</option>
-                        <option value="1">TPS Pasar Desa Utara</option>
-                        <option value="2">TPS Masjid Besar</option>
-                        <option value="3">TPS Sekolah Dasar</option>
-                        <option value="4">TPS Terminal Desa</option>
-                        <option value="5">TPS Puskesmas</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Kondisi <span class="required">*</span></label>
-                    <div class="radio-group-vertical">
-                        <label class="radio-label">
-                            <input type="radio" name="condition" value="hampir_penuh" required>
-                            <span>Hampir Penuh</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="condition" value="penuh">
-                            <span>Sudah Penuh</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="condition" value="berserakan">
-                            <span>Sampah Berserakan</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="photoUpload">Foto (Opsional)</label>
-                    <div class="file-upload">
-                        <input type="file" id="photoUpload" accept="image/*">
-                        <label for="photoUpload" class="file-upload-label">
-                            <span class="material-icons">photo_camera</span>
-                            <span id="fileLabel">Pilih foto</span>
-                        </label>
-                    </div>
-                    <div id="imagePreview" class="image-preview"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Keterangan Tambahan:</label>
-                    <textarea id="description" rows="4" placeholder="Jelaskan kondisi sampah..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="reporterName">Nama Pelapor (Opsional):</label>
-                    <input type="text" id="reporterName" placeholder="Nama Anda">
-                </div>
-
-                <div class="form-group">
-                    <label for="reporterPhone">No. HP (Opsional):</label>
-                    <input type="tel" id="reporterPhone" placeholder="08xx xxxx xxxx">
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" id="btnCancel">Batal</button>
-                    <button type="submit" class="btn-primary">
-                        <span class="material-icons">send</span>
-                        Kirim Laporan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- Report modal provided by ReportModal component -->
 
     <!-- Modal TPS Schedule -->
     <div class="modal" id="modalSchedule">
@@ -448,7 +370,7 @@
 </template>
 
 <script setup>
-import LoginModal from '@/components/LoginModal.vue'
+// import LoginModal from '@/components/LoginModal.vue'
 
 import { ref, onMounted, computed } from 'vue'
 import L from 'leaflet'
@@ -458,6 +380,9 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 import { wastePoints, scheduleData, tpsData } from '@/services/WasteService.js'
+import LoginModal from '@/components/LoginModal.vue'
+import ReportModal from '@/components/ReportModal.vue'
+
 
 // Simulasi role user (ubah ke true untuk mode petugas)
 // let isOfficer = ref(false); // false = masyarakat, true = petugas
@@ -486,6 +411,26 @@ const selectedVillage = ref('all')
 const selectedStatus = ref(['normal', 'warning', 'danger'])
 
 const loginRef = ref(null)
+
+const reportRef = ref(null)
+
+function openReport() {
+    console.log('openReport called, reportRef=', reportRef.value)
+    if (reportRef.value && typeof reportRef.value.open === 'function') {
+        reportRef.value.open()
+        return
+    }
+
+    console.warn('reportRef not ready or open() missing')
+    // Fallback: try legacy static modal if present
+    const staticModal = document.getElementById('modalReport')
+    if (staticModal) {
+        staticModal.style.display = 'flex'
+        return
+    }
+
+    alert('Modal laporan tidak tersedia (reportRef null). Periksa console untuk detail.')
+}
 
 // ===== Date and Schedule Functions =====
 function formatDate(date = new Date()) {
