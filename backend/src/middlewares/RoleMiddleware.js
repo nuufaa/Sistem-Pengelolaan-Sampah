@@ -1,4 +1,4 @@
-async function role(allowedRoles) {
+function role(allowedRoles) {
   return function (req, res, next) {
 
     if (!allowedRoles.includes(req.user.role)) {

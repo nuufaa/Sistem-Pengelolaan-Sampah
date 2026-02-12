@@ -1,4 +1,4 @@
-const JadwalModel = require("../models/jadwal.model");
+const JadwalModel = require("../model/JadwalModel");
 
 async function createJadwal(req, res) {
   try {

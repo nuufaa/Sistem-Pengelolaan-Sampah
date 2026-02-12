@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const {db} = require("../config/db");
 
 // const user = {
 //     findbyUsername: async (username) => {
@@ -30,7 +30,7 @@ async function createAdmin({username, password, nama, noTelp}) {
 
 async function updateAdmin(idAdmin) {
     const [result] = await db.query(
-        'UPDATE admin SET username=?, password=?, namaAdmin=?, noTelp',
+        'UPDATE admin SET username=?, password=?, namaAdmin=?, noTelp=?',
         [username, pasword, nama, noTelp, idAdmin]
     )
     return result.affectedRows > 0

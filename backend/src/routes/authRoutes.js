@@ -4,6 +4,6 @@ const router = express.Router()
 const login = require("../controllers/AuthController");
 const validate = require("../middlewares/ValidateMiddleware");
 
-router.post('/login', validate(['username', 'password']), login)
+router.post('/login', validate(['username', 'password']), login.loginUser);
 
-export default router
+module.exports = router;
