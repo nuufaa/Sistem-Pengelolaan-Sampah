@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 // Mengecek dan memverifikasi JWT token, Menyimpan payload ke req.user
-async function auth(req, res, next) {
+function auth(req, res, next) {
 
   const authHeader = req.headers.authorization;
 

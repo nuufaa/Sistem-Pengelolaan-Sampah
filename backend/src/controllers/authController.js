@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const admin = require("../model/AdminModel");
 const petugas = require("../model/PetugasModel");
 
-async function login(req, res){
+async function loginUser(req, res){
     const { username, password} = req.body
 
     let user = await admin.findAdmin(username);
@@ -22,7 +22,7 @@ async function login(req, res){
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-        return res.status(401)({
+        return res.status(401).json({
             message: "Username atau password salah"
         });
     }
@@ -41,4 +41,4 @@ async function login(req, res){
 
 }
 
-module.exports = { login };
+module.exports = { loginUser };

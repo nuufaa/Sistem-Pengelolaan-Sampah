@@ -3,8 +3,8 @@ const cors = require("cors");
 
 const app = express();
 
-const authRoutes = require("./routes/authRoutes");
-const laporanRoutes = require("./routes/laporanRoutes");
+const authRoutes = require("./routes/AuthRoutes");
+const laporanRoutes = require("./routes/LaporanRoutes");
 const tpsRoutes = require("./routes/TpsRoutes");
 const dusunRoutes = require("./routes/DusunRoutes");
 const jadwalRoutes = require("./routes/JadwalRoutes");
