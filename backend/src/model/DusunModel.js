@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const {db} = require("../config/db");
 
 async function create(data) {
     const {
@@ -7,7 +7,7 @@ async function create(data) {
     } = data;
 
     const [result] = await db.query(
-        `INSERT INTO dusun (nama_dusun, jumlah)
+        `INSERT INTO dusun (nama_dusun, jumlah_kk)
         VALUES (?, ?)`,
         [nama_dusun, jumlah_kk] 
     );
@@ -28,17 +28,7 @@ async function findAll() {
     return rows;
 }
 
-async function update(id, data) {
-    const {
-        nama_tps,
-        alamat,
-        id_dusun,
-        latitude,
-        longitude,
-        kapasitas,
-        status_tps,
-        foto_tps
-    } = data;
+async function update(id) {
 
     await db.query(
         `UPDATE dusun SET

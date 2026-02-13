@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const {db} = require("../config/db");
 
 async function addLaporan(id_tps, nama_pelapor, foto_laporan, deskripsi, kondisi_tps) {
     const [result] = await db.query(

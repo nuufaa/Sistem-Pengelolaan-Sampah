@@ -25,4 +25,23 @@ function auth(req, res, next) {
   }
 }
 
-module.exports = auth;
+function isAdmin(allowedRoles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi"
+      });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: "Akses ditolak"
+      });
+    }
+
+    next();
+  };
+}
+
+
+module.exports = { auth, isAdmin };
