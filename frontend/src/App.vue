@@ -10,10 +10,11 @@
 </style> -->
 
 <template>
-  <Masyarakat />
+  <Home />
+  <router-view />
 </template>
 
 <script setup>
-import Masyarakat from './views/Home.vue'
+import Home from './views/Home.vue'
 </script>
 

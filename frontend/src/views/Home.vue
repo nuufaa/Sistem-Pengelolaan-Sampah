@@ -589,10 +589,10 @@ onMounted(() => {
 })
 
 function initMap() {
-    map.value = L.map('map').setView([-8.5833, 116.1167], 14)
+    // map.value = L.map('map').setView([-8.5833, 116.1167], 14)
 
     //kordinat desa bumbung
-    // map.value = L.map('map').setView([-8.384399, 116.542617], 14)
+    map.value = L.map('map').setView([-8.384399, 116.542617], 14)
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
