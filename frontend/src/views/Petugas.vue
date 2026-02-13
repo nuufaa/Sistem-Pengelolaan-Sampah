@@ -19,7 +19,7 @@
 
     <div class="petugas-container">
         <!-- Sidebar -->
-        <aside class="petugas-sidebar" id="petugasSidebar">
+        <aside class="petugas" id="petugasSidebar">
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
             <div class="sidebar-content">
                 <div class="sidebar-header">
@@ -570,4 +570,4 @@ onMounted(() => {
 })
 </script>
 
-<style src="@/assets/styles/petugas.css"></style>
+<style scoped src="@/assets/styles/petugas.css"></style>
