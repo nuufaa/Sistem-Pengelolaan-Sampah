@@ -1,6 +1,7 @@
 const DusunModel = require("../model/DusunModel");
 
 async function createDusun(req, res) {
+    
     try {
         const id = await DusunModel.create(req.body);
 
