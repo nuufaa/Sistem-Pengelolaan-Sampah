@@ -5,9 +5,9 @@ const jadwal = require("../controllers/JadwalContoller");
 const {auth, isAdmin} = require("../middlewares/AuthMiddleware");
 const role = require("../middlewares/RoleMiddleware");
 
-router.post("/", auth, isAdmin, jadwal.createJadwal);
-router.get("/", auth, isAdmin, jadwal.getAllJadwal);
-router.put("/:id", auth, isAdmin, jadwal.updateJadwal);
-router.delete("/:id", auth, isAdmin, jadwal.deleteJadwal);
+router.post("/", auth, isAdmin(["admin"]), jadwal.createJadwal);
+router.get("/", auth, isAdmin(["admin"]), jadwal.getAllJadwal);
+router.put("/:id", auth, isAdmin(["admin"]), jadwal.updateJadwal);
+router.delete("/:id", auth, isAdmin(["admin"]), jadwal.deleteJadwal);
 
 module.exports = router;
