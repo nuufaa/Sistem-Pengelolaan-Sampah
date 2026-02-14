@@ -1,10 +1,4 @@
 <template>
-    <!-- Header
-
-    <div class="map-container">
-    <div id="map"></div>
-  </div> -->
-
     <header class="header">
         <div class="header-left">
             <div class="logo-container">
@@ -379,9 +373,9 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { wastePoints, scheduleData, tpsData } from '@/services/WasteService.js'
-import LoginModal from '@/components/LoginModal.vue'
-import ReportModal from '@/components/ReportModal.vue'
+import { wastePoints, scheduleData, tpsData } from '@/services/wasteService.js'
+import LoginModal from '@/components/loginModal.vue'
+import ReportModal from '@/components/reportModal.vue'
 
 
 // Simulasi role user (ubah ke true untuk mode petugas)

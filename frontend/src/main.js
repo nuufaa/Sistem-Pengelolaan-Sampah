@@ -19,4 +19,3 @@ import router from './router'
 import './assets/styles/home.css'
 
 createApp(App).use(router).mount('#app')
-
