@@ -1,4 +1,4 @@
-const TpsModel = require("../model/TpsModel");
+const TpsModel = require("../model/tpsModel");
 
 async function createTps(req, res) {
     try {

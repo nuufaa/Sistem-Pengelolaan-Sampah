@@ -2,17 +2,18 @@ const {db} = require("../config/db");
 
 async function create(data) {
   const {
-    id_petugas,
     id_tps,
+    hari_pengambilan,
+    tgl_terakhir_diambil,
+    id_petugas,
     id_admin,
-    hari_pengambilan
   } = data;
 
   const [result] = await db.query(
     `INSERT INTO jadwal_pengambilan
-     (id_petugas, id_tps, id_admin, hari_pengambilan)
-     VALUES (?, ?, ?, ?)`,
-    [id_petugas, id_tps, id_admin, hari_pengambilan]
+     (id_tps, hari_pengambilan, tgl_terakhir_diambil, id_petugas, id_admin)
+     VALUES (?, ?, ?, ?, ?)`,
+    [id_tps, hari_pengambilan, tgl_terakhir_diambil, id_petugas, id_admin]
   );
 
   return result.insertId;

@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-const tpsController = require("../controllers/TpsController");
-const { auth, isAdmin } = require("../middlewares/AuthMiddleware");
-const role = require("../middlewares/ValidateMiddleware");
-const upload = require("../middlewares/UploadMiddleware")
+const tpsController = require("../controllers/tpsController");
+const { auth, isAdmin } = require("../middlewares/authMiddleware");
+const role = require("../middlewares/validateMiddleware");
+const upload = require("../middlewares/uploadMiddleware");
 
 router.post("/", auth, isAdmin(["admin"]), upload.single("foto_tps"), tpsController.createTps);
 router.get("/", auth, isAdmin(["admin"]), tpsController.getAllTps);

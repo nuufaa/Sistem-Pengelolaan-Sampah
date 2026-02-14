@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
 
-const laporan = require("../controllers/LaporanController");
-const validate = require("../middlewares/ValidateMiddleware");
-const {auth, isAdmin} = require("../middlewares/AuthMiddleware");
-const role = require("../middlewares/ValidateMiddleware");
+const laporan = require("../controllers/laporanController");
+const validate = require("../middlewares/validateMiddleware");
+const {auth, isAdmin} = require("../middlewares/authMiddleware");
+const upload = require("../middlewares/uploadMiddleware");
 
-router.post("/", laporan.createLaporan);
+router.post("/", upload.single("foto_tps"), laporan.createLaporan);
 router.get("/", auth, isAdmin(["admin"]), laporan.getAllLaporan);
 router.get("/:id", auth, isAdmin(["admin"]), laporan.getLaporanById);
 
