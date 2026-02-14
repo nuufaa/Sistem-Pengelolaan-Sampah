@@ -1,5 +1,6 @@
 <template>
-        <!-- Header -->
+    <div class="petugas-page">
+    <!-- Header -->
     <header class="petugas-header">
         <button class="hamburger-menu" id="hamburgerMenu">
             <span class="material-icons">menu</span>
@@ -17,9 +18,10 @@
         </div>
     </header>
 
+    <!-- Container -->
     <div class="petugas-container">
         <!-- Sidebar -->
-        <aside class="petugas" id="petugasSidebar">
+        <aside class="petugas-sidebar" id="petugasSidebar">
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
             <div class="sidebar-content">
                 <div class="sidebar-header">
@@ -30,7 +32,7 @@
                     </div>
                 </div>
                 
-                <nav class="sidebar-nav">
+                <!-- <nav class="sidebar-nav">
                     <a href="#" class="nav-item active" data-section="dashboard">
                         <span class="material-icons">dashboard</span>
                         <span>Dashboard</span>
@@ -51,12 +53,39 @@
                         <span class="material-icons">description</span>
                         <span>Logbook Kendaraan</span>
                     </a>
-                </nav>
+                </nav> -->
+
+<router-link to="/petugas" class="nav-item" active-class="active">
+  <span class="material-icons">dashboard</span>
+  <span>Dashboard</span>
+</router-link>
+
+<router-link to="/petugas/pengambilan" class="nav-item" active-class="active">
+  <span class="material-icons">list_alt</span>
+  <span>Daftar Pengambilan</span>
+</router-link>
+
+<!-- <router-link to="/petugas/peta" class="nav-item" active-class="active">
+  <span class="material-icons">map</span>
+  <span>Peta TPS</span>
+</router-link> -->
+
+<router-link to="/petugas/kepatuhan" class="nav-item" active-class="active">
+  <span class="material-icons">schedule</span>
+  <span>Kepatuhan Jadwal</span>
+</router-link>
+
+<router-link to="/petugas/logbook" class="nav-item" active-class="active">
+  <span class="material-icons">description</span>
+  <span>Logbook Kendaraan</span>
+</router-link>
+
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="petugas-main">
+            <router-view />
             <!-- Dashboard Section -->
             <section class="content-section active" id="section-dashboard">
                 <div class="section-header">
@@ -149,7 +178,7 @@
                 <div class="card-list mobile-only" id="pengambilanCardList"></div>
             </section>
 
-            <!-- Peta Section -->
+            <!-- Peta Section
             <section class="content-section" id="section-peta">
                 <div class="section-header">
                     <h2>Peta Titik Pengambilan Sampah</h2>
@@ -176,7 +205,7 @@
                         </div>
                     </div>
                 </div>
-            </section>
+            </section> -->
 
             <!-- Kepatuhan Jadwal Section -->
             <section class="content-section" id="section-kepatuhan">
@@ -386,6 +415,7 @@
         <span class="material-icons toast-icon">check_circle</span>
         <span class="toast-message" id="toastMessage"></span>
     </div>
+    </div>
 </template>
 
 <script setup>
@@ -463,11 +493,11 @@ function switchSection(section) {
   activeSection.value = section
   sidebarOpen.value = false
 
-  if (section === 'peta') {
-    nextTick(() => {
-      if (!map) initMap()
-    })
-  }
+//   if (section === 'peta') {
+//     nextTick(() => {
+//       if (!map) initMap()
+//     })
+//   }
 }
 
 function toggleSidebar() {

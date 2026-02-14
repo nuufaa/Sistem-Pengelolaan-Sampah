@@ -1,5 +1,5 @@
-/* ===== CSS Variables ===== */
-:root {
+/* ===== CSS Variables =====
+:petugas-page {
     --primary: #2196F3;
     --primary-dark: #1976D2;
     --primary-light: #64B5F6;
@@ -27,7 +27,14 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===== Reset ===== */
+.petugas-page {
+    min-height: 100vh;
+    background: var(--bg-primary);
+    position: relative;
+} */
+
+
+/* ===== Reset =====
 * {
     margin: 0;
     padding: 0;
@@ -39,10 +46,216 @@ body {
     color: var(--text-primary);
     background: var(--bg-primary);
     line-height: 1.6;
+} */
+
+/* =========================
+   CSS VARIABLES (PETUGAS)
+========================= */
+.petugas-page {
+  --primary: #2196f3;
+  --primary-dark: #1976d2;
+  --primary-light: #64b5f6;
+  --success: #4caf50;
+  --warning: #ff9800;
+  --danger: #f44336;
+
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #ffffff;
+  --border: #e0e0e0;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  --sidebar-width: 280px;
+  --header-height: 70px;
+}
+
+/* =========================
+   BASE
+========================= */
+.petugas-page {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* =========================
+   HEADER
+========================= */
+.petugas-page .petugas-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+}
+
+.petugas-page .header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.petugas-page .header-title h1 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.petugas-page .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.petugas-page .btn-logout {
+  border: 2px solid var(--border);
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.petugas-page .btn-logout:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+/* =========================
+   CONTAINER
+========================= */
+.petugas-page .petugas-container {
+  display: flex;
+  margin-top: var(--header-height);
+  min-height: calc(100vh - var(--header-height));
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.petugas-page .petugas-sidebar {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: white;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 900;
+}
+
+.petugas-page .sidebar-content {
+  padding: 24px;
+}
+
+.petugas-page .sidebar-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.petugas-page .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.petugas-page .nav-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.petugas-page .nav-item.active {
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary-light)
+  );
+  color: white;
+}
+
+/* =========================
+   MAIN CONTENT
+========================= */
+.petugas-page .petugas-main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 32px;
+}
+
+.petugas-page .content-section {
+  display: none;
+}
+
+.petugas-page .content-section.active {
+  display: block;
+}
+
+.petugas-page .section-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+/* =========================
+   STATS
+========================= */
+.petugas-page .stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.petugas-page .stat-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* =========================
+   TODAY TASKS
+========================= */
+.petugas-page .today-tasks {
+  margin-top: 32px;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .petugas-page .petugas-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .petugas-page .petugas-main {
+    margin-left: 0;
+    padding: 20px;
+  }
 }
 
 /* ===== Header ===== */
-.petugas-header {
+/* .petugas-header {
     position: fixed;
     top: 0;
     left: 0;
@@ -56,7 +269,7 @@ body {
     padding: 0 24px;
     z-index: 1000;
     box-shadow: var(--shadow-sm);
-}
+} */
 
 .hamburger-menu {
     display: none;
