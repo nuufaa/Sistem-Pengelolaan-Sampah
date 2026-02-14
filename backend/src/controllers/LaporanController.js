@@ -1,8 +1,13 @@
-const LaporanModel = require("../model/LaporanModel");
+const LaporanModel = require("../model/laporanModel");
 
 async function createLaporan(req, res) {
     try {
-        const id_laporan = await LaporanModel.addLaporan(req.body);
+        const data = {
+            ...req.body,
+            foto_tps: req.file ? req.file.filename : null
+        };
+
+        const id_laporan = await LaporanModel.addLaporan(data);
 
         return res.status(201).json({
             message: "Laporan berhasil dibuat",

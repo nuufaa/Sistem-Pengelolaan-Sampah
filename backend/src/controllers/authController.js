@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const admin = require("../model/AdminModel");
-const petugas = require("../model/PetugasModel");
+const admin = require("../model/adminModel");
+const petugas = require("../model/petugasModel");
 
 async function loginUser(req, res){
     const { username, password} = req.body
@@ -27,8 +27,16 @@ async function loginUser(req, res){
         });
     }
 
+    let userId;
+
+    if (role === "admin") {
+        userId = user.id_admin;
+    } else {
+        userId = user.id_petugas;
+    }
+
     const token = jwt.sign(
-        { id: user.id, role: role, name: user.nama},
+        { id: userId, role: role, name: user.nama},
         process.env.JWT_SECRET,
         { expiresIn: '1d' }
     )

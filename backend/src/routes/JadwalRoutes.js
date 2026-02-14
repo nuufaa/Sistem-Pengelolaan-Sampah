@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 
-const jadwal = require("../controllers/JadwalContoller");
-const {auth, isAdmin} = require("../middlewares/AuthMiddleware");
-const role = require("../middlewares/RoleMiddleware");
+const jadwal = require("../controllers/jadwalContoller");
+const {auth, isAdmin} = require("../middlewares/authMiddleware");
+const role = require("../middlewares/roleMiddleware");
 
 router.post("/", auth, isAdmin(["admin"]), jadwal.createJadwal);
 router.get("/", auth, isAdmin(["admin"]), jadwal.getAllJadwal);
