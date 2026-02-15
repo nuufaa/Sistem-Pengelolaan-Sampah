@@ -1,24 +1,46 @@
 const JadwalModel = require("../model/jadwalModel");
+const jadwalService = require("../service/jadwalService")
+
+// async function createJadwal(req, res) {
+//   try {
+//     const id_admin = req.user.id; // dari JWT
+    
+//     const data = {
+//       ...req.body,
+//       id_admin
+//     };
+    
+//     const id = await JadwalModel.create(data);
+    
+//     return res.status(201).json({
+//       message: "Jadwal berhasil dibuat",
+//       id_jadwal: id
+//     });
+    
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       message: "Gagal membuat jadwal"
+//     });
+//   }
+// }
 
 async function createJadwal(req, res) {
   try {
-    const id_admin = req.user.id; // dari JWT
-    
-    const data = {
+    const id_admin = req.user.id;
+
+    const id = await jadwalService.createJadwalHari({
       ...req.body,
       id_admin
-    };
-    
-    const id = await JadwalModel.create(data);
-    
-    return res.status(201).json({
+    });
+
+    res.status(201).json({
       message: "Jadwal berhasil dibuat",
       id_jadwal: id
     });
-    
+
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
+    res.status(500).json({
       message: "Gagal membuat jadwal"
     });
   }

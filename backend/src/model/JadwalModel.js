@@ -42,6 +42,16 @@ async function findById(id) {
   return rows[0];
 }
 
+async function findByHari(hariIndex) {
+  const [rows] = await db.query(
+    `SELECT * FROM jadwal_pengambilan
+     WHERE hari_pengambilan = ?`,
+    [hariIndex]
+  );
+
+  return rows;
+}
+
 async function update(id, data) {
   const {
     id_petugas,
@@ -57,6 +67,15 @@ async function update(id, data) {
   );
 }
 
+async function updateTanggalTerakhir(id_jadwal) {
+  await db.query(
+    `UPDATE jadwal_pengambilan
+     SET tgl_terakhir_diambil = CURDATE()
+     WHERE id_jadwal = ?`,
+    [id_jadwal]
+  );
+}
+
 async function remove(id) {
   await db.query(
     "DELETE FROM jadwal_pengambilan WHERE id_jadwal = ?",
@@ -68,6 +87,8 @@ module.exports = {
   create,
   findAll,
   findById,
+  findByHari,
   update,
+  updateTanggalTerakhir,
   remove
 };
