@@ -1,5 +1,5 @@
 <template>
-  <section class="content-section">
+  <section class="content-section active">
     <div class="section-header">
       <h2>Kelola Titik Pengambilan Sampah (TPS)</h2>
       <button class="btn-primary" @click="openAdd">
@@ -7,6 +7,12 @@
         Tambah TPS
       </button>
     </div>
+
+    <!-- Debug Info -->
+    <!-- <div style="background: #f0f0f0; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+      <p><strong>Modal Status:</strong> {{ showModal ? 'OPEN' : 'CLOSED' }}</p>
+      <p><strong>TPS Count:</strong> {{ tpsList.length }}</p>
+    </div> -->
 
     <div class="table-container">
       <table class="data-table">
@@ -47,7 +53,7 @@
       </table>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL - Conditionally Rendered -->
     <TPSModal
       v-if="showModal"
       :tps="selectedTPS"
@@ -73,6 +79,15 @@ const tpsList = ref([
     lng: 116.1167,
     kapasitas: 65,
     status: 'warning'
+  },
+  {
+    id: 2,
+    nama: 'TPS A2 – Pasar Selatan',
+    desa: 'Desa A',
+    lat: -8.5900,
+    lng: 116.1200,
+    kapasitas: 45,
+    status: 'normal'
   }
 ])
 
@@ -93,7 +108,9 @@ function closeModal() {
 function saveTPS(data) {
   if (data.id) {
     const i = tpsList.value.findIndex(t => t.id === data.id)
-    tpsList.value[i] = data
+    if (i !== -1) {
+      tpsList.value[i] = data
+    }
   } else {
     data.id = Date.now()
     tpsList.value.push(data)
