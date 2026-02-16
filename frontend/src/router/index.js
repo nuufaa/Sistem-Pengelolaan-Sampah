@@ -1,27 +1,3 @@
-// import { createRouter, createWebHistory } from 'vue-router'
-// import Home from '../views/Home.vue'
-// import Petugas from '../views/Petugas.vue'
-
-// const routes = [
-//   {
-//     path: '/',
-//     name: 'home',
-//     component: Home
-//   },
-//   {
-//     path: '/petugas',
-//     name: 'petugas',
-//     component: Petugas
-//   }
-// ]
-
-// const router = createRouter({
-//   history: createWebHistory(),
-//   routes
-// })
-
-// export default router
-
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/home.vue'
 // import Petugas from '../views/petugas/petugas.vue'
@@ -29,9 +5,18 @@ import LayoutPetugas from '../views/layoutPetugas.vue'
 
 import Dashboard from '../views/petugas/dashboard.vue'
 import PetugasPengambilan from '../views/petugas/pengambilan.vue'
-// import PetugasPeta from '../views/petugas/Peta.vue'
 import PetugasKepatuhan from '../views/petugas/kepatuhan.vue'
 import PetugasLogbook from '../views/petugas/logbook.vue'
+
+import LayoutAdmin from '@/views/layoutAdmin.vue'
+import DashboardAdmin from '../views/admin/dashboard.vue'
+import AdminTPS from '../views/admin/TPS.vue'
+import AdminKendaraan from '../views/admin/kendaraan.vue'
+// import AdminPeta from '../views/admin/peta.vue'
+import AdminJadwal from '../views/admin/jadwal.vue'
+import AdminPetugas from '../views/admin/petugas.vue'
+import AdminLaporan from '../views/admin/laporan.vue'
+
 
 const routes = [
   {
@@ -64,7 +49,48 @@ const routes = [
         component: PetugasLogbook
       }
     ]
-  }
+  },
+  {
+  path: '/admin',
+  component: LayoutAdmin,
+  children: [
+    {
+      path: '',
+      name: 'admin-dashboard',
+      component: DashboardAdmin
+    },
+    {
+      path: 'tps',
+      name: 'admin-tps',
+      component: AdminTPS
+    },
+    {
+      path: 'kendaraan',
+      name: 'admin-kendaraan',
+      component: AdminKendaraan
+    },
+    // {
+    //   path: 'peta',
+    //   name: 'admin-peta',
+    //   component: AdminPeta
+    // },
+    {
+      path: 'jadwal',
+      name: 'admin-jadwal',
+      component: AdminJadwal
+    },
+    {
+      path: 'petugas',
+      name: 'admin-petugas',
+      component: AdminPetugas
+    },
+    {
+      path: 'laporan',
+      name: 'admin-laporan',
+      component: AdminLaporan
+    }
+  ]
+}
 ]
 
 const router = createRouter({

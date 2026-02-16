@@ -146,11 +146,6 @@ const loading = ref(false)
 const errorUser = ref('')
 const errorPass = ref('')
 
-// const dummyAccounts = {
-//   petugas: { username: 'petugas', password: '1234', redirect: '/petugas' },
-//   admin: { username: 'admin', password: 'admin123', redirect: '/admin' }
-// }
-
 function open() {
   isOpen.value = true
   document.body.style.overflow = 'hidden'
@@ -221,33 +216,6 @@ async function submit() {
   } finally {
     loading.value = false
   }
-
-  // if (!username.value) {
-  //   errorUser.value = 'Username tidak boleh kosong'
-  //   return
-  // }
-  // if (!password.value) {
-  //   errorPass.value = 'Password tidak boleh kosong'
-  //   return
-  // }
-
-  // loading.value = true
-
-  // setTimeout(() => {
-  //   const acc = dummyAccounts[role.value]
-  //   if (
-  //     acc.username === username.value &&
-  //     acc.password === password.value
-  //   ) {
-  //     sessionStorage.setItem('loggedIn', 'true')
-  //     sessionStorage.setItem('role', role.value)
-  //     window.location.href = acc.redirect
-  //   } else {
-  //     errorPass.value = 'Username atau password salah'
-  //     loading.value = false
-  //     password.value = ''
-  //   }
-  // }, 900)
 }
 
 defineExpose({ open })
