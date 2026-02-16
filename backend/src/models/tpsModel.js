@@ -31,7 +31,7 @@ async function findById(id_tps) {
 
 async function findAll() {
     const [rows] = await db.query(
-        "SELECT * FROM tps ORDER BY id_tps DESC"
+        "SELECT * FROM tps ORDER BY nama_tps DESC"
     );
     return rows;
 }
