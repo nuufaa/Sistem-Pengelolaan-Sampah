@@ -24,12 +24,14 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/home.vue'
-import Petugas from '../views/petugas/petugas.vue'
+// import Petugas from '../views/petugas/petugas.vue'
+import LayoutPetugas from '../views/layoutPetugas.vue'
 
-// import PetugasPengambilan from '../views/petugas/pengambilan.vue'
+import Dashboard from '../views/petugas/dashboard.vue'
+import PetugasPengambilan from '../views/petugas/pengambilan.vue'
 // import PetugasPeta from '../views/petugas/Peta.vue'
-// import PetugasKepatuhan from '../views/petugas/Kepatuhan.vue'
-// import PetugasLogbook from '../views/petugas/Logbook.vue'
+import PetugasKepatuhan from '../views/petugas/kepatuhan.vue'
+import PetugasLogbook from '../views/petugas/logbook.vue'
 
 const routes = [
   {
@@ -39,23 +41,28 @@ const routes = [
   },
   {
     path: '/petugas',
-    component: Petugas,
+    component: LayoutPetugas,
     children: [
-      // {
-      //   path: 'pengambilan',
-      //   name: 'petugas-pengambilan',
-      //   component: PetugasPengambilan
-      // },
-      // {
-      //   path: 'kepatuhan',
-      //   name: 'petugas-kepatuhan',
-      //   component: PetugasKepatuhan
-      // },
-      // {
-      //   path: 'logbook',
-      //   name: 'petugas-logbook',
-      //   component: PetugasLogbook
-      // }
+      {
+        path: '',
+        name: 'petugas-dashboard',
+        component: Dashboard
+      },
+      {
+        path: 'pengambilan',
+        name: 'petugas-pengambilan',
+        component: PetugasPengambilan
+      },
+      {
+        path: 'kepatuhan',
+        name: 'petugas-kepatuhan',
+        component: PetugasKepatuhan
+      },
+      {
+        path: 'logbook',
+        name: 'petugas-logbook',
+        component: PetugasLogbook
+      }
     ]
   }
 ]
