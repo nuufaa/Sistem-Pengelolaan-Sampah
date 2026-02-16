@@ -17,10 +17,13 @@
         <!-- Lokasi -->
         <div class="form-group">
           <label>Lokasi Titik Sampah <span class="required">*</span></label>
-          <select v-model="form.location" required>
+          <select v-model="form.id_tps" required>
             <option value="">Pilih lokasi...</option>
-            <option v-for="tps in tpsList" :key="tps.id" :value="tps.id">
-              {{ tps.name }}
+            <option v-for="tps in tpsList" 
+              :key="tps.id_tps" 
+              :value="tps.id_tps"
+            >
+              {{ tps.nama_tps }}
             </option>
           </select>
         </div>
@@ -29,13 +32,13 @@
         <div class="form-group">
           <label>Kondisi <span class="required">*</span></label>
           <div class="radio-group-vertical">
-            <label class="radio-label" v-for="c in conditions" :key="c.value">
+            <label class="radio-label" v-for="c in conditions" :key="c">
               <input
                 type="radio"
-                :value="c.value"
-                v-model="form.condition"
+                :value="c"
+                v-model="form.kondisi_tps"
               />
-              <span>{{ c.label }}</span>
+              <span>{{ c }}</span>
             </label>
           </div>
         </div>
@@ -58,19 +61,19 @@
         <!-- Keterangan -->
         <div class="form-group">
           <label>Keterangan Tambahan</label>
-          <textarea v-model="form.description" rows="4" placeholder="Jelaskan kondisi sampah..."></textarea>
+          <textarea v-model="form.deskripsi" rows="4" placeholder="Jelaskan kondisi sampah..."></textarea>
         </div>
 
         <!-- Identitas -->
         <div class="form-group">
           <label>Nama Pelapor</label>
-          <input type="text" v-model="form.name" placeholder="Nama Anda" />
+          <input type="text" v-model="form.nama_pelapor" placeholder="Nama Anda" />
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>No. HP</label>
           <input type="tel" v-model="form.phone" placeholder="08xx xxxx xxxx" />
-        </div>
+        </div> -->
 
         <div class="modal-footer">
           <button type="button" class="btn-secondary" @click="close">
@@ -87,37 +90,37 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { apiFetch } from '../services/api'
 import '@/assets/styles/report.css'
 
 const isOpen = ref(false)
 
 const form = ref({
-  location: '',
-  condition: '',
-  description: '',
-  name: '',
-  phone: ''
+  id_tps: '',
+  kondisi_tps: '',
+  deskripsi: '',
+  nama_pelapor: ''
+  // phone: ''
 })
 
+const selectedFile = ref(null)
 const imagePreview = ref(null)
 const fileLabel = ref('Pilih foto')
 
-const tpsList = [
-  { id: 1, name: 'TPS Pasar Desa Utara' },
-  { id: 2, name: 'TPS Masjid Besar' },
-  { id: 3, name: 'TPS Sekolah Dasar' }
-]
+const tpsList = ref([])
 
 const conditions = [
-  { value: 'hampir_penuh', label: 'Hampir Penuh' },
-  { value: 'penuh', label: 'Sudah Penuh' },
-  { value: 'berserakan', label: 'Sampah Berserakan' }
+  "Hampir penuh",
+  "Penuh",
+  "Sampah berserakan"
 ]
 
 function previewImage(e) {
   const file = e.target.files[0]
+
   if (file) {
+    selectedFile.value = file
     imagePreview.value = URL.createObjectURL(file)
     fileLabel.value = file.name
   } else {
@@ -126,9 +129,48 @@ function previewImage(e) {
   }
 }
 
-function submit() {
-  console.log('Data laporan:', form.value)
-  close()
+async function submit() {
+  try {
+    const formData = new FormData()
+
+    formData.append("id_tps", form.value.id_tps)
+    formData.append("kondisi_tps", form.value.kondisi_tps)
+    formData.append("deskripsi", form.value.deskripsi)
+    formData.append("nama_pelapor", form.value.nama_pelapor)
+
+    if (selectedFile.value) {
+      formData.append("foto_tps", selectedFile.value)
+    }
+
+    await apiFetch("/api/lapor", {
+      method: 'POST',
+      body: formData,
+      // headers: { "Content-Type": "multipart/form-data" },
+      auth: false
+    })
+
+    alert("Laporan berhasil dikirim")
+
+    resetForm()
+    close()
+
+  } catch (err) {
+    console.error("Gagal kirim laporan:", err)
+    alert("Gagal mengirim laporan")
+  }
+}
+
+function resetForm() {
+  form.value = {
+    id_tps: "",
+    kondisi_tps: "",
+    deskripsi: "",
+    nama_pelapor: ""
+  }
+
+  selectedFile.value = null
+  imagePreview.value = null
+  fileLabel.value = "Pilih foto"
 }
 
 function open() {
@@ -138,6 +180,18 @@ function open() {
 function close() {
   isOpen.value = false
 }
+
+async function fetchTps() {
+  try {
+    const res = await apiFetch("/api/tps")
+    tpsList.value = res
+    console.log(res.data)
+  } catch (err) {
+    console.error("Gagal ambil TPS:", err)
+  }
+}
+
+onMounted(fetchTps)
 
 defineExpose({ open, close })
 </script>
