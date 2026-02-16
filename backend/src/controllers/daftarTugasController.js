@@ -1,12 +1,12 @@
-const daftarTugasModel = require("../model/daftarTugasModel");
-const DaftarTugasService = require("../service/daftarTugasService");
+const daftarTugasModel = require("../models/daftarTugasModel");
+const daftarTugasService = require("../services/daftarTugasService");
 
 async function updateStatus(req, res) {
   try {
     // const { id } = req.params;
 
     // await daftarTugasModel.updateStatus(id, req.body);
-    await DaftarTugasService.updateStatusTugas(
+    await daftarTugasService.updateStatusTugas(
       req.params.id,
       req.body
     );

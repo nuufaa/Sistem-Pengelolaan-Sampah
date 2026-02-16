@@ -1,4 +1,4 @@
-const KendaraanModel = require("../model/kendaraanModel");
+const KendaraanModel = require("../models/kendaraanModel");
 
 async function createKendaraan(req, res) {
     try {

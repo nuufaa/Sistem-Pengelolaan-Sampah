@@ -1,5 +1,5 @@
-const daftarTugasModel = require("../model/daftarTugasModel");
-const jadwalModel = require("../model/jadwalModel");
+const daftarTugasModel = require("../models/daftarTugasModel");
+const jadwalModel = require("../models/jadwalModel");
 
 async function updateStatusTugas(id, data) {
 

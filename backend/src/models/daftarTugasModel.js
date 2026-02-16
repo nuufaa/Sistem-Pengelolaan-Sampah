@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const {db} = require("../config/db");
 
 async function create(data) {
   await db.query(
@@ -16,7 +16,7 @@ async function create(data) {
 async function updateStatus(id, data) {
   await db.query(
     `UPDATE daftar_tugas
-     SET status_angkut = ?, volume_sampah = ?
+     SET id_kendaraan = ?, status_angkut = ?, volume_sampah = ?
      WHERE id_daftar_tugas = ?`,
     [
       data.status_angkut,

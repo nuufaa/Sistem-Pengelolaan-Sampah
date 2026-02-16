@@ -1,5 +1,5 @@
-const JadwalModel = require("../model/jadwalModel");
-const jadwalService = require("../service/jadwalService")
+const JadwalModel = require("../models/jadwalModel");
+const jadwalService = require("../services/jadwalService")
 
 // async function createJadwal(req, res) {
 //   try {
@@ -40,6 +40,7 @@ async function createJadwal(req, res) {
     });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       message: "Gagal membuat jadwal"
     });
@@ -54,6 +55,7 @@ async function getAllJadwal(req, res) {
     return res.json(data);
 
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Gagal mengambil jadwal"
     });

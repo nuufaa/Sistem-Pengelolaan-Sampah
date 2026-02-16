@@ -1,7 +1,7 @@
 const cron = require("node-cron");
-const db = require("../config/db");
-const jadwalModel = require("../model/jadwalModel");
-const daftarTugasModel = require("../model/daftarTugasModel");
+const {db} = require("../config/db");
+const jadwalModel = require("../models/jadwalModel");
+const daftarTugasModel = require("../models/daftarTugasModel");
 
 async function generateTugasHarian() {
 
@@ -31,5 +31,6 @@ function startScheduler() {
 }
 
 module.exports = {
+  generateTugasHarian,
   startScheduler
 };

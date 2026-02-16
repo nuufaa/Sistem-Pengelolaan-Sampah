@@ -1,4 +1,4 @@
-const LaporanModel = require("../model/laporanModel");
+const LaporanModel = require("../models/laporanModel");
 
 async function createLaporan(req, res) {
     try {
