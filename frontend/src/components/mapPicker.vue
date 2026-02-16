@@ -1,22 +1,18 @@
 <template>
-  <div class="modal show">
-    <div class="modal-overlay" @click="$emit('close')" />
-
-    <div class="modal-content modal-fullscreen">
-      <div class="modal-header">
-        <h2>Pilih Lokasi TPS</h2>
-        <button class="modal-close" @click="$emit('close')">
+  <div class="modal-overlay-wrapper" @click.self="$emit('close')">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-header d-flex justify-content-between align-items-center">
+        <h3 class="modal-title">Pilih Lokasi TPS</h3>
+        <button type="button" class="btn-close" @click="$emit('close')">
           <span class="material-icons">close</span>
         </button>
       </div>
 
-      <div class="modal-body" style="padding:0">
-        <div ref="mapEl" style="height:100%" />
-      </div>
+      <div ref="mapEl" class="map-container"></div>
 
-      <div class="modal-footer">
-        <button class="btn-secondary" @click="$emit('close')">Batal</button>
-        <button class="btn-primary" @click="confirm">
+      <div class="modal-footer d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-secondary" @click="$emit('close')">Batal</button>
+        <button type="button" class="btn btn-primary" @click="confirm">
           <span class="material-icons">check</span>
           Pilih Lokasi Ini
         </button>
@@ -55,3 +51,124 @@ function confirm() {
   emit('select', selected)
 }
 </script>
+
+<style scoped>
+.modal-overlay-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  background: white;
+  border-radius: 8px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-fullscreen {
+  width: 90%;
+  height: 85vh;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.map-container {
+  flex: 1;
+  min-height: 400px;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  gap: 0.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: #4CAF50;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #45a049;
+}
+
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background: #d0d0d0;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.justify-content-end {
+  justify-content: flex-end;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .modal-dialog {
+    border-radius: 12px 12px 0 0;
+  }
+
+  .modal-fullscreen {
+    width: 100%;
+    height: 90vh;
+  }
+}
+</style>
