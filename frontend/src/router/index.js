@@ -10,7 +10,7 @@ import PetugasLogbook from '../views/petugas/logbook.vue'
 
 import LayoutAdmin from '@/views/layoutAdmin.vue'
 import DashboardAdmin from '../views/admin/dashboard.vue'
-import AdminTPS from '../views/admin/TPS.vue'
+import AdminTPS from '../views/admin/kelolaTPS.vue'
 import AdminKendaraan from '../views/admin/kendaraan.vue'
 // import AdminPeta from '../views/admin/peta.vue'
 import AdminJadwal from '../views/admin/jadwal.vue'
