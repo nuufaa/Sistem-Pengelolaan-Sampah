@@ -373,9 +373,9 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { wastePoints, scheduleData, tpsData } from '@/services/wasteService.js'
-import LoginModal from '@/components/loginModal.vue'
-import ReportModal from '@/components/reportModal.vue'
+import { wastePoints, scheduleData, tpsData } from '@/services/WasteService.js'
+import LoginModal from '@/components/LoginModal.vue'
+import ReportModal from '@/components/ReportModal.vue'
 
 
 // Simulasi role user (ubah ke true untuk mode petugas)

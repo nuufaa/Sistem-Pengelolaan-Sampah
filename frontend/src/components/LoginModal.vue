@@ -129,7 +129,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { apiFetch, decodeJwtPayload } from '../services/api'
 import '@/assets/styles/login.css'
+
+const router = useRouter();
 
 const isOpen = ref(false)
 const role = ref('petugas')
@@ -142,10 +146,10 @@ const loading = ref(false)
 const errorUser = ref('')
 const errorPass = ref('')
 
-const dummyAccounts = {
-  petugas: { username: 'petugas', password: '1234', redirect: '/petugas' },
-  admin: { username: 'admin', password: 'admin123', redirect: '/admin' }
-}
+// const dummyAccounts = {
+//   petugas: { username: 'petugas', password: '1234', redirect: '/petugas' },
+//   admin: { username: 'admin', password: 'admin123', redirect: '/admin' }
+// }
 
 function open() {
   isOpen.value = true
@@ -175,36 +179,75 @@ function reset() {
   loading.value = false
 }
 
-function submit() {
+async function submit() {
   errorUser.value = ''
   errorPass.value = ''
 
-  if (!username.value) {
-    errorUser.value = 'Username tidak boleh kosong'
-    return
-  }
-  if (!password.value) {
-    errorPass.value = 'Password tidak boleh kosong'
-    return
-  }
-
-  loading.value = true
-
-  setTimeout(() => {
-    const acc = dummyAccounts[role.value]
-    if (
-      acc.username === username.value &&
-      acc.password === password.value
-    ) {
-      sessionStorage.setItem('loggedIn', 'true')
-      sessionStorage.setItem('role', role.value)
-      window.location.href = acc.redirect
-    } else {
-      errorPass.value = 'Username atau password salah'
-      loading.value = false
-      password.value = ''
+    if (!username.value) {
+      errorUser.value = 'Username tidak boleh kosong'
+      return
     }
-  }, 900)
+    if (!password.value) {
+      errorPass.value = 'Password tidak boleh kosong'
+      return
+    }
+
+    try {
+      const data = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        auth: false,
+        body: {
+          username: username.value,
+          password: password.value,
+          role: role.value,
+        },
+    })
+
+    if (!data?.token) {
+      throw new Error('Login gagal')
+    }
+
+    localStorage.setItem('token', data.token)
+
+    const payload = decodeJwtPayload(data.token)
+    const dest =
+      payload?.role === 'admin'
+        ? '/admin'
+        : '/petugas'
+
+    router.push(dest)
+  } catch (err) {
+    errorPass.value = err?.message || 'Username atau password salah'
+  } finally {
+    loading.value = false
+  }
+
+  // if (!username.value) {
+  //   errorUser.value = 'Username tidak boleh kosong'
+  //   return
+  // }
+  // if (!password.value) {
+  //   errorPass.value = 'Password tidak boleh kosong'
+  //   return
+  // }
+
+  // loading.value = true
+
+  // setTimeout(() => {
+  //   const acc = dummyAccounts[role.value]
+  //   if (
+  //     acc.username === username.value &&
+  //     acc.password === password.value
+  //   ) {
+  //     sessionStorage.setItem('loggedIn', 'true')
+  //     sessionStorage.setItem('role', role.value)
+  //     window.location.href = acc.redirect
+  //   } else {
+  //     errorPass.value = 'Username atau password salah'
+  //     loading.value = false
+  //     password.value = ''
+  //   }
+  // }, 900)
 }
 
 defineExpose({ open })
