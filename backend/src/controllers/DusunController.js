@@ -1,4 +1,4 @@
-const DusunModel = require("../model/dusunModel");
+const DusunModel = require("../models/dusunModel");
 
 async function createDusun(req, res) {
     try {

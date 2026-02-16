@@ -1,4 +1,4 @@
-const JadwalModel = require("../model/jadwalModel");
+const JadwalModel = require("../models/jadwalModel");
 const { toIndex } = require("../utils/hariJadwal");
 
 async function createJadwalHari(data) {

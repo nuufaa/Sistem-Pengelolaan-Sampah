@@ -22,7 +22,7 @@ async function create(data) {
 async function findAll() {
   const [rows] = await db.query(`
     SELECT jp.*, 
-           p.nama_petugas,
+           p.nama,
            t.nama_tps
     FROM jadwal_pengambilan jp
     JOIN petugas p ON jp.id_petugas = p.id_petugas

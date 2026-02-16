@@ -10,7 +10,7 @@ const dusunRoutes = require("./routes/dusunRoutes");
 const jadwalRoutes = require("./routes/jadwalRoutes");
 const kendaraanRoutes = require("./routes/kendaraanRoutes");
 const daftarTugasRoutes = require("./routes/daftarTugasRoutes");
-const { startScheduler } = require("./service/JadwalTugasService");
+const { startScheduler } = require("./services/daftarTugasOtomatisService");
 
 app.use(cors());
 app.use(express.json());
