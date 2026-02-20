@@ -1,11 +1,5 @@
-<!-- <template>
-  <div>
-    <h2>Kelola Kendaraan</h2>
-  </div>
-</template> -->
-
 <template>
-  <section class="content-section">
+  <section class="content-section active">
     <!-- Header -->
     <div class="section-header">
       <h2>Kelola Kendaraan</h2>
