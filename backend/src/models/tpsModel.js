@@ -31,7 +31,8 @@ async function findById(id_tps) {
 
 async function findAll() {
     const [rows] = await db.query(
-        "SELECT * FROM tps ORDER BY nama_tps DESC"
+        `SELECT id_tps, nama_tps, tps.id_dusun, alamat, dusun.nama_dusun, latitude, longitude, kapasitas, status_tps, foto_tps
+        FROM tps JOIN dusun ON tps.id_dusun = dusun.id_dusun ORDER BY id_tps DESC`
     );
     return rows;
 }
