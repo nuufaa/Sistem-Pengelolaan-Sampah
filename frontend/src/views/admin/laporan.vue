@@ -82,49 +82,21 @@
       </div>
     </div>
 
-    <!-- MODAL DETAIL -->
-    <div v-if="showModal" class="modal show">
-      <div class="modal-overlay" @click="closeModal"></div>
-
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Detail Laporan</h2>
-          <button class="modal-close" @click="closeModal">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          <div class="detail-item"><b>TPS:</b> {{ tpsDetail?.nama }}</div>
-          <div class="detail-item"><b>Desa:</b> Desa {{ tpsDetail?.desa }}</div>
-          <div class="detail-item">
-            <b>Kondisi:</b> {{ kondisiText(selected?.kondisi) }}
-          </div>
-          <div class="detail-item"><b>Pelapor:</b> {{ selected?.pelapor }}</div>
-          <div class="detail-item"><b>No. HP:</b> {{ selected?.hp }}</div>
-          <div class="detail-item">
-            <b>Tanggal:</b> {{ selected?.tanggal }}
-          </div>
-          <div class="detail-item">
-            <b>Keterangan:</b><br />
-            {{ selected?.keterangan }}
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-primary" @click="closeModal">Tutup</button>
-        </div>
-      </div>
-    </div>
+    <!-- MODAL COMPONENT -->
+    <LaporanDetailModal
+      v-if="showModal"
+      :laporan="selected"
+      :tps="tpsDetail"
+      @close="showModal = false"
+    />
   </section>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import LaporanDetailModal from '@/components/laporanModal.vue'
 
-/* =====================
-   DUMMY DATA
-===================== */
+/* DUMMY DATA */
 const tpsData = ref([
   { id: 1, nama: 'TPS A1 – Pasar Utara', desa: 'A' },
   { id: 2, nama: 'TPS B1 – Terminal Selatan', desa: 'B' }
@@ -142,9 +114,7 @@ const laporanList = ref([
   }
 ])
 
-/* =====================
-   MODAL STATE
-===================== */
+/* MODAL */
 const showModal = ref(false)
 const selected = ref(null)
 
@@ -152,9 +122,7 @@ const tpsDetail = computed(() =>
   selected.value ? getTPS(selected.value.tpsId) : null
 )
 
-/* =====================
-   METHODS
-===================== */
+/* METHODS */
 function getTPS(id) {
   return tpsData.value.find(t => t.id === id)
 }
@@ -170,10 +138,6 @@ function kondisiText(kondisi) {
 function openDetail(laporan) {
   selected.value = laporan
   showModal.value = true
-}
-
-function closeModal() {
-  showModal.value = false
 }
 </script>
 

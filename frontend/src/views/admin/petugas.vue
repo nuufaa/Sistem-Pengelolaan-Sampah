@@ -9,16 +9,16 @@
       </button>
     </div>
 
-    <!-- TABLE DESKTOP -->
+    <!-- TABLE -->
     <div class="table-container desktop-only">
       <table class="data-table">
         <thead>
           <tr>
             <th>No</th>
-            <th>Nama Petugas</th>
+            <th>Nama</th>
             <th>NIP</th>
             <th>No. HP</th>
-            <th>Desa Tugas</th>
+            <th>Desa</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
@@ -49,71 +49,20 @@
       </table>
     </div>
 
-    <!-- MODAL -->
-    <div v-if="showModal" class="modal show">
-      <div class="modal-overlay" @click="closeModal"></div>
-
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>{{ form.id ? 'Edit Petugas' : 'Tambah Petugas' }}</h2>
-          <button class="modal-close" @click="closeModal">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <form class="modal-body" @submit.prevent="save">
-          <div class="form-group">
-            <label>Nama Lengkap *</label>
-            <input v-model="form.nama" required />
-          </div>
-
-          <div class="form-group">
-            <label>NIP *</label>
-            <input v-model="form.nip" required />
-          </div>
-
-          <div class="form-group">
-            <label>No. HP *</label>
-            <input v-model="form.hp" required />
-          </div>
-
-          <div class="form-group">
-            <label>Desa Tugas *</label>
-            <select v-model="form.desa" required>
-              <option value="">Pilih Desa</option>
-              <option value="A">Desa A</option>
-              <option value="B">Desa B</option>
-              <option value="All">Semua Desa</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Status *</label>
-            <select v-model="form.status" required>
-              <option value="aktif">Aktif</option>
-              <option value="nonaktif">Non-Aktif</option>
-            </select>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn-secondary" @click="closeModal">
-              Batal
-            </button>
-            <button type="submit" class="btn-primary">
-              <span class="material-icons">save</span>
-              Simpan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- MODAL COMPONENT -->
+    <PetugasModal
+      v-if="showModal"
+      :model-value="form"
+      @save="save"
+      @close="showModal = false"
+    />
   </section>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
+import PetugasModal from '@/components/petugasModal.vue'
 
-/* DATA */
 const petugasList = ref([
   {
     id: 1,
@@ -125,53 +74,38 @@ const petugasList = ref([
   }
 ])
 
-/* MODAL */
 const showModal = ref(false)
-
-const form = reactive({
-  id: null,
-  nama: '',
-  nip: '',
-  hp: '',
-  desa: '',
-  status: 'aktif'
-})
+const form = ref(null)
 
 /* METHODS */
 function openAdd() {
-  resetForm()
+  form.value = {
+    id: null,
+    nama: '',
+    nip: '',
+    hp: '',
+    desa: '',
+    status: 'aktif'
+  }
   showModal.value = true
 }
 
 function openEdit(p) {
-  Object.assign(form, p)
+  form.value = { ...p }
   showModal.value = true
 }
 
-function closeModal() {
-  showModal.value = false
-}
-
-function resetForm() {
-  form.id = null
-  form.nama = ''
-  form.nip = ''
-  form.hp = ''
-  form.desa = ''
-  form.status = 'aktif'
-}
-
-function save() {
-  if (form.id) {
-    const i = petugasList.value.findIndex(p => p.id === form.id)
-    petugasList.value[i] = { ...form }
+function save(data) {
+  if (data.id) {
+    const i = petugasList.value.findIndex(p => p.id === data.id)
+    petugasList.value[i] = data
   } else {
     petugasList.value.push({
-      ...form,
+      ...data,
       id: Date.now()
     })
   }
-  closeModal()
+  showModal.value = false
 }
 
 function remove(id) {
