@@ -2,7 +2,7 @@
   <div class="modal-overlay-wrapper" @click.self="$emit('close')">
     <div class="modal-dialog modal-lg">
       <div class="modal-header d-flex justify-content-between align-items-center">
-        <h3 class="modal-title">{{ form.id ? 'Edit TPS' : 'Tambah TPS' }}</h3>
+        <h3 class="modal-title">{{ form.id_tps ? 'Edit TPS' : 'Tambah TPS' }}</h3>
         <button type="button" class="btn-close" @click="$emit('close')">
           <span class="material-icons">close</span>
         </button>
@@ -11,17 +11,25 @@
       <form class="modal-body" @submit.prevent="submit">
         <div class="form-group">
           <label class="form-label">Nama TPS *</label>
-          <input type="text" v-model="form.nama" class="form-control" placeholder="Nama TPS" required />
+          <input type="text" v-model="form.nama_tps" class="form-control" placeholder="Nama TPS" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Alamat *</label>
+          <input type="text" v-model="form.alamat" class="form-control" placeholder="Alamat" required />
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Desa *</label>
-            <select v-model="form.desa" class="form-control" required>
-              <option value="">Pilih Desa</option>
-              <option>Desa A</option>
-              <option>Desa B</option>
-              <option>Desa C</option>
+            <label class="form-label">Dusun *</label>
+            <select v-model="form.id_dusun" class="form-control" required>
+              <option value="">Pilih Dusun</option>
+              <option v-for="dusun in dusunList" 
+              :key="dusun.id_dusun" 
+              :value="Number(dusun.id_dusun)"
+            >
+              {{ dusun.nama_dusun }}
+            </option>
             </select>
           </div>
 
@@ -33,7 +41,7 @@
 
         <div class="form-group">
           <label class="form-label">Status *</label>
-          <select v-model="form.status" class="form-control" required>
+          <select v-model="form.status_tps" class="form-control" required>
             <option value="normal">Normal</option>
             <option value="warning">Hampir Penuh</option>
             <option value="danger">Penuh</option>
@@ -43,12 +51,34 @@
         <div class="form-group">
           <label class="form-label">Lokasi (Latitude, Longitude) *</label>
           <div class="location-input-group">
-            <input type="number" step="0.0001" readonly v-model.number="form.lat" class="form-control" placeholder="Latitude" />
-            <input type="number" step="0.0001" readonly v-model.number="form.lng" class="form-control" placeholder="Longitude" />
+            <input type="number" step="0.0001" readonly v-model.number="form.latitude" class="form-control" placeholder="Latitude" />
+            <input type="number" step="0.0001" readonly v-model.number="form.longitude" class="form-control" placeholder="Longitude" />
             <button type="button" class="btn btn-secondary" @click="showMap = true">
               <span class="material-icons">map</span>
               Pilih di Peta
             </button>
+            <button type="button" class="btn btn-info" @click="getCurrentLocation">
+              Gunakan Lokasi Saya
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Upload Foto TPS</label>
+          <input
+            type="file"
+            class="form-control"
+            accept="image/*"
+            @change="handleFileUpload"
+          />
+  
+          <!-- Preview gambar jika ada -->
+          <div v-if="previewImage" class="mt-2">
+            <img
+              :src="previewImage"
+              alt="Preview Foto TPS"
+              style="max-width: 200px; border-radius: 8px;"
+            />
           </div>
         </div>
 
@@ -66,8 +96,8 @@
 
     <MapPicker
       v-if="showMap"
-      :lat="form.lat"
-      :lng="form.lng"
+      :lat="form.latitude"
+      :lng="form.longitude"
       @close="showMap = false"
       @select="setLocation"
     />
@@ -75,43 +105,87 @@
 </template>
 
 <script setup>
-import { reactive, watch, ref } from 'vue'
+import { watch, ref} from 'vue'
 import MapPicker from './mapPicker.vue'
 
 const props = defineProps({
-  tps: Object
+  tps: Object,
+  dusunList: Array
 })
 const emit = defineEmits(['save', 'close'])
 
 const showMap = ref(false)
+const previewImage = ref(null)
 
-const form = reactive({
-  id: null,
-  nama: '',
-  desa: '',
-  lat: -8.5833,
-  lng: 116.1167,
-  kapasitas: 0,
-  status: 'normal'
+function handleFileUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  form.value.foto_tps = file
+
+  // preview gambar
+  previewImage.value = URL.createObjectURL(file)
+}
+
+
+const form = ref({
+  id_tps: null,
+  nama_tps: '',
+  alamat: '',
+  id_dusun: '',
+  latitude: null,
+  longitude: null,
+  kapasitas: '',
+  status_tps: '',
+  foto_tps: ''
 })
 
 watch(
   () => props.tps,
-  val => {
-    if (val) Object.assign(form, val)
+  (val) => {
+    if (val) {
+      Object.assign(form.value, val)
+
+      // jika sudah ada foto dari backend
+      if (val.foto_tps) {
+        previewImage.value = `http://localhost:3000/uploads/${val.foto_tps}`
+      }
+    }
   },
   { immediate: true }
 )
 
 function setLocation({ lat, lng }) {
-  form.lat = lat
-  form.lng = lng
+  form.value.latitude = lat
+  form.value.longitude = lng
   showMap.value = false
 }
 
-function submit() {
-  emit('save', { ...form })
+function getCurrentLocation() {
+  if (!navigator.geolocation) {
+    alert("Browser tidak mendukung geolocation")
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      form.value.latitude = position.coords.latitude
+      form.value.longitude = position.coords.longitude
+    },
+    (error) => {
+      console.error(error)
+      alert("Gagal mengambil lokasi")
+    },
+    {
+      enableHighAccuracy: true
+    }
+  )
 }
+
+function submit() {
+  emit('save', { ...form.value })
+}
+
 </script>
 
 <style scoped>

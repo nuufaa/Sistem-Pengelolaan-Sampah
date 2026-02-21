@@ -69,13 +69,31 @@ async function getTpsById(req, res) {
 
 async function updateTps(req, res) {
   try {
-    await TpsModel.update(req.params.id, req.body);
+    const tpsLama = await TpsModel.findById(req.params.id);
+
+    if (!tpsLama) {
+      return res.status(404).json({
+        message: "TPS tidak ditemukan"
+      });
+    }
+
+    const foto = req.file
+      ? req.file.filename      // jika upload baru
+      : tpsLama.foto_tps; 
+
+    const data = {
+      ...req.body,
+      foto_tps: foto
+    };
+
+    await TpsModel.update(req.params.id, data);
 
     return res.json({
       message: "TPS berhasil diperbarui"
     });
 
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Gagal update TPS"
     });

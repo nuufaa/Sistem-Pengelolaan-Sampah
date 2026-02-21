@@ -36,16 +36,55 @@ let map, marker
 let selected = { lat: props.lat, lng: props.lng }
 
 onMounted(() => {
-  map = L.map(mapEl.value).setView([props.lat, props.lng], 14)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
+  // default view dulu (sementara)
+  map = L.map(mapEl.value).setView(
+    [props.lat || -8.5, props.lng || 116.5],
+    14
+  )
 
-  marker = L.marker([props.lat, props.lng]).addTo(map)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    .addTo(map)
 
+  marker = L.marker(
+    [props.lat || -8.5, props.lng || 116.5]
+  ).addTo(map)
+
+  selected = {
+    lat: props.lat || -8.5,
+    lng: props.lng || 116.5
+  }
+
+  // Jika tidak ada lat/lng dari parent → ambil GPS
+  if (props.lat == null || !props.lng == null) {
+    getCurrentLocation()
+  }
+
+  // klik peta
   map.on('click', e => {
     selected = e.latlng
     marker.setLatLng(selected)
   })
 })
+
+function getCurrentLocation() {
+  if (!navigator.geolocation) return
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+
+      selected = { lat, lng }
+
+      marker.setLatLng([lat, lng])
+      map.setView([lat, lng], 16)
+    },
+    (error) => {
+      console.error(error)
+    },
+    { enableHighAccuracy: true }
+  )
+}
 
 function confirm() {
   emit('select', selected)
