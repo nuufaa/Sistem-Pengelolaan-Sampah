@@ -42,79 +42,26 @@
       </table>
     </div>
 
-    <!-- MODAL -->
-    <div class="modal show" v-if="showModal">
-      <div class="modal-overlay" @click="closeModal"></div>
-
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>{{ form.id ? 'Edit Jadwal' : 'Tambah Jadwal' }}</h2>
-          <button class="modal-close" @click="closeModal">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <form class="modal-body" @submit.prevent="save">
-          <div class="form-group">
-            <label>TPS</label>
-            <select v-model.number="form.tpsId" required>
-              <option value="">Pilih TPS</option>
-              <option
-                v-for="t in tpsList"
-                :key="t.id"
-                :value="t.id"
-              >
-                {{ t.nama }} (Desa {{ t.desa }})
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Interval Pengambilan (Hari)</label>
-            <input
-              type="number"
-              min="1"
-              max="30"
-              v-model.number="form.interval"
-              required
-            />
-            <small>Pengambilan dilakukan setiap N hari</small>
-          </div>
-
-          <div class="form-group">
-            <label>Terakhir Diambil</label>
-            <input type="date" v-model="form.lastPickup" required />
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn-secondary" @click="closeModal">
-              Batal
-            </button>
-            <button type="submit" class="btn-primary">
-              Simpan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- MODAL COMPONENT -->
+    <JadwalModal
+      v-if="showModal"
+      :model-value="form"
+      :tps-list="tpsList"
+      @save="save"
+      @close="showModal = false"
+    />
   </section>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import JadwalModal from '@/components/jadwalModal.vue'
 
-/* ======================
-   DUMMY TPS (nanti ganti API / Pinia)
-====================== */
+/* TPS (nanti ganti API) */
 const tpsList = ref([
   { id: 1, nama: 'TPS Pasar Utara', desa: 'A' },
   { id: 2, nama: 'TPS Masjid Besar', desa: 'B' }
 ])
-
-/* ======================
-   STATE
-====================== */
-const showModal = ref(false)
 
 const jadwalList = ref([
   {
@@ -125,18 +72,17 @@ const jadwalList = ref([
   }
 ])
 
-const form = ref({
-  id: null,
-  tpsId: '',
-  interval: 1,
-  lastPickup: ''
-})
+const showModal = ref(false)
+const form = ref(null)
 
-/* ======================
-   METHODS
-====================== */
+/* METHODS */
 function openAdd() {
-  resetForm()
+  form.value = {
+    id: null,
+    tpsId: '',
+    interval: 1,
+    lastPickup: ''
+  }
   showModal.value = true
 }
 
@@ -145,39 +91,22 @@ function openEdit(j) {
   showModal.value = true
 }
 
-function closeModal() {
-  showModal.value = false
-}
-
-function save() {
-  if (form.value.id) {
-    const i = jadwalList.value.findIndex(
-      j => j.id === form.value.id
-    )
-    jadwalList.value[i] = { ...form.value }
+function save(data) {
+  if (data.id) {
+    const i = jadwalList.value.findIndex(j => j.id === data.id)
+    jadwalList.value[i] = data
   } else {
     jadwalList.value.push({
-      ...form.value,
+      ...data,
       id: Date.now()
     })
   }
-  closeModal()
+  showModal.value = false
 }
 
 function remove(id) {
   if (confirm('Hapus jadwal ini?')) {
-    jadwalList.value = jadwalList.value.filter(
-      j => j.id !== id
-    )
-  }
-}
-
-function resetForm() {
-  form.value = {
-    id: null,
-    tpsId: '',
-    interval: 1,
-    lastPickup: ''
+    jadwalList.value = jadwalList.value.filter(j => j.id !== id)
   }
 }
 

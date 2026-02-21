@@ -1,6 +1,5 @@
 <template>
   <section class="content-section active">
-    <!-- Header -->
     <div class="section-header">
       <h2>Kelola Kendaraan</h2>
       <button class="btn-primary" @click="openAdd">
@@ -9,19 +8,19 @@
       </button>
     </div>
 
-    <!-- Desktop Table -->
     <div class="table-container desktop-only">
       <table class="data-table">
         <thead>
           <tr>
             <th>No</th>
-            <th>Nomor Kendaraan</th>
-            <th>Plat Nomor</th>
-            <th>Kapasitas (kg)</th>
+            <th>Nomor</th>
+            <th>Plat</th>
+            <th>Kapasitas</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
         </thead>
+
         <tbody>
           <tr v-for="(k, i) in kendaraanList" :key="k.id">
             <td>{{ i + 1 }}</td>
@@ -46,67 +45,22 @@
       </table>
     </div>
 
-    <!-- MODAL -->
-    <div class="modal show" v-if="showModal">
-      <div class="modal-overlay" @click="closeModal"></div>
-
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>{{ form.id ? 'Edit Kendaraan' : 'Tambah Kendaraan' }}</h2>
-          <button class="modal-close" @click="closeModal">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-
-        <form class="modal-body" @submit.prevent="save">
-          <div class="form-group">
-            <label>Nomor Kendaraan</label>
-            <input v-model="form.nomor" required placeholder="Truck 01" />
-          </div>
-
-          <div class="form-group">
-            <label>Plat Nomor</label>
-            <input v-model="form.plat" required placeholder="H 1234 AB" />
-          </div>
-
-          <div class="form-group">
-            <label>Kapasitas (kg)</label>
-            <input
-              type="number"
-              v-model.number="form.kapasitas"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Status</label>
-            <select v-model="form.status">
-              <option value="available">Tersedia</option>
-              <option value="maintenance">Maintenance</option>
-            </select>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn-secondary" @click="closeModal">
-              Batal
-            </button>
-            <button type="submit" class="btn-primary">
-              Simpan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- MODAL COMPONENT -->
+    <KendaraanModal
+      v-if="showModal"
+      :model-value="selected"
+      @close="showModal = false"
+      @save="save"
+    />
   </section>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import KendaraanModal from '@/components/kendaraanModal.vue'
 
-/* ======================
-   STATE
-====================== */
 const showModal = ref(false)
+const selected = ref({})
 
 const kendaraanList = ref([
   {
@@ -118,68 +72,40 @@ const kendaraanList = ref([
   }
 ])
 
-const form = ref({
-  id: null,
-  nomor: '',
-  plat: '',
-  kapasitas: '',
-  status: 'available'
-})
-
-/* ======================
-   METHODS
-====================== */
 function openAdd() {
-  resetForm()
-  showModal.value = true
-}
-
-function openEdit(k) {
-  form.value = { ...k }
-  showModal.value = true
-}
-
-function closeModal() {
-  showModal.value = false
-}
-
-function save() {
-  if (form.value.id) {
-    const i = kendaraanList.value.findIndex(
-      k => k.id === form.value.id
-    )
-    kendaraanList.value[i] = { ...form.value }
-  } else {
-    kendaraanList.value.push({
-      ...form.value,
-      id: Date.now()
-    })
-  }
-  closeModal()
-}
-
-function remove(id) {
-  if (confirm('Hapus kendaraan ini?')) {
-    kendaraanList.value = kendaraanList.value.filter(
-      k => k.id !== id
-    )
-  }
-}
-
-function resetForm() {
-  form.value = {
+  selected.value = {
     id: null,
     nomor: '',
     plat: '',
     kapasitas: '',
     status: 'available'
   }
+  showModal.value = true
 }
 
-function statusText(status) {
-  return status === 'available'
-    ? 'Tersedia'
-    : 'Maintenance'
+function openEdit(k) {
+  selected.value = { ...k }
+  showModal.value = true
+}
+
+function save(data) {
+  if (data.id) {
+    const i = kendaraanList.value.findIndex(k => k.id === data.id)
+    kendaraanList.value[i] = data
+  } else {
+    kendaraanList.value.push({ ...data, id: Date.now() })
+  }
+  showModal.value = false
+}
+
+function remove(id) {
+  if (confirm('Hapus kendaraan ini?')) {
+    kendaraanList.value = kendaraanList.value.filter(k => k.id !== id)
+  }
+}
+
+function statusText(s) {
+  return s === 'available' ? 'Tersedia' : 'Maintenance'
 }
 </script>
 
