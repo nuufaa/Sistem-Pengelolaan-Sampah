@@ -366,20 +366,16 @@
 <script setup>
 // import LoginModal from '@/components/LoginModal.vue'
 
-import { ref, onMounted, computed } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { wastePoints, scheduleData, tpsData } from '@/services/wasteService.js'
+import { ref, onMounted, watch, nextTick } from 'vue'
+import { fetchTitikTps, scheduleData, tpsData } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
-
-
-// Simulasi role user (ubah ke true untuk mode petugas)
-// let isOfficer = ref(false); // false = masyarakat, true = petugas
 
 // Mobile detection
 let isMobile = ref(window.innerWidth <= 768);
@@ -402,11 +398,14 @@ const markerCluster = ref(null)
 let markers = ref([]);
 
 const selectedVillage = ref('all')
-const selectedStatus = ref(['normal', 'warning', 'danger'])
+const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
 
 const loginRef = ref(null)
-
 const reportRef = ref(null)
+
+const wastePoints = ref([])
+const loading = ref(false)
+const error = ref(null)
 
 function openReport() {
     console.log('openReport called, reportRef=', reportRef.value)
@@ -445,24 +444,26 @@ function getCurrentDayName(date = new Date()) {
 }
 
 function getTodaySchedules() {
+    if (!Array.isArray(wastePoints.value)) return []
+
     const today = new Date()
     const todayName = getCurrentDayName(today)
     
-    const schedules = wastePoints
+    const schedules = wastePoints.value
         .filter(point => {
             // Cek apakah jadwal mengandung hari ini
-            return point.schedule.includes(todayName)
+            return point.hari_pengambilan?.includes(todayName)
         })
         .map(point => {
             // Ekstrak waktu dari schedule (format: "Hari1 & Hari2, HH.MM WIB")
-            const timeMatch = point.schedule.match(/(\d{2}\.\d{2})/)
+            const timeMatch = point.hari_pengambilan.match(/(\d{2}\.\d{2})/)
             const time = timeMatch ? timeMatch[1] : '-'
             
             return {
                 id: point.id,
-                name: point.name,
+                name: point.nama_tps,
                 time: time + ' WIB',
-                address: point.address
+                address: point.alamat
             }
         })
     
@@ -520,7 +521,7 @@ function openScheduleModal(desa) {
             <div class="tps-schedule-item ${statusClass}">
                 <div class="tps-item-header">
                     <span class="material-icons">delete</span>
-                    <span class="tps-item-name">${tps.name}</span>
+                    <span class="tps-item-name">${tps.nama_tps}</span>
                 </div>
                 <div class="tps-item-body">
                     <div class="tps-item-info">
@@ -545,7 +546,7 @@ function openScheduleModal(desa) {
     modalContent.innerHTML = html
     
     // Update modal title
-    document.getElementById('scheduleModalTitle').textContent = `Jadwal Lengkap TPS ${desa.desa}`
+    document.getElementById('scheduleModalTitle').textContent = `Jadwal Lengkap TPS ${desa.dusun}`
     
     // Show modal with centered display
     const modalSchedule = document.getElementById('modalSchedule')
@@ -563,28 +564,47 @@ function initializeDateTime() {
     todaySchedules.value = getTodaySchedules()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    loading.value = true
+
+    //Ambil data dulu
+    const result = await fetchTitikTps()
+    wastePoints.value = Array.isArray(result) ? result : []
+
+    //Set tanggal & schedule
     initializeDateTime()
-    
-    // Modal schedule event listeners
-    const modalSchedule = document.getElementById('modalSchedule')
-    const modalScheduleClose = document.getElementById('modalScheduleClose')
-    const modalScheduleOverlay = document.getElementById('modalScheduleOverlay')
-    
-    if (modalScheduleClose) {
-        modalScheduleClose.addEventListener('click', closeScheduleModal)
-    }
-    
-    if (modalScheduleOverlay) {
-        modalScheduleOverlay.addEventListener('click', closeScheduleModal)
-    }
-    
+
+    //Inisialisasi map
     initMap()
+
+    //Render marker setelah map siap
+    nextTick(() => {
+      updateMarkers()
+    })
+
+  } catch (err) {
+    console.error('Gagal ambil data TPS:', err.message)
+    wastePoints.value = []
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+
+  // Event listener modal (tidak perlu di dalam try)
+  const modalScheduleClose = document.getElementById('modalScheduleClose')
+  const modalScheduleOverlay = document.getElementById('modalScheduleOverlay')
+
+  if (modalScheduleClose) {
+    modalScheduleClose.addEventListener('click', closeScheduleModal)
+  }
+
+  if (modalScheduleOverlay) {
+    modalScheduleOverlay.addEventListener('click', closeScheduleModal)
+  }
 })
 
 function initMap() {
-    // map.value = L.map('map').setView([-8.5833, 116.1167], 14)
-
     //kordinat desa bumbung
     map.value = L.map('map').setView([-8.384399, 116.542617], 14)
 
@@ -593,24 +613,58 @@ function initMap() {
     }).addTo(map.value)
 
     markerCluster.value = L.markerClusterGroup()
-    updateMarkers()
     map.value.addLayer(markerCluster.value)
+    // updateMarkers()
+    watch(wastePoints, () => {
+        if (map.value) {
+            updateMarkers()
+        }
+    })
 }
 
-// ===== Create Popup Content =====
+function getMarkerIcon(status_tps) {
+    const colors = {
+        normal: '#4CAF50',
+        hampir_penuh: '#FFC107',
+        penuh: '#F44336'
+    };
+
+    return L.divIcon({
+        className: 'custom-marker',
+        html: `
+            <div style="
+                width: 30px;
+                height: 30px;
+                background: ${colors[status_tps]};
+                border: 3px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <span class="material-icons" style="font-size: 16px; color: white;">delete</span>
+            </div>
+        `,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+}
+
+// pop up titik tps
 function createPopupContent(point) {
-    const statusClass = point.status;
+    const statusClass = point.status_tps;
     const statusText = {
         normal: 'Normal',
-        warning: 'Hampir Penuh',
-        danger: 'Penuh'
-    }[point.status];
+        hampir_penuh: 'Hampir Penuh',
+        penuh: 'Penuh'
+    }[point.status_tps];
 
     return `
         <div class="popup-content">
             <div class="popup-header">
                 <span class="material-icons">delete</span>
-                <div class="popup-title">${point.name}</div>
+                <div class="popup-title">${point.nama_tps}</div>
             </div>
             <div class="popup-body">
                 <div class="popup-info">
@@ -621,11 +675,11 @@ function createPopupContent(point) {
                 </div>
                 <div class="popup-info">
                     <span class="material-icons">location_on</span>
-                    <span>${point.address}</span>
+                    <span>${point.alamat}</span>
                 </div>
                 <div class="popup-info">
                     <span class="material-icons">schedule</span>
-                    <span>${point.schedule}</span>
+                    <span>${point.hari_pengambilan}</span>
                 </div>
                 <div class="popup-info">
                     <span class="material-icons">update</span>
@@ -647,14 +701,17 @@ function createPopupContent(point) {
 function updateMarkers() {
     markerCluster.value.clearLayers()
 
-    const filtered = wastePoints.filter(p =>
+    const filtered = wastePoints.value.filter(p =>
     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
-    selectedStatus.value.includes(p.status)
+    selectedStatus.value.includes(p.status_tps)
     )
 
     filtered.forEach(point => {
-    const marker = L.marker([point.lat, point.lng])
-    markerCluster.value.addLayer(marker)
+    const marker = L.marker(
+        [parseFloat(point.latitude), parseFloat(point.longitude)],
+        { icon: getMarkerIcon(point.status_tps) }
+    );
+    // markerCluster.value.addLayer(marker)
 
     // Use popup for both desktop and mobile
     marker.bindPopup(createPopupContent(point), {

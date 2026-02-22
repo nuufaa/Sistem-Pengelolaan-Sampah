@@ -27,8 +27,22 @@ async function getAllTps(req, res) {
 
         return res.json(data);
     } catch (error) {
+        console.error("ERROR TPS:", error)
         return res.status(500).json({
             message: "Gagal mengambil data TPS"
+        });
+    }
+}
+
+async function getAllTpsJadwal(req, res) {
+    try {
+        const data = await TpsModel.findAllJadwal;
+
+        return res.json(data);
+    } catch (error) {
+        console.error("ERROR TPS:", error)
+        return res.status(500).json({
+            message: "Gagal mengambil data jadwal TPS"
         });
     }
 }
@@ -140,6 +154,7 @@ async function getTpsStatistics(req, res) {
 module.exports = {
     createTps,
     getAllTps,
+    getAllTpsJadwal,
     getTpsById,
     updateTps,
     deleteTps,

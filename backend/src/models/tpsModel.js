@@ -37,6 +37,35 @@ async function findAll() {
     return rows;
 }
 
+async function findAllJadwal() {
+    const [rows] = await db.query(
+        `SELECT 
+            t.id_tps,
+            t.nama_tps,
+            t.alamat,
+            t.latitude,
+            t.longitude,
+            t.status_tps,
+            jadwal.hari_pengambilan,
+            jadwal.tgl_terakhir_diambil
+
+        FROM tps t
+
+        LEFT JOIN (
+            SELECT 
+                id_tps,
+                GROUP_CONCAT(hari_pengambilan SEPARATOR ', ') AS hari_pengambilan,
+                MAX(tgl_terakhir_diambil) AS tgl_terakhir_diambil
+            FROM jadwal_pengambilan
+            GROUP BY id_tps
+        ) jadwal ON t.id_tps = jadwal.id_tps
+
+        ORDER BY t.id_tps DESC
+    `);
+
+    return rows;
+}
+
 async function update(id, data) {
     const {
         nama_tps,
