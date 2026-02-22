@@ -24,12 +24,12 @@
         <tbody>
           <tr v-for="(k, i) in kendaraanList" :key="k.id">
             <td>{{ i + 1 }}</td>
-            <td>{{ k.nomor }}</td>
-            <td>{{ k.plat }}</td>
-            <td>{{ k.kapasitas }}</td>
+            <td>{{ k.nomor_kendaraan }}</td>
+            <td>{{ k.nomor_polisi }}</td>
+            <td>{{ k.kapasitas_angkut }}</td>
             <td>
-              <span class="status-badge" :class="k.status">
-                {{ statusText(k.status) }}
+              <span class="status-badge" :class="k.status_kendaraan">
+                {{ statusText(k.status_kendaraan) }}
               </span>
             </td>
             <td class="action-buttons">
@@ -57,7 +57,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import api, { apiFetch } from '@/services/api'
+import api from '@/services/api'
 import KendaraanModal from '@/components/kendaraanModal.vue'
 
 const showModal = ref(false)
@@ -72,7 +72,7 @@ async function fetchKendaraan() {
       throw new Error('TOKEN_NOT_FOUND')
     }
 
-    const res = await api.get('/kendaraan',{
+    const res = await api.get('/api/kendaraan',{
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -130,7 +130,7 @@ async function remove(id) {
 }
 
 function statusText(s) {
-  return s === 'available' ? 'Tersedia' : 'Maintenance'
+  return s === 'tersedia' ? 'Tersedia' : 'Perbaikan'
 }
 </script>
 
