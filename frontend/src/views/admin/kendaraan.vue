@@ -56,21 +56,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import api, { apiFetch } from '@/services/api'
 import KendaraanModal from '@/components/kendaraanModal.vue'
 
 const showModal = ref(false)
 const selected = ref({})
 
-const kendaraanList = ref([
-  {
-    id: 1,
-    nomor: 'Truck 01',
-    plat: 'H 1234 AB',
-    kapasitas: 5000,
-    status: 'available'
+const kendaraanList = ref([])
+
+async function fetchKendaraan() {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw new Error('TOKEN_NOT_FOUND')
+    }
+
+    const res = await api.get('/kendaraan',{
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+    )
+    kendaraanList.value = res.data
+  } catch (err) {
+    console.error('Gagal ambil kendaraan', err)
   }
-])
+}
+
+onMounted(fetchKendaraan)
 
 function openAdd() {
   selected.value = {
@@ -88,19 +102,30 @@ function openEdit(k) {
   showModal.value = true
 }
 
-function save(data) {
-  if (data.id) {
-    const i = kendaraanList.value.findIndex(k => k.id === data.id)
-    kendaraanList.value[i] = data
-  } else {
-    kendaraanList.value.push({ ...data, id: Date.now() })
+async function save(data) {
+  try {
+    if (data.id) {
+      // UPDATE
+      await api.put(`/kendaraan/${data.id}`, data)
+    } else {
+      // CREATE
+      await api.post('/kendaraan', data)
+    }
+    await fetchKendaraan()
+    showModal.value = false
+  } catch (err) {
+    console.error('Gagal simpan kendaraan', err)
   }
-  showModal.value = false
 }
 
-function remove(id) {
-  if (confirm('Hapus kendaraan ini?')) {
-    kendaraanList.value = kendaraanList.value.filter(k => k.id !== id)
+async function remove(id) {
+  if (!confirm('Yakin ingin menghapus kendaraan ini?')) return
+
+  try {
+    await api.delete(`/kendaraan/${id}`)
+    await fetchKendaraan()
+  } catch (err) {
+    console.error('Gagal hapus kendaraan', err)
   }
 }
 
