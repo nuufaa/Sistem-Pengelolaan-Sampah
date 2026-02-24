@@ -57,6 +57,7 @@ async function getKendaraanById(req, res) {
 
 async function updateKendaraan(req, res) {
   try {
+    console.log('Update kendaraan', req.body);
     await KendaraanModel.update(req.params.id, req.body);
 
     return res.json({

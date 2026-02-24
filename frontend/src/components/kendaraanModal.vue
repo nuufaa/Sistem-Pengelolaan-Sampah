@@ -4,7 +4,7 @@
 
     <div class="modal-content">
       <div class="modal-header">
-        <h2>{{ modelValue.id ? 'Edit Kendaraan' : 'Tambah Kendaraan' }}</h2>
+        <h2>{{ local.id_kendaraan ? 'Edit Kendaraan' : 'Tambah Kendaraan' }}</h2>
         <button class="modal-close" @click="$emit('close')">
           <span class="material-icons">close</span>
         </button>
@@ -13,24 +13,24 @@
       <form class="modal-body" @submit.prevent="submit">
         <div class="form-group">
           <label>Nomor Kendaraan</label>
-          <input v-model="local.nomor" required />
+          <input v-model="local.nomor_kendaraan" placeholder="Contoh: Truck 01"required />
         </div>
 
         <div class="form-group">
           <label>Plat Nomor</label>
-          <input v-model="local.plat" required />
+          <input v-model="local.nomor_polisi" placeholder="Contoh: H-123-ABC" required />
         </div>
 
         <div class="form-group">
           <label>Kapasitas (kg)</label>
-          <input type="number" v-model.number="local.kapasitas" required />
+          <input type="number" v-model.number="local.kapasitas_angkut" placeholder="Contoh: 5000" required />
         </div>
 
         <div class="form-group">
           <label>Status</label>
-          <select v-model="local.status">
-            <option value="available">Tersedia</option>
-            <option value="maintenance">Maintenance</option>
+          <select v-model="local.status_kendaraan">
+            <option value="tersedia">Tersedia</option>
+            <option value="perbaikan">Perbaikan</option>
           </select>
         </div>
 
@@ -60,11 +60,11 @@ const props = defineProps({
 const emit = defineEmits(['save', 'close'])
 
 const local = reactive({
-  id: null,
-  nomor: '',
-  plat: '',
-  kapasitas: '',
-  status: 'available'
+  id_kendaraan: null,
+  nomor_kendaraan: '',
+  nomor_polisi: '',
+  kapasitas_angkut: '',
+  status_kendaraan: 'tersedia'
 })
 
 watch(
