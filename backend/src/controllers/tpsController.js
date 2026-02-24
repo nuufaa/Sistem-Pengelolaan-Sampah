@@ -36,7 +36,7 @@ async function getAllTps(req, res) {
 
 async function getAllTpsJadwal(req, res) {
     try {
-        const data = await TpsModel.findAllJadwal;
+        const data = await TpsModel.findAllJadwal();
 
         return res.json(data);
     } catch (error) {
