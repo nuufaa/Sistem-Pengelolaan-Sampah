@@ -34,14 +34,14 @@
         <tbody>
           <tr v-for="(item, index) in filteredData" :key="item.id">
             <td>{{ index + 1 }}</td>
-            <td>{{ item.tps.nama }}</td>
-            <td>{{ item.tps.desa }}</td>
-            <td>Setiap {{ item.interval }} hari</td>
-            <td>{{ item.lastPickup }}</td>
-            <td>{{ item.kendaraan || '-' }}</td>
+            <td>{{ item.tps.nama_tps }}</td>
+            <td>{{ item.tps.nama_dusun }}</td>
+            <td>Setiap {{ item.hari_pengambilan }} hari</td>
+            <td>{{ item.tgl_terakhir_diambil }}</td>
+            <td>{{ item.id_kendaraan || '-' }}</td>
             <td>
-              {{ item.volume
-                ? item.volume + ' ' + item.volumeUnit
+              {{ item.volume_sampah
+                ? item.volume_sampah + ' ' + item.volumeUnit
                 : '-' }}
             </td>
             <td>

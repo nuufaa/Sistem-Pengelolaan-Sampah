@@ -461,9 +461,9 @@ function getTodaySchedules() {
             
             return {
                 id: point.id,
-                name: point.nama_tps,
+                nama_tps: point.nama_tps,
                 time: time + ' WIB',
-                address: point.alamat
+                alamat: point.alamat
             }
         })
     
@@ -557,7 +557,6 @@ function closeScheduleModal() {
     isModalScheduleOpen.value = false
     document.getElementById('modalSchedule').style.display = 'none'
 }
-
 
 function initializeDateTime() {
     currentDate.value = formatDate()

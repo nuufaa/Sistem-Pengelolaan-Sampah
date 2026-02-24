@@ -1,4 +1,5 @@
 const {db} = require("../config/db");
+const { toString } = require('../utils/hariJadwal');
 
 async function create(data) {
     const {
@@ -62,6 +63,15 @@ async function findAllJadwal() {
 
         ORDER BY t.id_tps DESC
     `);
+
+    rows.forEach(row => {
+        if (row.hari_pengambilan) {
+            row.hari_pengambilan = row.hari_pengambilan
+                .split(',')
+                .map(h => toString(parseInt(h.trim())))
+                .join(', ');
+        }
+    });
 
     return rows;
 }
@@ -135,6 +145,7 @@ async function getStatistics() {
 module.exports = {
     create,
     findAll,
+    findAllJadwal,
     findById,
     update,
     remove,
