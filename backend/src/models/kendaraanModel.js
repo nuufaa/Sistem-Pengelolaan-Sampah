@@ -42,7 +42,7 @@ async function update(id, data) {
     } = data;
 
     await db.query(
-        `UPDATE tps SET nomor_kendaraan = ?, nomor_polisi = ?, kapasitas_angkut = ?, status_kendaraan = ?,
+        `UPDATE kendaraan SET nomor_kendaraan = ?, nomor_polisi = ?, kapasitas_angkut = ?, status_kendaraan = ?
         WHERE id_kendaraan = ?`,
         [nomor_kendaraan, nomor_polisi, kapasitas_angkut, status_kendaraan, id]
     );

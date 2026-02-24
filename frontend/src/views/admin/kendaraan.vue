@@ -22,7 +22,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="(k, i) in kendaraanList" :key="k.id">
+          <tr v-for="(k, i) in kendaraanList" :key="k.id_kendaraan">
             <td>{{ i + 1 }}</td>
             <td>{{ k.nomor_kendaraan }}</td>
             <td>{{ k.nomor_polisi }}</td>
@@ -36,7 +36,7 @@
               <button class="btn-action edit" @click="openEdit(k)">
                 <span class="material-icons">edit</span>
               </button>
-              <button class="btn-action delete" @click="remove(k.id)">
+              <button class="btn-action delete" @click="remove(k.id_kendaraan)">
                 <span class="material-icons">delete</span>
               </button>
             </td>
@@ -60,24 +60,13 @@ import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 import KendaraanModal from '@/components/kendaraanModal.vue'
 
-const showModal = ref(false)
-const selected = ref({})
-
 const kendaraanList = ref([])
+const showModal = ref(false)
+const selected = ref(null)
 
 async function fetchKendaraan() {
   try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      throw new Error('TOKEN_NOT_FOUND')
-    }
-
-    const res = await api.get('/api/kendaraan',{
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-    )
+    const res = await api.get('/api/kendaraan')
     kendaraanList.value = res.data
   } catch (err) {
     console.error('Gagal ambil kendaraan', err)
@@ -88,11 +77,11 @@ onMounted(fetchKendaraan)
 
 function openAdd() {
   selected.value = {
-    id: null,
-    nomor: '',
-    plat: '',
-    kapasitas: '',
-    status: 'available'
+    id_kendaraan: null,
+    nomor_kendaraan: '',
+    nomor_polisi: '',
+    kapasitas_angkut: '',
+    status_kendaraan: 'tersedia'
   }
   showModal.value = true
 }
@@ -104,12 +93,13 @@ function openEdit(k) {
 
 async function save(data) {
   try {
-    if (data.id) {
+    if (data.id_kendaraan) {
       // UPDATE
-      await api.put(`/kendaraan/${data.id}`, data)
+      console.log('Update kendaraan', data)
+      await api.put(`/api/kendaraan/${data.id_kendaraan}`, data)
     } else {
       // CREATE
-      await api.post('/kendaraan', data)
+      await api.post('/api/kendaraan', data)
     }
     await fetchKendaraan()
     showModal.value = false
@@ -122,7 +112,7 @@ async function remove(id) {
   if (!confirm('Yakin ingin menghapus kendaraan ini?')) return
 
   try {
-    await api.delete(`/kendaraan/${id}`)
+    await api.delete(`/api/kendaraan/${id}`)
     await fetchKendaraan()
   } catch (err) {
     console.error('Gagal hapus kendaraan', err)
