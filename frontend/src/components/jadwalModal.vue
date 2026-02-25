@@ -4,7 +4,7 @@
 
     <div class="modal-content">
       <div class="modal-header">
-        <h2>{{ localForm.id ? 'Edit Jadwal' : 'Tambah Jadwal' }}</h2>
+        <h2>{{ localForm.id_jadwal ? 'Edit Jadwal' : 'Tambah Jadwal' }}</h2>
         <button class="modal-close" @click="$emit('close')">
           <span class="material-icons">close</span>
         </button>
@@ -13,33 +13,45 @@
       <form class="modal-body" @submit.prevent="submit">
         <div class="form-group">
           <label>TPS</label>
-          <select v-model.number="localForm.tpsId" required>
+          <select v-model.number="localForm.id_tps" required>
             <option value="">Pilih TPS</option>
             <option
               v-for="t in tpsList"
-              :key="t.id"
-              :value="t.id"
+              :key="t.id_tps"
+              :value="t.id_tps"
             >
-              {{ t.nama }} (Desa {{ t.desa }})
+              {{ t.nama_tps }} 
             </option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Interval Pengambilan (Hari)</label>
-          <input
-            type="number"
-            min="1"
-            max="30"
-            v-model.number="localForm.interval"
-            required
-          />
+          <label>Hari Pengambilan</label>
+          <select v-model.number="localForm.hari_pengambilan" required>
+            <option value="">Pilih Hari Pengambilan</option>
+            <option value="0">Senin</option>
+            <option value="1">Selasa</option>
+            <option value="2">Rabu</option>
+            <option value="3">Kamis</option>
+            <option value="4">Jumat</option>
+            <option value="5">Sabtu</option>
+            <option value="6">Minggu</option>
+          </select>
           <small>Pengambilan dilakukan setiap N hari</small>
         </div>
 
         <div class="form-group">
-          <label>Terakhir Diambil</label>
-          <input type="date" v-model="localForm.lastPickup" required />
+          <label>Petugas</label>
+          <select v-model.number="localForm.id_petugas" required>
+            <option value="">Pilih Petugas</option>
+            <option
+              v-for="t in petugasList"
+              :key="t.id_petugas"
+              :value="t.id_petugas"
+            >
+              {{ t.nama }}
+            </option>
+          </select>
         </div>
 
         <div class="modal-footer">
@@ -64,27 +76,32 @@ import { reactive, watch } from 'vue'
 
 const props = defineProps({
   modelValue: Object,
-  tpsList: Array
+  tpsList: Array,
+  petugasList: Array
 })
 
 const emit = defineEmits(['save', 'close'])
 
 const localForm = reactive({
-  id: null,
-  tpsId: '',
-  interval: 1,
-  lastPickup: ''
+  id_jadwal: '',
+  id_tps: '',
+  id_petugas: '',
+  hari_pengambilan: '',
+  tgl_terakhir_diambil: null
 })
 
 watch(
   () => props.modelValue,
   val => {
-    Object.assign(localForm, val || {
-      id: null,
-      tpsId: '',
-      interval: 1,
-      lastPickup: ''
-    })
+    if (val) {
+      Object.assign(localForm, {
+        id_jadwal: val.id_jadwal,
+        id_tps: Number(val.id_tps), 
+        id_petugas: val.id_petugas,
+        hari_pengambilan: val.hari_pengambilan,
+        tgl_terakhir_diambil: val.tgl_terakhir_diambil
+      })
+    }
   },
   { immediate: true }
 )

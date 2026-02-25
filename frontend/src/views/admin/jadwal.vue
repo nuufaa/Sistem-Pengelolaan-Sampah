@@ -16,24 +16,24 @@
           <tr>
             <th>No</th>
             <th>TPS</th>
-            <th>Desa</th>
-            <th>Interval (Hari)</th>
+            <th>Petugas</th>
+            <th>Hari Pengambilan</th>
             <th>Terakhir Diambil</th>
             <th>Aksi</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(j, i) in jadwalList" :key="j.id">
+          <tr v-for="(j, i) in jadwalList" :key="j.id_jadwal">
             <td>{{ i + 1 }}</td>
-            <td>{{ getTPS(j.tpsId)?.nama }}</td>
-            <td>Desa {{ getTPS(j.tpsId)?.desa }}</td>
-            <td>Setiap {{ j.interval }} hari</td>
-            <td>{{ formatDate(j.lastPickup) }}</td>
+            <td>{{ j.nama_tps }}</td>
+            <td>{{ j.nama}}</td>
+            <td>Setiap {{ j.hari_pengambilan }}</td>
+            <td>{{ formatDate(j.tgl_terakhir_diambil) }}</td>
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(j)">
                 <span class="material-icons">edit</span>
               </button>
-              <button class="btn-action delete" @click="remove(j.id)">
+              <button class="btn-action delete" @click="remove(j.id_jadwal)">
                 <span class="material-icons">delete</span>
               </button>
             </td>
@@ -47,6 +47,7 @@
       v-if="showModal"
       :model-value="form"
       :tps-list="tpsList"
+      :petugas-list="petugasList"
       @save="save"
       @close="showModal = false"
     />
@@ -54,67 +55,101 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted} from 'vue'
+import api from '@/services/api'
 import JadwalModal from '@/components/jadwalModal.vue'
+import { toIndex } from '@/services/hariJadwal'
 
-/* TPS (nanti ganti API) */
-const tpsList = ref([
-  { id: 1, nama: 'TPS Pasar Utara', desa: 'A' },
-  { id: 2, nama: 'TPS Masjid Besar', desa: 'B' }
-])
-
-const jadwalList = ref([
-  {
-    id: 1,
-    tpsId: 1,
-    interval: 3,
-    lastPickup: '2026-01-13'
-  }
-])
-
+const jadwalList = ref([])
+const tpsList = ref([])
 const showModal = ref(false)
 const form = ref(null)
+const petugasList = ref([])
+
+async function fetchJadwal() {
+  const res = await api.get('/api/jadwal')
+  jadwalList.value = res.data
+}
+
+async function fetchTPS() {
+  const res = await api.get('/api/tps')
+  tpsList.value = res.data
+}
+
+async function fetchPetugas() {
+  const res = await api.get('/api/petugas')
+  petugasList.value = res.data
+}
+
+onMounted(() => {
+  // fetchPetugas()
+  fetchJadwal()
+  fetchTPS()
+})
 
 /* METHODS */
 function openAdd() {
   form.value = {
-    id: null,
-    tpsId: '',
-    interval: 1,
-    lastPickup: ''
+    id_jadwal: null,
+    id_tps: ' ',
+    id_petugas: ' ',
+    hari_pengambilan: ' ',
+    tgl_terakhir_diambil: null
   }
   showModal.value = true
 }
 
-function openEdit(j) {
-  form.value = { ...j }
+function openEdit(jadwal) {
+  form.value = {
+    ...jadwal,
+    hari_pengambilan:
+      typeof jadwal.hari_pengambilan === 'string'
+        ? toIndex(jadwal.hari_pengambilan)
+        : jadwal.hari_pengambilan
+  }
+
   showModal.value = true
 }
 
-function save(data) {
-  if (data.id) {
-    const i = jadwalList.value.findIndex(j => j.id === data.id)
-    jadwalList.value[i] = data
-  } else {
-    jadwalList.value.push({
+async function save(data) {
+  try {
+    const payload = {
       ...data,
-      id: Date.now()
-    })
+      hari_pengambilan:
+        typeof data.hari_pengambilan === 'string'
+          ? toIndex(data.hari_pengambilan)
+          : data.hari_pengambilan
+    }
+
+    if (data.id_jadwal) {
+      await api.put(`/api/jadwal/${data.id_jadwal}`, payload)
+    } else {
+      await api.post('/api/jadwal', payload)
+    }
+
+    showModal.value = false
+    await fetchJadwal()
+
+  } catch (error) {
+    console.error(error)
+    alert('Gagal menyimpan jadwal')
   }
-  showModal.value = false
 }
 
-function remove(id) {
+async function remove(id) {
   if (confirm('Hapus jadwal ini?')) {
-    jadwalList.value = jadwalList.value.filter(j => j.id !== id)
+    await api.delete(`/api/jadwal/${id}`)
+    await fetchJadwal()
   }
 }
 
 function getTPS(id) {
-  return tpsList.value.find(t => t.id === id)
+  return tpsList.value.find(t => t.id_tps === Number(id))
 }
 
 function formatDate(date) {
+  if (!date) return 'Belum pernah diambil'
+
   return new Date(date).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',

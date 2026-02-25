@@ -4,7 +4,7 @@
 
     <div class="modal-content">
       <div class="modal-header">
-        <h2>{{ localForm.id ? 'Edit Petugas' : 'Tambah Petugas' }}</h2>
+        <h2>{{ localForm.id_petugas ? 'Edit Petugas' : 'Tambah Petugas' }}</h2>
         <button class="modal-close" @click="$emit('close')">
           <span class="material-icons">close</span>
         </button>
@@ -16,17 +16,17 @@
           <input v-model="localForm.nama" required />
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>NIP *</label>
           <input v-model="localForm.nip" required />
-        </div>
+        </div> -->
 
         <div class="form-group">
           <label>No. HP *</label>
-          <input v-model="localForm.hp" required />
+          <input v-model="localForm.no_telp" required />
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>Desa Tugas *</label>
           <select v-model="localForm.desa" required>
             <option value="">Pilih Desa</option>
@@ -34,11 +34,11 @@
             <option value="B">Desa B</option>
             <option value="All">Semua Desa</option>
           </select>
-        </div>
+        </div> -->
 
         <div class="form-group">
           <label>Status *</label>
-          <select v-model="localForm.status" required>
+          <select v-model="localForm.status_petugas" required>
             <option value="aktif">Aktif</option>
             <option value="nonaktif">Non-Aktif</option>
           </select>
@@ -72,12 +72,10 @@ const props = defineProps({
 const emit = defineEmits(['save', 'close'])
 
 const localForm = reactive({
-  id: null,
+  id_petugas: null,
   nama: '',
-  nip: '',
-  hp: '',
-  desa: '',
-  status: 'aktif'
+  no_telp: '',
+  status_petugas: 'aktif'
 })
 
 watch(
@@ -86,12 +84,10 @@ watch(
     Object.assign(
       localForm,
       val || {
-        id: null,
+        id_petugas: null,
         nama: '',
-        nip: '',
-        hp: '',
-        desa: '',
-        status: 'aktif'
+        no_telp: '',
+        status_petugas: 'aktif'
       }
     )
   },

@@ -16,31 +16,27 @@
           <tr>
             <th>No</th>
             <th>Nama</th>
-            <th>NIP</th>
             <th>No. HP</th>
-            <th>Desa</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr v-for="(p, i) in petugasList" :key="p.id">
+          <tr v-for="(p, i) in petugasList" :key="p.id_petugas">
             <td>{{ i + 1 }}</td>
             <td>{{ p.nama }}</td>
-            <td>{{ p.nip }}</td>
-            <td>{{ p.hp }}</td>
-            <td>Desa {{ p.desa }}</td>
+            <td>{{ p.no_telp }}</td>
             <td>
-              <span class="status-badge" :class="p.status">
-                {{ p.status === 'aktif' ? 'Aktif' : 'Non-Aktif' }}
+              <span class="status-badge" :class="p.status_petugas">
+                {{ p.status_petugas === 'aktif' ? 'Aktif' : 'Non-Aktif' }}
               </span>
             </td>
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(p)">
                 <span class="material-icons">edit</span>
               </button>
-              <button class="btn-action delete" @click="remove(p.id)">
+              <button class="btn-action delete" @click="remove(p.id_petugas)">
                 <span class="material-icons">delete</span>
               </button>
             </td>
@@ -60,32 +56,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import PetugasModal from '@/components/petugasModal.vue'
 
-const petugasList = ref([
-  {
-    id: 1,
-    nama: 'Budi Santoso',
-    nip: '1987654321',
-    hp: '08123456789',
-    desa: 'A',
-    status: 'aktif'
-  }
-])
-
+const petugasList = ref([])
 const showModal = ref(false)
 const form = ref(null)
+
+async function fetchPetugas() {
+  const res = await api.get('/api/petugas')
+  petugasList.value = res.data
+}
+
+onMounted(fetchPetugas)
 
 /* METHODS */
 function openAdd() {
   form.value = {
-    id: null,
+    id_petugas: null,
     nama: '',
-    nip: '',
-    hp: '',
-    desa: '',
-    status: 'aktif'
+    no_telp: '',
+    status_petugas: 'aktif'
   }
   showModal.value = true
 }
@@ -95,24 +86,41 @@ function openEdit(p) {
   showModal.value = true
 }
 
-function save(data) {
-  if (data.id) {
-    const i = petugasList.value.findIndex(p => p.id === data.id)
-    petugasList.value[i] = data
+// function save(data) {
+//   if (data.id) {
+//     const i = petugasList.value.findIndex(p => p.id === data.id)
+//     petugasList.value[i] = data
+//   } else {
+//     petugasList.value.push({
+//       ...data,
+//       id: Date.now()
+//     })
+//   }
+//   showModal.value = false
+// }
+
+// function remove(id) {
+//   if (confirm('Hapus petugas ini?')) {
+//     petugasList.value = petugasList.value.filter(p => p.id !== id)
+//   }
+// }
+// </script>
+
+async function save(data) {
+  if (data.id_petugas) {
+    await api.put(`/api/petugas/${data.id_petugas}`, data)
   } else {
-    petugasList.value.push({
-      ...data,
-      id: Date.now()
-    })
+    await api.post('/api/petugas', data)
   }
   showModal.value = false
+  await fetchPetugas()
 }
 
-function remove(id) {
+async function remove(id) {
   if (confirm('Hapus petugas ini?')) {
-    petugasList.value = petugasList.value.filter(p => p.id !== id)
+    await api.delete(`/api/petugas/${id}`)
+    await fetchPetugas()
   }
 }
-</script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
