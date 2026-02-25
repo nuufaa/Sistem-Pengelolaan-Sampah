@@ -95,7 +95,6 @@ async function save(data) {
   try {
     if (data.id_kendaraan) {
       // UPDATE
-      console.log('Update kendaraan', data)
       await api.put(`/api/kendaraan/${data.id_kendaraan}`, data)
     } else {
       // CREATE

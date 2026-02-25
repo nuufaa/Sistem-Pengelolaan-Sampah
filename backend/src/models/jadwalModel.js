@@ -1,4 +1,5 @@
 const {db} = require("../config/db");
+const { toString } = require('../utils/hariJadwal');
 
 async function create(data) {
   const {
@@ -29,6 +30,13 @@ async function findAll() {
     JOIN tps t ON jp.id_tps = t.id_tps
     ORDER BY jp.id_jadwal DESC
   `);
+
+  rows.forEach(row => {
+    row.hari_pengambilan =
+      row.hari_pengambilan !== null
+        ? toString(Number(row.hari_pengambilan))
+        : null
+  })
 
   return rows;
 }
@@ -61,9 +69,13 @@ async function update(id, data) {
 
   await db.query(
     `UPDATE jadwal_pengambilan
-     SET id_petugas = ?, id_tps = ?, hari_pengambilan = ?
-     WHERE id_jadwal = ?`,
-    [id_petugas, id_tps, hari_pengambilan, id]
+    SET 
+      hari_pengambilan = ?,
+      id_tps = COALESCE(?, id_tps),
+      id_petugas = COALESCE(?, id_petugas),
+      tgl_terakhir_diambil = COALESCE(?, tgl_terakhir_diambil)
+    WHERE id_jadwal = ?`,
+    [hari_pengambilan, id_tps, id_petugas, data.tgl_terakhir_diambil, id]
   );
 }
 
