@@ -10,6 +10,7 @@ const dusunRoutes = require("./routes/dusunRoutes");
 const jadwalRoutes = require("./routes/jadwalRoutes");
 const kendaraanRoutes = require("./routes/kendaraanRoutes");
 const daftarTugasRoutes = require("./routes/daftarTugasRoutes");
+const petugasRoutes = require("./routes/petugasRoutes");
 const { startScheduler } = require("./services/daftarTugasOtomatisService");
 
 // app.use(cors());
@@ -27,6 +28,7 @@ app.use("/api/dusun", dusunRoutes)
 app.use("/api/jadwal", jadwalRoutes)
 app.use("/api/kendaraan", kendaraanRoutes)
 app.use("/api/daftar-tugas", daftarTugasRoutes);
+app.use("/api/petugas", petugasRoutes);
 
 startScheduler();
 

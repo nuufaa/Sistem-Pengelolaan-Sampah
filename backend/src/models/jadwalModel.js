@@ -65,6 +65,9 @@ async function update(id, data) {
      WHERE id_jadwal = ?`,
     [id_petugas, id_tps, hari_pengambilan, id]
   );
+
+  
+
 }
 
 async function updateTanggalTerakhir(id_jadwal) {
