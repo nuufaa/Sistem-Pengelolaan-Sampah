@@ -83,11 +83,11 @@ const props = defineProps({
 const emit = defineEmits(['save', 'close'])
 
 const localForm = reactive({
-  id_jadwal: '',
+  // id_jadwal: '',
   id_tps: '',
   id_petugas: '',
   hari_pengambilan: '',
-  tgl_terakhir_diambil: null
+  // tgl_terakhir_diambil: null
 })
 
 watch(
@@ -95,11 +95,11 @@ watch(
   val => {
     if (val) {
       Object.assign(localForm, {
-        id_jadwal: val.id_jadwal,
+        // id_jadwal: val.id_jadwal,
         id_tps: Number(val.id_tps), 
         id_petugas: val.id_petugas,
         hari_pengambilan: val.hari_pengambilan,
-        tgl_terakhir_diambil: val.tgl_terakhir_diambil
+        // tgl_terakhir_diambil: val.tgl_terakhir_diambil
       })
     }
   },

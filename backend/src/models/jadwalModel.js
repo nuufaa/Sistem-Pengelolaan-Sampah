@@ -5,16 +5,14 @@ async function create(data) {
   const {
     id_tps,
     hari_pengambilan,
-    tgl_terakhir_diambil,
     id_petugas,
-    id_admin,
   } = data;
 
   const [result] = await db.query(
     `INSERT INTO jadwal_pengambilan
-     (id_tps, hari_pengambilan, tgl_terakhir_diambil, id_petugas, id_admin)
-     VALUES (?, ?, ?, ?, ?)`,
-    [id_tps, hari_pengambilan, tgl_terakhir_diambil, id_petugas, id_admin]
+     (id_tps, hari_pengambilan, id_petugas)
+     VALUES (?, ?, ?)`,
+    [id_tps, hari_pengambilan, id_petugas]
   );
 
   return result.insertId;
