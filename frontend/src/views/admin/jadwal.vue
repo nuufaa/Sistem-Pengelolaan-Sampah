@@ -111,28 +111,54 @@ function openEdit(jadwal) {
   showModal.value = true
 }
 
+// async function save(data) {
+//   try {
+//     const payload = {
+//       ...data,
+//       hari_pengambilan:
+//         typeof data.hari_pengambilan === 'string'
+//           ? toIndex(data.hari_pengambilan)
+//           : data.hari_pengambilan
+//     }
+
+//     if (data.id_jadwal) {
+//       await api.put(`/api/jadwal/${data.id_jadwal}`, payload)
+//     } else {
+//       console.log('Payload untuk tambah jadwal:', payload) // Debug log
+//       await api.post('/api/jadwal', payload)
+//     }
+
+//     showModal.value = false
+//     await fetchJadwal()
+
+//   } catch (error) {
+//     console.error(error)
+//     alert('Gagal menyimpan jadwal')
+//   }
+// }
+
 async function save(data) {
   try {
     const payload = {
-      ...data,
-      hari_pengambilan:
-        typeof data.hari_pengambilan === 'string'
-          ? toIndex(data.hari_pengambilan)
-          : data.hari_pengambilan
+      id_tps: data.id_tps,
+      id_petugas: data.id_petugas,
+      hari_pengambilan: data.hari_pengambilan
     }
 
-    if (data.id_jadwal) {
-      await api.put(`/api/jadwal/${data.id_jadwal}`, payload)
-    } else {
-      await api.post('/api/jadwal', payload)
+    // kirim tgl_terakhir_diambil HANYA kalau ada
+    if (data.tgl_terakhir_diambil) {
+      payload.tgl_terakhir_diambil = data.tgl_terakhir_diambil
     }
+
+    console.log('payload FIX:', payload)
+
+    await api.post('/api/jadwal', payload)
 
     showModal.value = false
     await fetchJadwal()
-
   } catch (error) {
-    console.error(error)
-    alert('Gagal menyimpan jadwal')
+    console.error(error.response?.data || error)
+    alert(error.response?.data?.message || 'Gagal menyimpan jadwal')
   }
 }
 
