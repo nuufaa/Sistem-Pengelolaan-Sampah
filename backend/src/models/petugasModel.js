@@ -1,15 +1,9 @@
 const {db} = require("../config/db");
 
-// async function getPetugas(){
-//     const [rows] = await db.query(
-//         'SELECT id'
-//     )
-// }
-
-async function create({username, password, nama, noTelp, statusPetugas}) {
+async function create({nama, no_telp, status_petugas}) {
     const [result] = await db.query(
-        'INSERT INTO petugas (username, password, nama, noTelp, statusPetugas) VALUES (?, ?, ?, ?, ?)',
-        [username, password, nama, noTelp, statusPetugas]
+        'INSERT INTO petugas (nama, no_telp, status_petugas) VALUES (?, ?, ?)',
+        [nama, no_telp, status_petugas]
     )
     return result.insertId
     
@@ -30,14 +24,15 @@ async function findAll() {
     return rows;
 }
 
-async function update(id_petugas) {
-    const [result] = await db.query(
-        'UPDATE petugas SET username=?, password=?, nama=?, noTelp, statusPetugas',
-        [username, pasword, nama, noTelp, statusPetugas, id_petugas]
-    )
-    return result.affectedRows > 0
-
+async function update({ id_petugas, nama, no_telp, status_petugas }) {
+  return db.query(
+    `UPDATE petugas
+     SET nama = ?, no_telp = ?, status_petugas = ?
+     WHERE id_petugas = ?`,
+    [nama, no_telp, status_petugas, id_petugas]
+  )
 }
+
 
 module.exports = {
     create,

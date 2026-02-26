@@ -70,101 +70,68 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted} from 'vue'
+import api from '@/services/api'
 import UpdatePengambilanModal from '@/components/updateStatusModal.vue'
 
-/* =====================
-   STATE
-===================== */
 const showModal = ref(false)
 const selectedItem = ref(null)
 const filterStatus = ref('')
+const pengambilanData = ref([])
 
-/* =====================
-   DATA DUMMY (STRUKTUR BARU)
-===================== */
-const pengambilanData = ref([
-  {
-    id: 1,
-    tps: {
-      nama: 'TPS A1 - Pasar Utara',
-      desa: 'Desa A'
-    },
-    interval: 3,
-    lastPickup: '13 Januari 2026',
-    kendaraan: '',
-    volume: '',
-    volumeUnit: 'kg',
-    status: 'pending',
-    notes: ''
-  },
-  {
-    id: 2,
-    tps: {
-      nama: 'TPS A2 - Masjid Besar',
-      desa: 'Desa A'
-    },
-    interval: 2,
-    lastPickup: '15 Januari 2026',
-    kendaraan: '',
-    volume: '',
-    volumeUnit: 'kg',
-    status: 'progress',
-    notes: ''
-  },
-  {
-    id: 3,
-    tps: {
-      nama: 'TPS A3 - Sekolah Dasar',
-      desa: 'Desa A'
-    },
-    interval: 4,
-    lastPickup: '12 Januari 2026',
-    kendaraan: 'Truck 01',
-    volume: 92,
-    volumeUnit: 'kg',
-    status: 'done',
-    notes: ''
+async function fetchPengambilan() {
+  try {
+    const res = await api.get('/api/pengambilan')
+    pengambilanData.value = res.data
+  } catch (err) {
+    console.error('Gagal ambil pengambilan', err)
   }
-])
+}
 
-/* =====================
-   COMPUTED
-===================== */
+onMounted(fetchPengambilan)
+
+/* FILTER */
 const filteredData = computed(() => {
   if (!filterStatus.value) return pengambilanData.value
   return pengambilanData.value.filter(
-    item => item.status === filterStatus.value
+    i => i.status === filterStatus.value
   )
 })
 
-/* =====================
-   METHODS
-===================== */
 function openModal(item) {
   selectedItem.value = item
   showModal.value = true
 }
 
-function handleSave(payload) {
-  if (!selectedItem.value) return
+// function handleSave(payload) {
+//   if (!selectedItem.value) return
 
-  selectedItem.value.status = payload.status
-  selectedItem.value.kendaraan = payload.kendaraan
-  selectedItem.value.volume = payload.volume
-  selectedItem.value.volumeUnit = payload.unit
-  selectedItem.value.notes = payload.notes
+//   selectedItem.value.status = payload.status
+//   selectedItem.value.kendaraan = payload.kendaraan
+//   selectedItem.value.volume = payload.volume
+//   selectedItem.value.volumeUnit = payload.unit
+//   selectedItem.value.notes = payload.notes
 
-  if (payload.status === 'done') {
-    selectedItem.value.lastPickup =
-      new Date().toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      })
+//   if (payload.status === 'done') {
+//     selectedItem.value.lastPickup =
+//       new Date().toLocaleDateString('id-ID', {
+//         day: 'numeric',
+//         month: 'long',
+//         year: 'numeric'
+//       })
+//   }
+
+//   showModal.value = false
+// }
+
+async function handleSave(payload) {
+  try {
+    await api.put(`/api/pengambilan/${selectedItem.value.id_pengambilan}`, payload)
+    showModal.value = false
+    await fetchPengambilan()
+  } catch (err) {
+    console.error('Gagal update status', err)
   }
-
-  showModal.value = false
 }
 
 function statusText(status) {

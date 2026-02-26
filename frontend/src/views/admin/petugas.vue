@@ -29,7 +29,7 @@
             <td>{{ p.no_telp }}</td>
             <td>
               <span class="status-badge" :class="p.status_petugas">
-                {{ p.status_petugas === 'aktif' ? 'Aktif' : 'Non-Aktif' }}
+                {{ p.status_petugas === 1 ? 'Aktif' : 'Non-Aktif' }}
               </span>
             </td>
             <td class="action-buttons">
@@ -57,6 +57,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import api from '@/services/api'
 import PetugasModal from '@/components/petugasModal.vue'
 
 const petugasList = ref([])
@@ -81,37 +82,64 @@ function openAdd() {
   showModal.value = true
 }
 
+// function openEdit(p) {
+//   form.value = { ...p }
+//   showModal.value = true
+// }
+
 function openEdit(p) {
-  form.value = { ...p }
+  form.value = {
+    id_petugas: p.id_petugas,
+    nama: p.nama,
+    no_telp: p.no_telp,
+    status_petugas: p.status_petugas
+  }
   showModal.value = true
 }
 
-// function save(data) {
-//   if (data.id) {
-//     const i = petugasList.value.findIndex(p => p.id === data.id)
-//     petugasList.value[i] = data
+
+
+
+// async function save(data) {
+//   if (data.id_petugas) {
+//     await api.put(`/api/petugas/${data.id_petugas}`, data)
 //   } else {
-//     petugasList.value.push({
-//       ...data,
-//       id: Date.now()
-//     })
+//     await api.post('/api/petugas', data)
 //   }
 //   showModal.value = false
+//   await fetchPetugas()
 // }
 
-// function remove(id) {
-//   if (confirm('Hapus petugas ini?')) {
-//     petugasList.value = petugasList.value.filter(p => p.id !== id)
+// async function save(data) {
+//   const payload = {
+//     nama: data.nama,
+//     no_telp: data.no_telp,
+//     status_petugas: data.status_petugas
 //   }
+
+//   if (data.id_petugas) {
+//     await api.put(`/api/petugas/${data.id_petugas}`, payload)
+//   } else {
+//     await api.post('/api/petugas', payload)
+//   }
+
+//   showModal.value = false
+//   await fetchPetugas()
 // }
-// </script>
 
 async function save(data) {
-  if (data.id_petugas) {
-    await api.put(`/api/petugas/${data.id_petugas}`, data)
-  } else {
-    await api.post('/api/petugas', data)
+  const payload = {
+    nama: data.nama,
+    no_telp: data.no_telp,
+    status_petugas: data.status_petugas
   }
+
+  if (data.id_petugas) {
+    await api.put(`/api/petugas/${data.id_petugas}`, payload)
+  } else {
+    await api.post('/api/petugas', payload)
+  }
+
   showModal.value = false
   await fetchPetugas()
 }
@@ -122,5 +150,6 @@ async function remove(id) {
     await fetchPetugas()
   }
 }
+</script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
