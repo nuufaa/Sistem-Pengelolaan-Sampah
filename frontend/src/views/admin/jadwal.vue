@@ -82,7 +82,7 @@ async function fetchPetugas() {
 }
 
 onMounted(() => {
-  // fetchPetugas()
+  fetchPetugas()
   fetchJadwal()
   fetchTPS()
 })
