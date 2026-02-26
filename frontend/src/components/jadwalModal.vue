@@ -14,7 +14,7 @@
         <div class="form-group">
           <label>TPS</label>
           <select v-model.number="localForm.id_tps" required>
-            <option value="">Pilih TPS</option>
+            <option :value="null">Pilih TPS</option>
             <option
               v-for="t in tpsList"
               :key="t.id_tps"
@@ -28,14 +28,14 @@
         <div class="form-group">
           <label>Hari Pengambilan</label>
           <select v-model.number="localForm.hari_pengambilan" required>
-            <option value="">Pilih Hari Pengambilan</option>
-            <option value="0">Senin</option>
-            <option value="1">Selasa</option>
-            <option value="2">Rabu</option>
-            <option value="3">Kamis</option>
-            <option value="4">Jumat</option>
-            <option value="5">Sabtu</option>
-            <option value="6">Minggu</option>
+            <option :value="null">Pilih Hari Pengambilan</option>
+            <option
+              v-for="(hari, index) in daftarHari"
+              :key="index"
+              :value="index"
+            >
+              {{ hari }}
+            </option>
           </select>
           <small>Pengambilan dilakukan setiap N hari</small>
         </div>
@@ -82,12 +82,22 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'close'])
 
+const daftarHari = [
+  'Senin',
+  'Selasa',
+  'Rabu',
+  'Kamis',
+  'Jumat',
+  'Sabtu',
+  'Minggu'
+]
+
 const localForm = reactive({
-  // id_jadwal: '',
-  id_tps: '',
-  id_petugas: '',
-  hari_pengambilan: '',
-  // tgl_terakhir_diambil: null
+  id_jadwal: null,
+  id_tps: null,
+  id_petugas: null,
+  hari_pengambilan: null,
+  tgl_terakhir_diambil: null
 })
 
 watch(
@@ -95,11 +105,11 @@ watch(
   val => {
     if (val) {
       Object.assign(localForm, {
-        // id_jadwal: val.id_jadwal,
+        id_jadwal: val.id_jadwal,
         id_tps: Number(val.id_tps), 
         id_petugas: val.id_petugas,
         hari_pengambilan: val.hari_pengambilan,
-        // tgl_terakhir_diambil: val.tgl_terakhir_diambil
+        tgl_terakhir_diambil: val.tgl_terakhir_diambil
       })
     }
   },

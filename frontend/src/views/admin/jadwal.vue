@@ -111,32 +111,6 @@ function openEdit(jadwal) {
   showModal.value = true
 }
 
-// async function save(data) {
-//   try {
-//     const payload = {
-//       ...data,
-//       hari_pengambilan:
-//         typeof data.hari_pengambilan === 'string'
-//           ? toIndex(data.hari_pengambilan)
-//           : data.hari_pengambilan
-//     }
-
-//     if (data.id_jadwal) {
-//       await api.put(`/api/jadwal/${data.id_jadwal}`, payload)
-//     } else {
-//       console.log('Payload untuk tambah jadwal:', payload) // Debug log
-//       await api.post('/api/jadwal', payload)
-//     }
-
-//     showModal.value = false
-//     await fetchJadwal()
-
-//   } catch (error) {
-//     console.error(error)
-//     alert('Gagal menyimpan jadwal')
-//   }
-// }
-
 async function save(data) {
   try {
     const payload = {
@@ -167,10 +141,6 @@ async function remove(id) {
     await api.delete(`/api/jadwal/${id}`)
     await fetchJadwal()
   }
-}
-
-function getTPS(id) {
-  return tpsList.value.find(t => t.id_tps === Number(id))
 }
 
 function formatDate(date) {
