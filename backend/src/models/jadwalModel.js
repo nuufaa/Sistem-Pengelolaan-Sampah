@@ -77,6 +77,9 @@ async function update(id, data) {
     WHERE id_jadwal = ?`,
     [hari_pengambilan, id_tps, id_petugas, data.tgl_terakhir_diambil, id]
   );
+
+  
+
 }
 
 async function updateTanggalTerakhir(id_jadwal) {
