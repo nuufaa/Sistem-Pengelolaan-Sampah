@@ -15,22 +15,32 @@
       <div class="modal-body">
         <!-- INFO TPS -->
         <div class="tps-info">
-          <h3>{{ data.tps.nama }}</h3>
-          <p>Desa {{ data.tps.desa }}</p>
-          <p>Interval Pengambilan: Setiap {{ data.interval }} hari</p>
-          <p>Terakhir Diambil: {{ data.lastPickup }}</p>
+          <h3>{{ data.tps.nama_tps }}</h3>
+          <p>Hari Pengambilan: Setiap {{ data.hari_pengambilan }} hari</p>
+          <!-- <p>Terakhir Diambil: {{ data.hari_terakhir_diambil }}</p> -->
         </div>
 
         <!-- PILIH KENDARAAN -->
+        <!-- <div class="form-group">
+         <label>Pilih Kendaraan</label>
+         <select v-model="form.kendaraan" class="form-control">
+           <option value="">-- Pilih Kendaraan --</option>
+           <option v-for="k in kendaraan" :key="k" :value="k">
+             {{ k }}
+           </option>
+         </select>
+       </div> -->
+
         <div class="form-group">
           <label>Pilih Kendaraan</label>
-          <select v-model="form.kendaraan" class="form-control">
+          <select v-model="form.id_kendaraan" class="form-control">
             <option value="">-- Pilih Kendaraan --</option>
-            <option v-for="k in kendaraan" :key="k" :value="k">
-              {{ k }}
+            <option v-for="k in kendaraan" :key="k.id_kendaraan" :value="k.id_kendaraan">
+              {{ k.nama_kendaraan }}
             </option>
           </select>
         </div>
+
 
         <!-- VOLUME -->
         <div class="form-group">
@@ -122,7 +132,8 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, onMounted} from 'vue'
+import api from '@/services/api'
 
 const props = defineProps({
   show: Boolean,
@@ -131,7 +142,13 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 
-const kendaraan = ['Truck 01', 'Truck 02']
+const kendaraan = ref([])
+
+onMounted(async () => {
+  const res = await api.get('/api/kendaraan')
+  kendaraan.value = res.data
+})
+
 
 const form = reactive({
   kendaraan: '',
@@ -141,7 +158,7 @@ const form = reactive({
   notes: ''
 })
 
-const close = () => emit('close')
+// const close = () => emit('close')
 
 const submit = () => {
   emit('save', { ...form })

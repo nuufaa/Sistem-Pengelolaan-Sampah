@@ -16,31 +16,16 @@
           <input v-model="localForm.nama" required />
         </div>
 
-        <!-- <div class="form-group">
-          <label>NIP *</label>
-          <input v-model="localForm.nip" required />
-        </div> -->
-
         <div class="form-group">
           <label>No. HP *</label>
           <input v-model="localForm.no_telp" required />
         </div>
 
-        <!-- <div class="form-group">
-          <label>Desa Tugas *</label>
-          <select v-model="localForm.desa" required>
-            <option value="">Pilih Desa</option>
-            <option value="A">Desa A</option>
-            <option value="B">Desa B</option>
-            <option value="All">Semua Desa</option>
-          </select>
-        </div> -->
-
         <div class="form-group">
           <label>Status *</label>
           <select v-model="localForm.status_petugas" required>
-            <option value="aktif">Aktif</option>
-            <option value="nonaktif">Non-Aktif</option>
+            <option value=1>Aktif</option>
+            <option value=0>Non-Aktif</option>
           </select>
         </div>
 
@@ -94,9 +79,19 @@ watch(
   { immediate: true }
 )
 
+// function submit() {
+//   emit('save', { ...localForm })
+// }
+
 function submit() {
+  if (!localForm.nama || !localForm.no_telp) {
+    alert('Nama dan No HP wajib diisi')
+    return
+  }
+  
   emit('save', { ...localForm })
 }
+
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
