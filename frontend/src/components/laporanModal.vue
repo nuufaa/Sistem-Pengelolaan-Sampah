@@ -11,17 +11,17 @@
       </div>
 
       <div class="modal-body">
-        <div class="detail-item"><b>TPS:</b> {{ tps?.nama }}</div>
-        <div class="detail-item"><b>Desa:</b> Desa {{ tps?.desa }}</div>
+        <div class="detail-item"><b>TPS:</b> {{ laporan?.nama_tps }}</div>
+        <!-- <div class="detail-item"><b>Desa:</b> Desa {{ tps?.desa }}</div> -->
         <div class="detail-item">
-          <b>Kondisi:</b> {{ kondisiText(laporan?.kondisi) }}
+          <b>Kondisi:</b> {{ kondisiText(laporan?.kondisi_tps) }}
         </div>
-        <div class="detail-item"><b>Pelapor:</b> {{ laporan?.pelapor }}</div>
-        <div class="detail-item"><b>No. HP:</b> {{ laporan?.hp }}</div>
-        <div class="detail-item"><b>Tanggal:</b> {{ laporan?.tanggal }}</div>
+        <div class="detail-item"><b>Pelapor:</b> {{ laporan?.nama_pelapor }}</div>
+        <!-- <div class="detail-item"><b>No. HP:</b> {{ laporan?.no_hp }}</div> -->
+        <div class="detail-item"><b>Tanggal:</b> {{ formatDate(laporan?.tgl_laporan) }}</div>
         <div class="detail-item">
           <b>Keterangan:</b><br />
-          {{ laporan?.keterangan }}
+          {{ laporan?.deskripsi }}
         </div>
       </div>
 
@@ -37,7 +37,7 @@
 <script setup>
 const props = defineProps({
   laporan: Object,
-  tps: Object
+  // tps: Object
 })
 
 function kondisiText(kondisi) {
@@ -47,6 +47,20 @@ function kondisiText(kondisi) {
     berserakan: 'Sampah Berserakan'
   }[kondisi] || kondisi
 }
+
+function formatDate(date) {
+  const d = new Date(date)
+
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>

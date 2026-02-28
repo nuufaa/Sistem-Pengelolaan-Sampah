@@ -132,7 +132,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted} from 'vue'
+import { reactive, ref, onMounted} from 'vue'
 import api from '@/services/api'
 
 const props = defineProps({

@@ -21,7 +21,6 @@
           <tr>
             <th>No</th>
             <th>Nama TPS</th>
-            <th>Desa</th>
             <th>Jadwal</th>
             <th>Terakhir Diambil</th>
             <th>Kendaraan</th>
@@ -35,7 +34,6 @@
           <tr v-for="(item, index) in filteredData" :key="item.id">
             <td>{{ index + 1 }}</td>
             <td>{{ item.tps.nama_tps }}</td>
-            <td>{{ item.tps.nama_dusun }}</td>
             <td>Setiap {{ item.hari_pengambilan }} hari</td>
             <td>{{ item.tgl_terakhir_diambil }}</td>
             <td>{{ item.id_kendaraan || '-' }}</td>
@@ -45,8 +43,8 @@
                 : '-' }}
             </td>
             <td>
-              <span class="status-badge" :class="item.status">
-                {{ statusText(item.status) }}
+              <span class="status-badge" :class="item.status_angkut">
+                {{ statusText(item.status_angkut) }}
               </span>
             </td>
             <td>
@@ -81,7 +79,7 @@ const pengambilanData = ref([])
 
 async function fetchPengambilan() {
   try {
-    const res = await api.get('/api/pengambilan')
+    const res = await api.get('/api/daftar-tugas')
     pengambilanData.value = res.data
   } catch (err) {
     console.error('Gagal ambil pengambilan', err)
