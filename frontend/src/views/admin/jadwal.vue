@@ -27,7 +27,7 @@
             <td>{{ i + 1 }}</td>
             <td>{{ j.nama_tps }}</td>
             <td>{{ j.nama}}</td>
-            <td>Setiap {{ j.hari_pengambilan }}</td>
+            <td>Setiap {{ j.hari_label }}</td>
             <td>{{ formatDate(j.tgl_terakhir_diambil) }}</td>
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(j)">
@@ -90,16 +90,17 @@ onMounted(() => {
 /* METHODS */
 function openAdd() {
   form.value = {
-    id_jadwal: null,
-    id_tps: ' ',
-    id_petugas: ' ',
-    hari_pengambilan: ' ',
+    id_jadwal: '',
+    id_tps: '',
+    id_petugas: '',
+    hari_pengambilan: '',
     tgl_terakhir_diambil: null
   }
   showModal.value = true
 }
 
 function openEdit(jadwal) {
+  console.log(jadwal)
   form.value = {
     ...jadwal,
     hari_pengambilan:
@@ -116,7 +117,10 @@ async function save(data) {
     const payload = {
       id_tps: data.id_tps,
       id_petugas: data.id_petugas,
-      hari_pengambilan: data.hari_pengambilan
+      hari_pengambilan: Array.isArray(data.hari_pengambilan)
+        ? data.hari_pengambilan.map(Number)
+        : [],
+      id_admin: data.id_admin
     }
 
     // kirim tgl_terakhir_diambil HANYA kalau ada
@@ -124,9 +128,14 @@ async function save(data) {
       payload.tgl_terakhir_diambil = data.tgl_terakhir_diambil
     }
 
-    console.log('payload FIX:', payload)
-
-    await api.post('/api/jadwal', payload)
+    // choose POST or PUT depending on presence of id_jadwal
+    // determine create vs update by presence of id_jadwal
+    if (data.id_jadwal && data.id_jadwal.length) {
+      // update: send to route identified by TPS
+      await api.put(`/api/jadwal/${data.id_tps}`, payload);
+    } else {
+      await api.post('/api/jadwal', payload);
+    }
 
     showModal.value = false
     await fetchJadwal()

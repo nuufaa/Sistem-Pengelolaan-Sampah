@@ -1,21 +1,27 @@
 const petugasModel = require("../models/petugasModel");
+const bcrypt = require('bcrypt')
 
-// async function createPetugas(req, res) {
-//     try {
-//         const id = await petugasModel.create(req.body);
 
-//         return res.status(201).json({
-//             message: "Petugas berhasil dibuat",
-//             id_petugas: id
-//         });
+async function createPetugas(req, res) {
+  try {
+    const id_admin = req.user.id
+    const data = await petugasModel.create({
+      ...req.body,
+      id_admin
+    })
 
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({
-//             message: "Gagal membuat petugas"
-//         });
-//     }
-// }
+    return res.status(201).json({
+      message: "Petugas berhasil dibuat",
+      id_petugas: data
+    });
+
+  } catch (error) {
+    console.error();
+    return res.status(500).json({
+      message: "Gagal membuat petugas"
+    });
+  }
+}
 
 // petugasController.js
 // async function createPetugas(req, res) {
@@ -54,41 +60,41 @@ const petugasModel = require("../models/petugasModel");
 // }
 
 // petugasController.js
-async function createPetugas(req, res) {
-  try {
-    const { nama, no_telp, status_petugas } = req.body
+// async function createPetugas(req, res) {
+//   try {
+//     const { nama, no_telp, status_petugas } = req.body
 
-    // 🔥 VALIDASI WAJIB
-    if (!nama || !no_telp) {
-      return res.status(400).json({
-        message: 'Nama dan No HP wajib diisi'
-      })
-    }
+//     // 🔥 VALIDASI WAJIB
+//     if (!nama || !no_telp) {
+//       return res.status(400).json({
+//         message: 'Nama dan No HP wajib diisi'
+//       })
+//     }
 
-    const status =
-      status_petugas === 'aktif' ||
-      status_petugas === 1 ||
-      status_petugas === '1'
-        ? 1
-        : 0
+//     const status =
+//       status_petugas === 'aktif' ||
+//       status_petugas === 1 ||
+//       status_petugas === '1'
+//         ? 1
+//         : 0
 
-    const id = await petugasModel.create({
-      nama,
-      no_telp,
-      status_petugas: status
-    })
+//     const id = await petugasModel.create({
+//       nama,
+//       no_telp,
+//       status_petugas: status
+//     })
 
-    return res.status(201).json({
-      message: 'Petugas berhasil dibuat',
-      id_petugas: id
-    })
-  } catch (error) {
-    console.error('CREATE PETUGAS ERROR:', error)
-    return res.status(500).json({
-      message: error.message
-    })
-  }
-}
+//     return res.status(201).json({
+//       message: 'Petugas berhasil dibuat',
+//       id_petugas: id
+//     })
+//   } catch (error) {
+//     console.error('CREATE PETUGAS ERROR:', error)
+//     return res.status(500).json({
+//       message: error.message
+//     })
+//   }
+// }
 
 async function getAllPetugas(req, res) {
     try {
@@ -159,15 +165,24 @@ async function getPetugasById(req, res) {
 
 async function updatePetugas(req, res) {
   try {
-    const { nama, no_telp, status_petugas } = req.body
+    const { nama, no_telp, username, password, status_petugas } = req.body
     const id = req.params.id
 
     const status = Number(status_petugas)
+    let hashedPassword = null
+    
+    if (password && password.trim() !== "") {
+      hashedPassword = await bcrypt.hash(password, 10)
+    } else{
+      hashedPassword = null;
+    }
 
     await petugasModel.update({
       id_petugas: id,
       nama,
       no_telp,
+      username,
+      password: hashedPassword ,
       status_petugas: status
     })
 

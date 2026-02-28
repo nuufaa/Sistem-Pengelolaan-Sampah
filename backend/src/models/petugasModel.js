@@ -1,12 +1,15 @@
 const {db} = require("../config/db");
+const bcrypt = require('bcrypt')
 
-async function create({nama, no_telp, status_petugas}) {
+async function create({nama, no_telp, username, password, status_petugas, id_admin}) {
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash(password, saltRounds)
+
     const [result] = await db.query(
-        'INSERT INTO petugas (nama, no_telp, status_petugas) VALUES (?, ?, ?)',
-        [nama, no_telp, status_petugas]
+        'INSERT INTO petugas (nama, no_telp, username, password, status_petugas, id_admin) VALUES (?, ?, ?, ?, ?, ?)',
+        [nama, no_telp, username, hashedPassword, status_petugas, id_admin]
     )
     return result.insertId
-    
 }
 
 async function findById(id_petugas) {
@@ -24,13 +27,43 @@ async function findAll() {
     return rows;
 }
 
-async function update({ id_petugas, nama, no_telp, status_petugas }) {
+async function findPetugas(username) {
+    const [rows] = await db.query(
+        'SELECT * FROM petugas WHERE username = ?',
+        [username]
+    )
+    return rows[0] || null
+}
+
+async function update({ id_petugas, nama, no_telp, username, password, status_petugas }) {
   return db.query(
     `UPDATE petugas
-     SET nama = ?, no_telp = ?, status_petugas = ?
-     WHERE id_petugas = ?`,
-    [nama, no_telp, status_petugas, id_petugas]
+        SET nama = ?, 
+        no_telp = ?, 
+        username = ?, 
+        password = COALESCE(?, password),
+        status_petugas = ?
+    WHERE id_petugas = ?`,
+    [nama, no_telp,username, password, status_petugas, id_petugas]
   )
+
+//     if (password) {
+//     // Kalau password diganti
+//     return db.query(
+//       `UPDATE petugas
+//        SET nama = ?, no_telp = ?, username = ?, password = ?, status_petugas = ?
+//        WHERE id_petugas = ?`,
+//       [nama, no_telp, username, password, status_petugas, id_petugas]
+//     )
+//   } else {
+//     // Kalau password tidak diganti
+//     return db.query(
+//       `UPDATE petugas
+//        SET nama = ?, no_telp = ?, username = ?, status_petugas = ?
+//        WHERE id_petugas = ?`,
+//       [nama, no_telp, username, status_petugas, id_petugas]
+//     )
+//   }
 }
 
 
@@ -38,5 +71,6 @@ module.exports = {
     create,
     findById,
     findAll,
+    findPetugas,
     update
 }

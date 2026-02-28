@@ -26,8 +26,16 @@
         </div>
 
         <div class="form-group">
-          <label>Hari Pengambilan</label>
-          <select v-model.number="localForm.hari_pengambilan" required>
+          <!-- <label>Hari Pengambilan</label> -->
+          <label v-for="(hari, index) in daftarHari" :key="index">
+          <input
+            type="checkbox"
+            :value="index"
+            v-model="localForm.hari_pengambilan"
+          />
+          {{ hari }}
+        </label>
+          <!-- <select v-model.number="localForm.hari_pengambilan" required>
             <option :value="null">Pilih Hari Pengambilan</option>
             <option
               v-for="(hari, index) in daftarHari"
@@ -36,7 +44,7 @@
             >
               {{ hari }}
             </option>
-          </select>
+          </select> -->
           <small>Pengambilan dilakukan setiap N hari</small>
         </div>
 
@@ -94,9 +102,9 @@ const daftarHari = [
 
 const localForm = reactive({
   id_jadwal: null,
-  id_tps: null,
-  id_petugas: null,
-  hari_pengambilan: null,
+  id_tps: '',
+  id_petugas: '',
+  hari_pengambilan: [],
   tgl_terakhir_diambil: null
 })
 
@@ -107,8 +115,10 @@ watch(
       Object.assign(localForm, {
         id_jadwal: val.id_jadwal,
         id_tps: Number(val.id_tps), 
-        id_petugas: val.id_petugas,
-        hari_pengambilan: val.hari_pengambilan,
+        id_petugas: Number(val.id_petugas),
+        hari_pengambilan:  Array.isArray(val.hari_pengambilan)
+      ? val.hari_pengambilan.map(Number)
+      : [],
         tgl_terakhir_diambil: val.tgl_terakhir_diambil
       })
     }

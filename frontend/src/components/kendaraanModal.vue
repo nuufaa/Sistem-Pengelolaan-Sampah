@@ -13,7 +13,7 @@
       <form class="modal-body" @submit.prevent="submit">
         <div class="form-group">
           <label>Nomor Kendaraan</label>
-          <input v-model="local.nomor_kendaraan" placeholder="Contoh: Truck 01"required />
+          <input v-model="local.nomor_kendaraan" placeholder="Contoh: Truck 01" required />
         </div>
 
         <div class="form-group">
