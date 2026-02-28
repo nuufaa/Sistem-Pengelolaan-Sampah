@@ -48,7 +48,7 @@
     </div>
 
     <!-- CHART PLACEHOLDER -->
-    <div class="dashboard-charts">
+    <!-- <div class="dashboard-charts">
       <div class="chart-card">
         <h3>Status TPS Terkini</h3>
         <canvas></canvas>
@@ -58,51 +58,95 @@
         <h3>Laporan 7 Hari Terakhir</h3>
         <canvas></canvas>
       </div>
+    </div> -->
+
+    <div class="chart-card">
+      <h3>Status TPS Terkini</h3>
+      <canvas ref="statusChartRef"></canvas>
     </div>
+
+    <div class="chart-card">
+      <h3>Laporan 7 Hari Terakhir</h3>
+      <canvas ref="laporanChartRef"></canvas>
+    </div>
+
   </section>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, onMounted, nextTick} from 'vue'
+import api from '@/services/api'
+import Chart from 'chart.js/auto' 
 
-/* =====================
-   DUMMY DATA
-   (nanti ganti dari API / service)
-===================== */
-const tpsData = ref([
-  { id: 1, status: 'normal' },
-  { id: 2, status: 'danger' },
-  { id: 3, status: 'normal' },
-  { id: 4, status: 'danger' }
-])
+const totalTPS = ref(0)
+const totalPetugas = ref(0)
+const totalLaporan = ref(0)
+const totalTPSPenuh = ref(0)
 
-const petugasData = ref([
-  { id: 1, status: 'aktif' },
-  { id: 2, status: 'aktif' },
-  { id: 3, status: 'nonaktif' }
-])
+const statusChartRef = ref(null)
+const laporanChartRef = ref(null)
 
-const laporanData = ref([
-  { id: 1 },
-  { id: 2 },
-  { id: 3 },
-  { id: 4 }
-])
+let statusChart = null
+let laporanChart = null
 
-/* =====================
-   COMPUTED (pengganti renderDashboard())
-===================== */
-const totalTPS = computed(() => tpsData.value.length)
+async function fetchDashboard() {
+  try {
+    const res = await api.get('/api/dashboard')
 
-const totalPetugas = computed(() =>
-  petugasData.value.filter(p => p.status === 'aktif').length
-)
+    totalTPS.value = res.data.totalTPS
+    totalPetugas.value = res.data.totalPetugas
+    totalLaporan.value = res.data.totalLaporan
+    totalTPSPenuh.value = res.data.totalTPSPenuh
 
-const totalLaporan = computed(() => laporanData.value.length)
+    await nextTick()
+    renderStatusChart(res.data.statusTPS)
+    renderLaporanChart(res.data.laporan7Hari)
 
-const totalTPSPenuh = computed(() =>
-  tpsData.value.filter(t => t.status === 'danger').length
-)
+  } catch (error) {
+    console.error("Gagal ambil dashboard:", error)
+  }
+}
+onMounted(fetchDashboard)
+
+function renderStatusChart(data) {
+  if (statusChart) statusChart.destroy()
+
+  const labels = data.map(item => item.status)
+  const values = data.map(item => item.total)
+
+  statusChart = new Chart(statusChartRef.value, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#4CAF50', '#FF9800', '#F44336']
+      }]
+    }
+  })
+}
+
+function renderLaporanChart(data) {
+  if (laporanChart) laporanChart.destroy()
+
+  const labels = data.map(item => item.tanggal)
+  const values = data.map(item => item.total)
+
+  laporanChart = new Chart(laporanChartRef.value, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Jumlah Laporan',
+        data: values,
+        borderColor: '#2196F3',
+        fill: false,
+        tension: 0.3
+      }]
+    }
+  })
+}
+
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>

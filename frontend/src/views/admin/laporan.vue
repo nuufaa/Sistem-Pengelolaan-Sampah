@@ -12,22 +12,24 @@
           <tr>
             <th>No</th>
             <th>TPS</th>
-            <th>Desa</th>
+            <!-- <th>Desa</th> -->
             <th>Kondisi</th>
             <th>Pelapor</th>
             <th>Tanggal & Waktu</th>
+            <th>Deskripsi</th>
             <th>Aksi</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr v-for="(laporan, i) in laporanList" :key="laporan.id">
+          <tr v-for="(laporan, i) in laporanList" :key="laporan.id_laporan">
             <td>{{ i + 1 }}</td>
-            <td>{{ getTPS(laporan.tpsId)?.nama }}</td>
-            <td>Desa {{ getTPS(laporan.tpsId)?.desa }}</td>
-            <td>{{ kondisiText(laporan.kondisi) }}</td>
-            <td>{{ laporan.pelapor }}</td>
-            <td>{{ laporan.tanggal }}</td>
+            <td>{{ laporan.nama_tps }}</td>
+            <!-- <td>Desa {{ getTPS(laporan.id_tps)?.desa }}</td> -->
+            <td>{{ kondisiText(laporan.kondisi_tps) }}</td>
+            <td>{{ laporan.nama_pelapor }}</td>
+            <td>{{ formatDate(laporan.tgl_laporan) }}</td>
+            <td>{{ laporan.deskripsi }}</td>
             <td>
               <button class="btn-action" @click="openDetail(laporan)">
                 <span class="material-icons">visibility</span>
@@ -42,17 +44,17 @@
     <div class="card-list mobile-only">
       <div
         v-for="laporan in laporanList"
-        :key="laporan.id"
+        :key="laporan.id_laporan"
         class="data-card"
       >
         <div class="data-card-header">
           <div>
             <div class="data-card-title">
-              {{ getTPS(laporan.tpsId)?.nama }}
+              {{ laporan.nama_pelapor }}
             </div>
-            <div class="data-card-subtitle">
-              Desa {{ getTPS(laporan.tpsId)?.desa }}
-            </div>
+            <!-- <div class="data-card-subtitle">
+              Desa {{ getTPS(laporan.id_tps)?.desa }}
+            </div> -->
           </div>
         </div>
 
@@ -60,17 +62,21 @@
           <div class="data-card-item">
             <span class="data-card-label">Kondisi:</span>
             <span class="data-card-value">
-              {{ kondisiText(laporan.kondisi) }}
+              {{ kondisiText(laporan.kondisi_tps) }}
             </span>
           </div>
           <div class="data-card-item">
             <span class="data-card-label">Pelapor:</span>
-            <span class="data-card-value">{{ laporan.pelapor }}</span>
+            <span class="data-card-value">{{ laporan.nama_pelapor }}</span>
           </div>
           <div class="data-card-item">
             <span class="data-card-label">Tanggal:</span>
-            <span class="data-card-value">{{ laporan.tanggal }}</span>
+            <span class="data-card-value">{{ laporan.tgl_laporan }}</span>
           </div>
+          <!-- <div class="data-card-item">
+            <span class="data-card-label">Keterangan:</span>
+            <span class="data-card-value">{{ laporan.deskripsi }}</span>
+          </div> -->
         </div>
 
         <div class="data-card-footer">
@@ -93,39 +99,33 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted} from 'vue'
+import api from '@/services/api.js'
 import LaporanDetailModal from '@/components/laporanModal.vue'
 
-/* DUMMY DATA */
-const tpsData = ref([
-  { id: 1, nama: 'TPS A1 – Pasar Utara', desa: 'A' },
-  { id: 2, nama: 'TPS B1 – Terminal Selatan', desa: 'B' }
-])
-
-const laporanList = ref([
-  {
-    id: 1,
-    tpsId: 1,
-    kondisi: 'penuh',
-    pelapor: 'Warga A',
-    hp: '08123456789',
-    tanggal: '20 Februari 2026 10:15',
-    keterangan: 'TPS sudah penuh dan meluber'
-  }
-])
-
-/* MODAL */
+const laporanList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
 
 const tpsDetail = computed(() =>
-  selected.value ? getTPS(selected.value.tpsId) : null
+  selected.value ?(selected.value.id_tps) : null
 )
 
-/* METHODS */
-function getTPS(id) {
-  return tpsData.value.find(t => t.id === id)
+async function fetchLaporan() {
+  try {
+    const res = await api.get('/api/lapor')
+    laporanList.value = res.data
+  } catch (err) {
+    console.error('Gagal ambil laporan', err)
+  }
 }
+
+onMounted(fetchLaporan)
+
+/* METHODS */
+// function getTPS(id) {
+//   return tpsData.value.find(t => t.id_tps === id)
+// }
 
 function kondisiText(kondisi) {
   return {
@@ -139,6 +139,20 @@ function openDetail(laporan) {
   selected.value = laporan
   showModal.value = true
 }
+
+function formatDate(date) {
+  const d = new Date(date)
+
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>

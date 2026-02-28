@@ -20,9 +20,19 @@ const {db} = require("../config/db");
 
 async function findAll() {
     const [rows] = await db.query(
-        'SELECT * FROM lapor ORDER BY tgl_lapor DESC'
+        `SELECT 
+            l.id_laporan,
+            l.nama_pelapor,
+            l.tgl_laporan,
+            l.kondisi_tps,
+            l.deskripsi,
+            t.id_tps,
+            t.nama_tps
+        FROM lapor l
+        JOIN tps t ON l.id_tps = t.id_tps
+        ORDER BY l.tgl_laporan DESC`
     );
-    return result.rows;
+    return rows;
 }
 
 async function findById(id_laporan) {
@@ -31,7 +41,6 @@ async function findById(id_laporan) {
     );
     return rows[0]
 }
-
 
 module.exports = { 
     addLaporan,
