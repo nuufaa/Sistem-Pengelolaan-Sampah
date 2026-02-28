@@ -17,6 +17,8 @@
             <th>No</th>
             <th>Nama</th>
             <th>No. HP</th>
+            <th>Username</th>
+            <th>Password</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
@@ -27,6 +29,8 @@
             <td>{{ i + 1 }}</td>
             <td>{{ p.nama }}</td>
             <td>{{ p.no_telp }}</td>
+            <td>{{ p.username }}</td>
+            <td>{{ p.password }}</td>
             <td>
               <span class="status-badge" :class="p.status_petugas">
                 {{ p.status_petugas === 1 ? 'Aktif' : 'Non-Aktif' }}
@@ -77,7 +81,9 @@ function openAdd() {
     id_petugas: null,
     nama: '',
     no_telp: '',
-    status_petugas: 'aktif'
+    username: '',
+    password: '',
+    status_petugas: '1'
   }
   showModal.value = true
 }
@@ -92,13 +98,12 @@ function openEdit(p) {
     id_petugas: p.id_petugas,
     nama: p.nama,
     no_telp: p.no_telp,
+    username: p.username,
+    password: '',
     status_petugas: p.status_petugas
   }
   showModal.value = true
 }
-
-
-
 
 // async function save(data) {
 //   if (data.id_petugas) {
@@ -128,26 +133,38 @@ function openEdit(p) {
 // }
 
 async function save(data) {
-  const payload = {
-    nama: data.nama,
-    no_telp: data.no_telp,
-    status_petugas: data.status_petugas
+  try {
+    const payload = {
+      nama: data.nama,
+      no_telp: data.no_telp,
+      username: data.username,
+      password: data.password,
+      status_petugas: data.status_petugas,
+      id_admin: data.id_admin
+    }
+  
+    if (data.id_petugas) {
+      await api.put(`/api/petugas/${data.id_petugas}`, payload)
+    } else {
+      await api.post('/api/petugas', payload)
+    }
+  
+    showModal.value = false
+    await fetchPetugas()
+    
+  } catch (error) {
+    console.error('Gagal simpan petugas', error)
   }
-
-  if (data.id_petugas) {
-    await api.put(`/api/petugas/${data.id_petugas}`, payload)
-  } else {
-    await api.post('/api/petugas', payload)
-  }
-
-  showModal.value = false
-  await fetchPetugas()
 }
 
 async function remove(id) {
-  if (confirm('Hapus petugas ini?')) {
+  if (!confirm('Yakin ingin menghapus petugas ini?')) return
+
+  try {
     await api.delete(`/api/petugas/${id}`)
     await fetchPetugas()
+  } catch (err) {
+    console.error('Gagal hapus petugas', err)
   }
 }
 </script>

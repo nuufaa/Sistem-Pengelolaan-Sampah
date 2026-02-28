@@ -16,7 +16,6 @@ async function findAdmin(username) {
         [username]
     )
     return rows[0] || null
-    
 }
 
 async function createAdmin({username, password, nama, noTelp}) {

@@ -11,16 +11,27 @@
       </div>
 
       <form class="modal-body" @submit.prevent="submit">
+        
         <div class="form-group">
           <label>Nama Lengkap *</label>
           <input v-model="localForm.nama" required />
         </div>
-
+        
         <div class="form-group">
           <label>No. HP *</label>
           <input v-model="localForm.no_telp" required />
         </div>
+        
+        <div class="form-group">
+          <label>Username *</label>
+          <input v-model="localForm.username" required />
+        </div>
 
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" v-model="localForm.password" placeholder="Kosongkan jika tidak ingin mengganti password" />
+        </div>
+        
         <div class="form-group">
           <label>Status *</label>
           <select v-model="localForm.status_petugas" required>
@@ -60,35 +71,48 @@ const localForm = reactive({
   id_petugas: null,
   nama: '',
   no_telp: '',
-  status_petugas: 'aktif'
+  username: '',
+  password: '',
+  status_petugas: '1'
 })
 
 watch(
   () => props.modelValue,
-  val => {
-    Object.assign(
-      localForm,
-      val || {
-        id_petugas: null,
-        nama: '',
-        no_telp: '',
-        status_petugas: 'aktif'
-      }
-    )
-  },
+  val => Object.assign(localForm, val),
   { immediate: true }
 )
+
+// watch(
+//   () => props.modelValue,
+//   val => {
+//     Object.assign(
+//       localForm,
+//       val || {
+//         id_petugas: null,
+//         nama: '',
+//         no_telp: '',
+//         status_petugas: 'aktif'
+//       }
+//     )
+//   },
+//   { immediate: true }
+// )
 
 // function submit() {
 //   emit('save', { ...localForm })
 // }
 
-function submit() {
-  if (!localForm.nama || !localForm.no_telp) {
-    alert('Nama dan No HP wajib diisi')
-    return
-  }
+// function submit() {
+//   if (!localForm.nama || !localForm.no_telp) {
+//     alert('Nama dan No HP wajib diisi')
+//     return
+//   }
   
+//   emit('save', { ...localForm })
+// }
+
+
+function submit() {
   emit('save', { ...localForm })
 }
 

@@ -1,25 +1,27 @@
 const { daftarHari } = require("../utils/hariJadwal");
 
-function validateCreateJadwal(req, res, next) {
-  const { id_tps, hari_pengambilan, id_petugas } = req.body;
+// middleware/validateJadwal.js
 
-  // cek null / undefined saja
-  if (
-    id_tps == null ||
-    id_petugas == null ||
-    hari_pengambilan == null
-  ) {
+function validateCreateJadwal(req, res, next) {
+  const { id_tps, id_petugas, hari_pengambilan } = req.body;
+
+  if (!id_tps || !id_petugas) {
     return res.status(400).json({
-      message: "Semua field wajib diisi"
+      message: "TPS dan Petugas wajib diisi"
     });
   }
 
-  // pastikan angka 0–6
-  if (
-    typeof hari_pengambilan !== "number" ||
-    hari_pengambilan < 0 ||
-    hari_pengambilan > 6
-  ) {
+  if (!Array.isArray(hari_pengambilan) || hari_pengambilan.length === 0) {
+    return res.status(400).json({
+      message: "Minimal pilih satu hari"
+    });
+  }
+
+  const isValid = hari_pengambilan.every(
+    h => Number.isInteger(h) && h >= 0 && h <= 6
+  );
+
+  if (!isValid) {
     return res.status(400).json({
       message: "Hari tidak valid"
     });
@@ -28,6 +30,4 @@ function validateCreateJadwal(req, res, next) {
   next();
 }
 
-module.exports = {
-  validateCreateJadwal
-};
+module.exports = { validateCreateJadwal };
