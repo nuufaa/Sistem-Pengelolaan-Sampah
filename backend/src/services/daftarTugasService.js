@@ -14,6 +14,15 @@ async function updateStatusTugas(id, data) {
   }
 }
 
+async function listTugas(id_petugas) {
+  // if id_petugas is provided, filter by petugas; otherwise return all
+  if (id_petugas) {
+    return await daftarTugasModel.getByPetugas(id_petugas);
+  }
+  return await daftarTugasModel.getAll();
+}
+
 module.exports = {
-  updateStatusTugas
+  updateStatusTugas,
+  listTugas
 };

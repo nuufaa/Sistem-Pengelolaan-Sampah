@@ -9,7 +9,7 @@
 
       <div class="header-actions">
         <span class="admin-name">Admin Desa</span>
-        <button class="btn-logout">
+        <button class="btn-logout" @click="logout">
           <span class="material-icons">logout</span>
           Keluar
         </button>
@@ -106,6 +106,14 @@
 
 <script setup>
 // layout only — logic nanti kalau perlu (logout, auth, dll)
+import { useRouter } from 'vue-router';
+const router = useRouter()
+
+function logout() {
+  localStorage.removeItem('token') // hapus token login
+  router.push('/') // redirect ke halaman login
+}
+
 </script>
 
 <style src="@/assets/styles/admin.css"></style>

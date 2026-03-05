@@ -15,9 +15,9 @@
       <div class="modal-body">
         <!-- INFO TPS -->
         <div class="tps-info">
-          <h3>{{ data.tps.nama_tps }}</h3>
-          <p>Hari Pengambilan: Setiap {{ data.hari_pengambilan }} hari</p>
-          <!-- <p>Terakhir Diambil: {{ data.hari_terakhir_diambil }}</p> -->
+          <h3>{{ data.nama_tps }}</h3>
+          <p>Hari Pengambilan: {{ hariLabel(data.hari_pengambilan) }}</p>
+          <!-- <p>Terakhir Diambil: {{ data.tgl_terakhir_diambil }}</p> -->
         </div>
 
         <!-- PILIH KENDARAAN -->
@@ -81,8 +81,8 @@
           <div class="status-buttons">
             <button
               class="status-btn"
-              :class="{ selected: form.status === 'pending' }"
-              @click="form.status = 'pending'"
+              :class="{ selected: form.status === 'belum_diangkut' }"
+              @click="form.status = 'belum_diangkut'"
             >
               <span class="material-icons">pending</span>
               Belum Mulai
@@ -90,8 +90,8 @@
 
             <button
               class="status-btn"
-              :class="{ selected: form.status === 'progress' }"
-              @click="form.status = 'progress'"
+              :class="{ selected: form.status === 'diangkut' }"
+              @click="form.status = 'diangkut'"
             >
               <span class="material-icons">autorenew</span>
               Sedang Berlangsung
@@ -99,8 +99,8 @@
 
             <button
               class="status-btn"
-              :class="{ selected: form.status === 'done' }"
-              @click="form.status = 'done'"
+              :class="{ selected: form.status === 'selesai' }"
+              @click="form.status = 'selesai'"
             >
               <span class="material-icons">check_circle</span>
               Selesai
@@ -151,12 +151,17 @@ onMounted(async () => {
 
 
 const form = reactive({
-  kendaraan: '',
+  id_kendaraan: '',
   volume: '',
   unit: 'kg',
-  status: 'pending',
+  status: 'belum_diangkut',
   notes: ''
 })
+
+function hariLabel(idx) {
+  const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+  return labels[idx] || '-';
+}
 
 // const close = () => emit('close')
 

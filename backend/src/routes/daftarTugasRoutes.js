@@ -4,7 +4,15 @@ const router = express.Router();
 const daftarTugasController = require("../controllers/daftarTugasController");
 const { generateTugasHarian } = require("../services/daftarTugasOtomatisService");
 
-router.put("/:id/status", daftarTugasController.updateStatus);
+const { auth } = require("../middlewares/authMiddleware");
+
+// list tasks - petugas must be authenticated
+router.get("/", auth, daftarTugasController.listTugas);
+
+// update status (could be petugas or admin)
+router.put("/:id/status", auth, daftarTugasController.updateStatus);
+
+// generate endpoint does not require auth for now (could be protected later)
 router.post("/generate", async (req, res) => {
   try {
     await generateTugasHarian();

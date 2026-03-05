@@ -7,9 +7,9 @@
       <div class="filter-group">
         <select v-model="filterStatus" class="filter-select">
           <option value="">Semua Status</option>
-          <option value="pending">Belum Mulai</option>
-          <option value="progress">Sedang Berlangsung</option>
-          <option value="done">Selesai</option>
+          <option value="belum_diangkut">Belum Mulai</option>
+          <option value="diangkut">Sedang Berlangsung</option>
+          <option value="selesai">Selesai</option>
         </select>
       </div>
     </div>
@@ -33,14 +33,12 @@
         <tbody>
           <tr v-for="(item, index) in filteredData" :key="item.id">
             <td>{{ index + 1 }}</td>
-            <td>{{ item.tps.nama_tps }}</td>
-            <td>Setiap {{ item.hari_pengambilan }} hari</td>
+            <td>{{ item.nama_tps }}</td>
+            <td>{{ hariLabel(item.hari_pengambilan) }}</td>
             <td>{{ item.tgl_terakhir_diambil }}</td>
             <td>{{ item.id_kendaraan || '-' }}</td>
             <td>
-              {{ item.volume_sampah
-                ? item.volume_sampah + ' ' + item.volumeUnit
-                : '-' }}
+              {{ item.volume_sampah != null ? item.volume_sampah : '-' }}
             </td>
             <td>
               <span class="status-badge" :class="item.status_angkut">
@@ -78,7 +76,13 @@ const filterStatus = ref('')
 const pengambilanData = ref([])
 
 async function fetchPengambilan() {
+  const token = localStorage.getItem("token")
+  console.log("TOKEN:", token)
   try {
+    // hit backend route that returns current daftar tugas for logged-in petugas
+    
+    await api.post('/api/daftar-tugas/generate')
+
     const res = await api.get('/api/daftar-tugas')
     pengambilanData.value = res.data
   } catch (err) {
@@ -92,9 +96,22 @@ onMounted(fetchPengambilan)
 const filteredData = computed(() => {
   if (!filterStatus.value) return pengambilanData.value
   return pengambilanData.value.filter(
-    i => i.status === filterStatus.value
+    i => i.status_angkut === filterStatus.value
   )
 })
+
+function hariLabel(idx) {
+  const labels = [
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu'
+  ];
+  return labels[idx] || '-';
+}
 
 function openModal(item) {
   selectedItem.value = item
@@ -122,9 +139,18 @@ function openModal(item) {
 //   showModal.value = false
 // }
 
+// payload coming from modal has generic field names, convert to what backend expects
 async function handleSave(payload) {
+  if (!selectedItem.value) return;
+
+  const body = {
+    status_angkut: payload.status,
+    id_kendaraan: payload.id_kendaraan || null,
+    volume_sampah: payload.volume || null
+  };
+
   try {
-    await api.put(`/api/pengambilan/${selectedItem.value.id_pengambilan}`, payload)
+    await api.put(`/api/daftar-tugas/${selectedItem.value.id}/status`, body)
     showModal.value = false
     await fetchPengambilan()
   } catch (err) {
@@ -134,9 +160,9 @@ async function handleSave(payload) {
 
 function statusText(status) {
   return {
-    pending: 'Belum Mulai',
-    progress: 'Sedang Berlangsung',
-    done: 'Selesai'
+    belum_diangkut: 'Belum Mulai',
+    diangkut: 'Sedang Berlangsung',
+    selesai: 'Selesai'
   }[status]
 }
 </script>
