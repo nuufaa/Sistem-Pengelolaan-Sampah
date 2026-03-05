@@ -100,7 +100,6 @@ function openAdd() {
 }
 
 function openEdit(jadwal) {
-  console.log(jadwal)
   form.value = {
     ...jadwal,
     hari_pengambilan:
