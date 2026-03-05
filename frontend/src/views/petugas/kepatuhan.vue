@@ -33,10 +33,10 @@
           class="kepatuhan-item"
         >
           <div class="kepatuhan-info">
-            <h4>{{ item.namaTPS }}</h4>
+            <h4>{{ item.nama_tps }}</h4>
             <p>
-              Desa {{ item.desa }} • Jadwal {{ item.interval }} hari sekali •
-              Terakhir diambil: {{ item.terakhirDiambil }}
+              Jadwal {{ item.hari_pengambilan }} hari sekali •
+              Terakhir diambil: {{ item.tgl_terakhir_diambil }}
             </p>
           </div>
 
@@ -60,79 +60,53 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import api from '@/services/api'
 
-/* =====================
-   SOURCE DATA (DUMMY)
-   nanti ganti dari API / Pinia
-===================== */
-const pengambilanData = [
-  {
-    id: 1,
-    tps: { nama: 'TPS A1 - Pasar Utara', desa: 'Desa A' },
-    interval: 3,
-    lastPickup: '2026-01-13'
-  },
-  {
-    id: 2,
-    tps: { nama: 'TPS A2 - Masjid Besar', desa: 'Desa A' },
-    interval: 2,
-    lastPickup: '2026-01-10'
-  },
-  {
-    id: 3,
-    tps: { nama: 'TPS A3 - Sekolah Dasar', desa: 'Desa A' },
-    interval: 4,
-    lastPickup: '2026-01-05'
+const pengambilanData = ref([])
+
+async function fetchKepatuhan() {
+  try {
+    const res = await api.get('/api/kepatuhan')
+    pengambilanData.value = res.data
+  } catch (error) {
+    console.error("Gagal ambil kepatuhan", error)
   }
-]
+}
 
-/* =====================
-   COMPUTED: KEPATUHAN
-===================== */
+onMounted(fetchKepatuhan)
+
 const kepatuhanList = computed(() => {
-  const today = new Date()
-
-  return pengambilanData
+  return pengambilanData.value
     .map(item => {
-      const last = new Date(item.lastPickup)
-      const daysDiff = Math.floor(
-        (today - last) / (1000 * 60 * 60 * 24)
-      )
 
-      const terlambat = Math.max(0, daysDiff - item.interval)
-      const onTime = terlambat === 0
+      const last = new Date(item.terakhirDiambil)
 
       return {
         id: item.id,
-        namaTPS: item.tps.nama,
-        desa: item.tps.desa,
+        namaTPS: item.namaTPS,
+        desa: item.desa,
         interval: item.interval,
         terakhirDiambil: last.toLocaleDateString('id-ID', {
           day: 'numeric',
           month: 'long',
           year: 'numeric'
         }),
-        onTime,
-        statusText: onTime
-          ? 'Tepat Waktu'
-          : terlambat === 1
-            ? 'Terlambat 1 Hari'
-            : `Terlambat ${terlambat} Hari`
+        onTime: item.terlambatHari === 0,
+        statusText:
+          item.terlambatHari === 0
+            ? "Tepat Waktu"
+            : item.terlambatHari === 1
+              ? "Terlambat 1 Hari"
+              : `Terlambat ${item.terlambatHari} Hari`
       }
+
     })
     .filter(item => !item.onTime)
-    .sort((a, b) => {
-      const getDay = s => parseInt(s.match(/\d+/))
-      return getDay(b.statusText) - getDay(a.statusText)
-    })
 })
 
-/* =====================
-   SUMMARY
-===================== */
 const tepatCount = computed(
-  () => pengambilanData.length - kepatuhanList.value.length
+  () => pengambilanData.value.length - kepatuhanList.value.length
 )
 
 const terlambatCount = computed(

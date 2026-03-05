@@ -17,14 +17,14 @@
         <div class="form-row">
           <div class="form-group">
             <label>Pilih Kendaraan</label>
-            <select v-model="form.kendaraan" class="form-control" required>
+            <select v-model="form.id_kendaraan" class="form-control" required>
               <option value="">-- Pilih Kendaraan --</option>
               <option
                 v-for="k in kendaraanList"
-                :key="k.nomor"
-                :value="k.nomor"
+                :key="k.nomor_kendaraan"
+                :value="k.nomor_kendaraan"
               >
-                {{ k.nomor }} ({{ k.plat }})
+                {{ k.nomor_kendaraan }} ({{ k.nomor_polisi }})
               </option>
             </select>
           </div>
@@ -35,7 +35,7 @@
           </div>
         </div>
 
-        <div class="form-row">
+        <!-- <div class="form-row">
           <div class="form-group">
             <label>Waktu Mulai</label>
             <input type="time" v-model="form.waktuMulai" class="form-control" required />
@@ -45,34 +45,22 @@
             <label>Waktu Selesai</label>
             <input type="time" v-model="form.waktuSelesai" class="form-control" required />
           </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Km Awal</label>
-            <input type="number" v-model.number="form.kmAwal" class="form-control" required />
-          </div>
-
-          <div class="form-group">
-            <label>Km Akhir</label>
-            <input type="number" v-model.number="form.kmAkhir" class="form-control" required />
-          </div>
-        </div>
+        </div> -->
 
         <div class="form-group">
           <label>TPS yang Dikunjungi</label>
           <div class="checkbox-group">
             <label
               v-for="tps in tpsList"
-              :key="tps.id"
+              :key="tps.id_tps"
               class="checkbox-label"
             >
               <input
                 type="checkbox"
-                :value="tps.nama"
+                :value="tps.nama_tps"
                 v-model="form.tpsVisited"
               />
-              {{ tps.nama }}
+              {{ tps.nama_tps }}
             </label>
           </div>
         </div>
@@ -115,12 +103,12 @@
               <span class="label">Jumlah TPS</span>
               <span class="value">{{ todayLogbook.tpsVisited.length }} TPS</span>
             </div>
-            <div class="logbook-info-item">
+            <!-- <div class="logbook-info-item">
               <span class="label">Waktu</span>
               <span class="value">
                 {{ todayLogbook.waktuMulai }} - {{ todayLogbook.waktuSelesai }}
               </span>
-            </div>
+            </div> -->
             <div class="logbook-info-item">
               <span class="label">TPS</span>
               <span class="value">
@@ -155,10 +143,10 @@
                 <span class="label">Jumlah TPS</span>
                 <span class="value">{{ log.tpsVisited.length }}</span>
               </div>
-              <div class="logbook-item-row">
+              <!-- <div class="logbook-item-row">
                 <span class="label">Waktu</span>
                 <span class="value">{{ log.waktuMulai }} - {{ log.waktuSelesai }}</span>
-              </div>
+              </div> -->
               <div class="logbook-item-row">
                 <span class="label">TPS</span>
                 <span class="value">{{ log.tpsVisited.join(', ') }}</span>
@@ -176,101 +164,93 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted} from 'vue'
+import api from '@/services/api'
 
-/* =====================
-   DUMMY DATA
-===================== */
-const kendaraanList = [
-  { nomor: 'Truck 01', plat: 'DR 1234 AB' },
-  { nomor: 'Truck 02', plat: 'DR 5678 CD' }
-]
-
-const tpsList = [
-  { id: 1, nama: 'TPS A1 - Pasar Utara' },
-  { id: 2, nama: 'TPS A2 - Masjid Besar' },
-  { id: 3, nama: 'TPS A3 - Sekolah Dasar' }
-]
-
+const kendaraanList = ref([])
+const tpsList = ref([])
 const logbookData = ref([])
 
-/* =====================
-   FORM STATE
-===================== */
-const today = new Date().toISOString().split('T')[0]
+async function fetchLogbook() {
+  try {
 
-const form = ref({
-  kendaraan: '',
-  tanggal: today,
-  waktuMulai: '',
-  waktuSelesai: '',
-  kmAwal: null,
-  kmAkhir: null,
-  tpsVisited: [],
-  catatan: ''
-})
+    const res = await api.get('/api/logbook')
+    logbookData.value = res.data
 
-/* =====================
-   COMPUTED
-===================== */
-const todayLabel = new Date().toLocaleDateString('id-ID', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric'
-})
-
-const todayLogbook = computed(() =>
-  logbookData.value.find(l => l.tanggal === today)
-)
-
-const historyLogbook = computed(() =>
-  logbookData.value.filter(l => l.tanggal !== today)
-)
-
-/* =====================
-   METHODS
-===================== */
-function submitLogbook() {
-  if (form.value.kmAwal >= form.value.kmAkhir) {
-    alert('Km akhir harus lebih besar dari km awal')
-    return
+  } catch (error) {
+    console.error("Gagal ambil logbook", error)
   }
+}
 
+async function fetchKendaraan() {
+  const res = await api.get('/api/kendaraan')
+  kendaraanList.value = res.data
+}
+
+async function fetchTPS() {
+  const res = await api.get('/api/tps')
+  tpsList.value = res.data
+}
+
+async function submitLogbook() {
+  
   if (!form.value.tpsVisited.length) {
-    alert('Pilih minimal satu TPS')
+    alert("Pilih minimal satu TPS")
     return
   }
-
-  logbookData.value.unshift({
-    id: Date.now(),
-    ...form.value
-  })
-
-  resetForm()
-}
-
-function resetForm() {
-  form.value = {
-    kendaraan: '',
-    tanggal: today,
-    waktuMulai: '',
-    waktuSelesai: '',
-    kmAwal: null,
-    kmAkhir: null,
-    tpsVisited: [],
-    catatan: ''
+  
+  try {
+    
+    await api.post('/api/logbook', {
+      id_kendaraan: form.value.id_kendaraan,
+      tanggal: form.value.tanggal,
+      tpsVisited: form.value.tpsVisited,
+      catatan: form.value.catatan
+    })
+    
+    await fetchLogbook()
+    
+    resetForm()
+    
+  } catch (error) {
+    console.error("Gagal simpan logbook", error)
   }
+  
 }
+
+// const todayLabel = new Date().toLocaleDateString('id-ID', {
+//   weekday: 'long',
+//   day: 'numeric',
+//   month: 'long',
+//   year: 'numeric'
+// })
+
+// function formatDate(date) {
+//   return new Date(date).toLocaleDateString('id-ID', {
+//     day: 'numeric',
+//     month: 'long',
+//     year: 'numeric'
+//   })
+// }
 
 function formatDate(date) {
-  return new Date(date).toLocaleDateString('id-ID', {
+  if (!date) return '-'
+
+  const d = new Date(date)
+
+  return d.toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   })
 }
+
+onMounted(() => {
+  fetchLogbook()
+  fetchKendaraan()
+  fetchTPS()
+})
+
 </script>
 
 <style scoped src="@/assets/styles/petugas.css"></style>
-
