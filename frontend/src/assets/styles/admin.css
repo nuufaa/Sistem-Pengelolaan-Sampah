@@ -360,6 +360,25 @@ body {
     margin-bottom: var(--spacing-md);
 }
 
+/* PIE CHART */
+.pie-chart {
+  width: 310px !important;
+  height: 370px !important;
+  margin: auto;
+}
+
+/* LINE CHART */
+.line-chart {
+  width: 100% !important;
+  height: 350px !important;
+}
+/* mobile responsive */
+@media (max-width: 768px) {
+  .dashboard-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Table ===== */
 .table-container {
     background: white;

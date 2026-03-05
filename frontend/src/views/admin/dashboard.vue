@@ -48,28 +48,17 @@
     </div>
 
     <!-- CHART PLACEHOLDER -->
-    <!-- <div class="dashboard-charts">
+    <div class="dashboard-charts">
       <div class="chart-card">
         <h3>Status TPS Terkini</h3>
-        <canvas></canvas>
+        <canvas ref="statusChartRef" class="pie-chart"></canvas>
       </div>
 
       <div class="chart-card">
         <h3>Laporan 7 Hari Terakhir</h3>
-        <canvas></canvas>
+        <canvas ref="laporanChartRef" class="line-chart"></canvas>
       </div>
-    </div> -->
-
-    <div class="chart-card">
-      <h3>Status TPS Terkini</h3>
-      <canvas ref="statusChartRef"></canvas>
     </div>
-
-    <div class="chart-card">
-      <h3>Laporan 7 Hari Terakhir</h3>
-      <canvas ref="laporanChartRef"></canvas>
-    </div>
-
   </section>
 </template>
 
@@ -111,7 +100,7 @@ onMounted(fetchDashboard)
 function renderStatusChart(data) {
   if (statusChart) statusChart.destroy()
 
-  const labels = data.map(item => item.status)
+  const labels = data.map(item => item.status_tps)
   const values = data.map(item => item.total)
 
   statusChart = new Chart(statusChartRef.value, {
@@ -119,18 +108,51 @@ function renderStatusChart(data) {
     data: {
       labels,
       datasets: [{
+        label: 'Status TPS',
         data: values,
-        backgroundColor: ['#4CAF50', '#FF9800', '#F44336']
+        backgroundColor: ['#4CAF50', '#FF9800', '#F44336'],
+        borderWidth: 1
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      },
     }
   })
 }
 
+
 function renderLaporanChart(data) {
   if (laporanChart) laporanChart.destroy()
 
-  const labels = data.map(item => item.tanggal)
-  const values = data.map(item => item.total)
+  const days = 7
+  const labels = []
+  const values = []
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+
+    const tanggal = d.toLocaleDateString('en-CA')
+
+    // label tampil
+    labels.push(
+      d.toLocaleDateString('id-ID', { weekday: 'short' })
+    )
+
+    // cari data laporan
+    const laporan = data.find(item => {
+      const dbDate = new Date(item.tanggal).toLocaleDateString('en-CA')
+      return dbDate === tanggal
+    })
+
+    values.push(laporan ? laporan.total : 0)
+  }
 
   laporanChart = new Chart(laporanChartRef.value, {
     type: 'line',
@@ -140,9 +162,37 @@ function renderLaporanChart(data) {
         label: 'Jumlah Laporan',
         data: values,
         borderColor: '#2196F3',
+        backgroundColor: 'rgba(59,130,246,0.2)',
+        borderWidth: 3,
         fill: false,
-        tension: 0.3
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#2196F3',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
     }
   })
 }

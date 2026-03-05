@@ -59,7 +59,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
+import api from '@/services/api'
 
 const today = new Date().toLocaleDateString('id-ID', {
   weekday: 'long',
@@ -73,6 +74,25 @@ const total = ref(0)
 const pending = ref(0)
 const done = ref(0)
 const progress = ref(0)
+
+async function fetchDashboard() {
+  try {
+    const res = await api.get('/api/dashboard/petugas')
+
+    total.value = res.data.total
+    pending.value = res.data.pending
+    done.value = res.data.done
+    progress.value = res.data.progress
+
+    await nextTick()
+
+  } catch (error) {
+    console.error("Gagal ambil dashboard:", error)
+  }
+}
+onMounted(fetchDashboard)
+
+
 </script>
 
 <style scoped src="@/assets/styles/petugas.css"></style>
