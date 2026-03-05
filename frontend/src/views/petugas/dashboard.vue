@@ -54,12 +54,15 @@
     <div class="today-tasks">
       <h3>Tugas Hari Ini</h3>
       <p style="color:#757575">Belum ada tugas hari ini</p>
+      <div class="task-list" id="todayTaskList">
+        <!-- Dynamic content -->
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted} from 'vue'
 import api from '@/services/api'
 
 const today = new Date().toLocaleDateString('id-ID', {
@@ -84,12 +87,11 @@ async function fetchDashboard() {
     done.value = res.data.done
     progress.value = res.data.progress
 
-    await nextTick()
-
   } catch (error) {
     console.error("Gagal ambil dashboard:", error)
   }
 }
+
 onMounted(fetchDashboard)
 
 

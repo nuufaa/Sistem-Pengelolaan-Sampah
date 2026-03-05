@@ -24,10 +24,12 @@ async function updateStatus(req, res) {
 async function listTugas(req, res) {
   try {
     const userId = req.user ? req.user.id : null;
+    console.log('Fetching tasks for userId:', userId);
     const data = await daftarTugasService.listTugas(userId);
+    console.log('Tasks data:', data);
     res.json(data);
   } catch (error) {
-    console.error(error);
+    console.error('Error in listTugas:', error);
     res.status(500).json({ message: "Gagal mengambil daftar tugas" });
   }
 }

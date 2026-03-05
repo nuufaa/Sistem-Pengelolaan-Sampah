@@ -22,6 +22,7 @@
             <th>No</th>
             <th>Nama TPS</th>
             <th>Jadwal</th>
+            <th>Tanggal Pengambilan</th>
             <th>Terakhir Diambil</th>
             <th>Kendaraan</th>
             <th>Volume</th>
@@ -35,7 +36,8 @@
             <td>{{ index + 1 }}</td>
             <td>{{ item.nama_tps }}</td>
             <td>{{ hariLabel(item.hari_pengambilan) }}</td>
-            <td>{{ item.tgl_terakhir_diambil }}</td>
+            <td>{{ formatDate(item.tgl_pengambilan)}}</td>
+            <td>{{ formatDate(item.tgl_terakhir_diambil) }}</td>
             <td>{{ item.id_kendaraan || '-' }}</td>
             <td>
               {{ item.volume_sampah != null ? item.volume_sampah : '-' }}
@@ -76,17 +78,17 @@ const filterStatus = ref('')
 const pengambilanData = ref([])
 
 async function fetchPengambilan() {
-  const token = localStorage.getItem("token")
-  console.log("TOKEN:", token)
   try {
+    console.log('fetchPengambilan - token', localStorage.getItem('token'));
     // hit backend route that returns current daftar tugas for logged-in petugas
-    
-    await api.post('/api/daftar-tugas/generate')
 
-    const res = await api.get('/api/daftar-tugas')
-    pengambilanData.value = res.data
+    await api.post('/api/daftar-tugas/generate');
+
+    const res = await api.get('/api/daftar-tugas');
+    console.log('GET /api/daftar-tugas response', res.data);
+    pengambilanData.value = res.data;
   } catch (err) {
-    console.error('Gagal ambil pengambilan', err)
+    console.error('Gagal ambil pengambilan', err);
   }
 }
 
@@ -165,6 +167,20 @@ function statusText(status) {
     selesai: 'Selesai'
   }[status]
 }
+
+function formatDate(date) {
+  const d = new Date(date)
+
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
 </script>
 
 <style scoped src="@/assets/styles/petugas.css"></style>

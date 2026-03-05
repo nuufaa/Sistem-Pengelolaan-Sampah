@@ -25,11 +25,17 @@ async function create(data) {
 }
 
 async function updateStatus(id, data) {
+  if (data.status_angkut === "selesai" && !data.tgl_terakhir_diambil) {
+    data.tgl_terakhir_diambil = new Date(); // frontend bisa kirim atau backend set otomatis
+    await daftarTugasModel.updateStatus(id, data);
+  }
+
   await db.query(
     `UPDATE daftar_tugas
-     SET id_kendaraan = ?, status_angkut = ?, volume_sampah = ?
+     SET tgl_terakhir_diambil = ?, id_kendaraan = ?, status_angkut = ?, volume_sampah = ?
      WHERE id_daftar_tugas = ?`,
     [
+      data.tgl_terakhir_diambil,
       data.id_kendaraan || null,
       data.status_angkut,
       data.volume_sampah,
