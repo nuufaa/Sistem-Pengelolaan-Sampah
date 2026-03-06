@@ -61,6 +61,7 @@
     <UpdatePengambilanModal
       :show="showModal"
       :data="selectedItem"
+      :kendaraan-list="kendaraanList"
       @close="showModal = false"
       @save="handleSave"
     />
@@ -76,23 +77,33 @@ const showModal = ref(false)
 const selectedItem = ref(null)
 const filterStatus = ref('')
 const pengambilanData = ref([])
+const kendaraanList = ref([])
+
+async function fetchKendaraan() {
+  const res = await api.get('/api/kendaraan')
+  kendaraanList.value = res.data
+}
 
 async function fetchPengambilan() {
   try {
-    console.log('fetchPengambilan - token', localStorage.getItem('token'));
+    // console.log('fetchPengambilan - token', localStorage.getItem('token'));
     // hit backend route that returns current daftar tugas for logged-in petugas
 
     await api.post('/api/daftar-tugas/generate');
 
     const res = await api.get('/api/daftar-tugas');
-    console.log('GET /api/daftar-tugas response', res.data);
+    // console.log('GET /api/daftar-tugas response', res.data);
     pengambilanData.value = res.data;
   } catch (err) {
     console.error('Gagal ambil pengambilan', err);
   }
 }
 
-onMounted(fetchPengambilan)
+// onMounted(fetchPengambilan)
+onMounted(() => {
+    fetchPengambilan(),
+    fetchKendaraan()
+})
 
 /* FILTER */
 const filteredData = computed(() => {
