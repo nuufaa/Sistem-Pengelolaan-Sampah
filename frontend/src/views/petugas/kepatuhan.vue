@@ -35,7 +35,7 @@
           <div class="kepatuhan-info">
             <h4>{{ item.nama_tps }}</h4>
             <p>
-              Jadwal {{ item.hari_pengambilan }} hari sekali •
+              Jadwal Hari {{ item.hari_pengambilan }} •
               Terakhir diambil: {{ item.tgl_terakhir_diambil }}
             </p>
           </div>
@@ -52,7 +52,7 @@
           v-if="kepatuhanList.length === 0"
           class="no-logbook"
         >
-          Tidak ada keterlambatan pengambilan 🎉
+          Tidak ada keterlambatan pengambilan
         </p>
       </div>
     </div>
@@ -65,15 +65,6 @@ import api from '@/services/api'
 
 const pengambilanData = ref([])
 
-// async function fetchKepatuhan() {
-//   try {
-//     const res = await api.get('/api/kepatuhan')
-//     pengambilanData.value = res.data
-//   } catch (error) {
-//     console.error("Gagal ambil kepatuhan", error)
-//   }
-// }
-
 async function fetchDaftarTugas() {
   try {
     const res = await api.get('/api/daftar-tugas')
@@ -85,41 +76,66 @@ async function fetchDaftarTugas() {
 
 onMounted(fetchDaftarTugas)
 
+const hariMap = {
+  0: "Senin",
+  1: "Selasa",
+  2: "Rabu",
+  3: "Kamis",
+  4: "Jumat",
+  5: "Sabtu",
+  6: "Minggu"
+}
+
+function selisihHari(date1, date2) {
+  const d1 = new Date(date1)
+  const d2 = new Date(date2)
+
+  // Set jam, menit, detik, milidetik jadi 0 supaya cuma tanggal yang dibandingkan
+  d1.setHours(0,0,0,0)
+  d2.setHours(0,0,0,0)
+
+  const diffTime = d2 - d1
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24))
+}
+
 const kepatuhanList = computed(() => {
-  return pengambilanData.value
-    .map(item => {
+  return pengambilanData.value.map(item => {
 
-      const last = new Date(item.tgl_terakhir_diambil)
+    const diffDays = selisihHari(
+      item.tgl_pengambilan,
+      item.tgl_terakhir_diambil
+    )
 
-      return {
-        id: item.id,
-        nama_tps: item.nama_tps,
-        // desa: item.desa,
-        hari_pengambilan: item.hari_pengambilan,
-        tgl_terakhir_diambil: last.toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }),
-        onTime: item.terlambatHari === 0,
-        statusText:
-          item.terlambatHari === 0
-            ? "Tepat Waktu"
-            : item.terlambatHari === 1
-              ? "Terlambat 1 Hari"
-              : `Terlambat ${item.terlambatHari} Hari`
-      }
+    const last = new Date(item.tgl_terakhir_diambil)
 
-    })
-    // .filter(item => !item.onTime)
+    return {
+      id: item.id,
+      nama_tps: item.nama_tps,
+      hari_pengambilan: hariMap[item.hari_pengambilan],
+      tgl_terakhir_diambil: last.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }),
+
+      onTime: diffDays <= 0,
+
+      statusText:
+        diffDays <= 0
+          ? "Tepat Waktu"
+          : diffDays === 1
+            ? "Terlambat 1 Hari"
+            : `Terlambat ${diffDays} Hari`
+    }
+  })
 })
 
-const tepatCount = computed(
-  () => pengambilanData.value.length - kepatuhanList.value.length
+const tepatCount = computed(() =>
+  kepatuhanList.value.filter(item => item.onTime).length
 )
 
-const terlambatCount = computed(
-  () => kepatuhanList.value.length
+const terlambatCount = computed(() =>
+  kepatuhanList.value.filter(item => !item.onTime).length
 )
 </script>
 

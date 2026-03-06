@@ -31,7 +31,7 @@
 
           <div class="form-group">
             <label>Tanggal Pengambilan</label>
-            <input type="date" v-model="form.tanggal" class="form-control" required />
+            <input type="date" v-model="form.tgl_pengambilan" class="form-control" required />
           </div>
         </div>
 
@@ -101,7 +101,8 @@
             </div>
             <div class="logbook-info-item">
               <span class="label">Jumlah TPS</span>
-              <span class="value">{{ todayLogbook.tpsVisited.length }} TPS</span>
+              <!-- <span class="value">{{ todayLogbook.tpsVisited.length }} TPS</span> -->
+               <span class="value">{{ todayLogbook?.tpsVisited?.length || 0 }} TPS</span>
             </div>
             <!-- <div class="logbook-info-item">
               <span class="label">Waktu</span>
@@ -112,7 +113,7 @@
             <div class="logbook-info-item">
               <span class="label">TPS</span>
               <span class="value">
-                {{ todayLogbook.tpsVisited.join(', ') }}
+                {{ todayLogbook?.tpsVisited?.join(', ') }}
               </span>
             </div>
           </div>
@@ -164,12 +165,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted} from 'vue'
+import { ref, reactive, onMounted, computed} from 'vue'
 import api from '@/services/api'
 
 const kendaraanList = ref([])
 const tpsList = ref([])
 const logbookData = ref([])
+
+const form = reactive({
+  id_kendaraan: '',
+  id_tps: '',
+  id_petugas: '',
+  hari_pengambilan: [],
+  tgl_terakhir_diambil: null
+})
+
+const historyLogbook = computed(() => {
+  return logbookData.value || []
+})
 
 async function fetchLogbook() {
   try {
@@ -192,7 +205,7 @@ async function fetchTPS() {
   tpsList.value = res.data
 }
 
-async function submitLogbook() {
+async function submitLogbook(form) {
   
   if (!form.value.tpsVisited.length) {
     alert("Pilih minimal satu TPS")
@@ -210,7 +223,7 @@ async function submitLogbook() {
     
     await fetchLogbook()
     
-    resetForm()
+    // resetForm()
     
   } catch (error) {
     console.error("Gagal simpan logbook", error)
