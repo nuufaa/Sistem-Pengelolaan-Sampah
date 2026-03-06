@@ -70,11 +70,6 @@
           <input type="text" v-model="form.nama_pelapor" placeholder="Nama Anda" />
         </div>
 
-        <!-- <div class="form-group">
-          <label>No. HP</label>
-          <input type="tel" v-model="form.phone" placeholder="08xx xxxx xxxx" />
-        </div> -->
-
         <div class="modal-footer">
           <button type="button" class="btn-secondary" @click="close">
             Batal
@@ -148,6 +143,7 @@ async function submit() {
       // headers: { "Content-Type": "multipart/form-data" },
       auth: false
     })
+
 
     alert("Laporan berhasil dikirim")
 

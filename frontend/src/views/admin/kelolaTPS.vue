@@ -75,6 +75,7 @@ const tpsList = ref([])
 async function fetchTPS() {
   try {
     const data = await apiFetch("/api/tps")
+    console.log(data)
     tpsList.value = data
   } catch (err) {
     console.error("Gagal ambil TPS:", err.message)
@@ -166,9 +167,9 @@ async function remove(id) {
 function statusText(status) {
   return {
     normal: 'Normal',
-    warning: 'Hampir Penuh',
-    danger: 'Penuh'
-  }[status]
+    hampir_penuh: 'Hampir Penuh',
+    penuh: 'Penuh'
+  }[status] || status
 }
 </script>
 

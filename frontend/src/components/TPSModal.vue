@@ -43,8 +43,8 @@
           <label class="form-label">Status *</label>
           <select v-model="form.status_tps" class="form-control" required>
             <option value="normal">Normal</option>
-            <option value="warning">Hampir Penuh</option>
-            <option value="danger">Penuh</option>
+            <option value="hampir_penuh">Hampir Penuh</option>
+            <option value="penuh">Penuh</option>
           </select>
         </div>
 
