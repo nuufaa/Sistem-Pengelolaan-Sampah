@@ -65,29 +65,38 @@ import api from '@/services/api'
 
 const pengambilanData = ref([])
 
-async function fetchKepatuhan() {
+// async function fetchKepatuhan() {
+//   try {
+//     const res = await api.get('/api/kepatuhan')
+//     pengambilanData.value = res.data
+//   } catch (error) {
+//     console.error("Gagal ambil kepatuhan", error)
+//   }
+// }
+
+async function fetchDaftarTugas() {
   try {
-    const res = await api.get('/api/kepatuhan')
+    const res = await api.get('/api/daftar-tugas')
     pengambilanData.value = res.data
   } catch (error) {
     console.error("Gagal ambil kepatuhan", error)
   }
 }
 
-onMounted(fetchKepatuhan)
+onMounted(fetchDaftarTugas)
 
 const kepatuhanList = computed(() => {
   return pengambilanData.value
     .map(item => {
 
-      const last = new Date(item.terakhirDiambil)
+      const last = new Date(item.tgl_terakhir_diambil)
 
       return {
         id: item.id,
-        namaTPS: item.namaTPS,
-        desa: item.desa,
-        interval: item.interval,
-        terakhirDiambil: last.toLocaleDateString('id-ID', {
+        nama_tps: item.nama_tps,
+        // desa: item.desa,
+        hari_pengambilan: item.hari_pengambilan,
+        tgl_terakhir_diambil: last.toLocaleDateString('id-ID', {
           day: 'numeric',
           month: 'long',
           year: 'numeric'
@@ -102,7 +111,7 @@ const kepatuhanList = computed(() => {
       }
 
     })
-    .filter(item => !item.onTime)
+    // .filter(item => !item.onTime)
 })
 
 const tepatCount = computed(

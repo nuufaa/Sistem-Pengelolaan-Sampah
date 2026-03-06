@@ -35,8 +35,8 @@
           <label>Pilih Kendaraan</label>
           <select v-model="form.id_kendaraan" class="form-control">
             <option value="">-- Pilih Kendaraan --</option>
-            <option v-for="k in kendaraan" :key="k.id_kendaraan" :value="k.id_kendaraan">
-              {{ k.nama_kendaraan }}
+            <option v-for="k in kendaraanList" :key="k.id_kendaraan" :value="k.id_kendaraan">
+              {{ k.nomor_kendaraan }}
             </option>
           </select>
         </div>
@@ -132,22 +132,20 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted} from 'vue'
-import api from '@/services/api'
+import { reactive} from 'vue'
 
 const props = defineProps({
   show: Boolean,
-  data: Object
+  data: Object,
+  kendaraanList: Array
 })
 
 const emit = defineEmits(['close', 'save'])
 
-const kendaraan = ref([])
-
-onMounted(async () => {
-  const res = await api.get('/api/kendaraan')
-  kendaraan.value = res.data
-})
+// onMounted(async () => {
+//   const res = await api.get('/api/kendaraan')
+//   kendaraan.value = res.data
+// })
 
 
 const form = reactive({
