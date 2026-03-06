@@ -57,15 +57,6 @@
               Kelola Kendaraan
             </router-link>
 
-            <!-- <router-link
-              to="/admin/peta"
-              class="nav-item"
-              active-class="active"
-            >
-              <span class="material-icons">map</span>
-              Peta TPS
-            </router-link> -->
-
             <router-link
               to="/admin/jadwal"
               class="nav-item"
@@ -105,7 +96,6 @@
 </template>
 
 <script setup>
-// layout only — logic nanti kalau perlu (logout, auth, dll)
 import { useRouter } from 'vue-router';
 const router = useRouter()
 

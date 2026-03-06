@@ -26,26 +26,26 @@
         </div>
 
         <div class="form-group">
-          <!-- <label>Hari Pengambilan</label> -->
-          <label v-for="(hari, index) in daftarHari" :key="index">
-          <input
-            type="checkbox"
-            :value="index"
-            v-model="localForm.hari_pengambilan"
-          />
-          {{ hari }}
-        </label>
-          <!-- <select v-model.number="localForm.hari_pengambilan" required>
-            <option :value="null">Pilih Hari Pengambilan</option>
-            <option
+          <label>Hari Pengambilan</label>
+          <small>Pilih hari pengambilan sampah</small>
+
+          <div class="hari-grid">
+            <label
               v-for="(hari, index) in daftarHari"
               :key="index"
-              :value="index"
-            >
+              class="hari-pill"
+              :class="{ active: localForm.hari_pengambilan.includes(index) }"
+            > 
+              <input
+                type="checkbox"
+                :value="index"
+                v-model="localForm.hari_pengambilan"
+              />
               {{ hari }}
-            </option>
-          </select> -->
-          <small>Pengambilan dilakukan setiap N hari</small>
+            </label>
+          </div>
+          
+          <small>Pengambilan akan dilakukan setiap N hari</small>
         </div>
 
         <div class="form-group">

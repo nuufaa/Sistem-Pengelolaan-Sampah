@@ -9,7 +9,7 @@
 
       <div class="header-actions">
         <span class="petugas-name">Petugas Desa</span>
-        <button class="btn-logout">
+        <button class="btn-logout" @click="logout">
           <span class="material-icons">logout</span>
           Keluar
         </button>
@@ -24,7 +24,7 @@
           <div class="sidebar-header">
             <span class="material-icons">badge</span>
             <div>
-              <h2>Ahmad Fauzi</h2>
+              <h2>{{ user?.nama || 'Petugas Desa' }}</h2>
               <p>Desa Sembalun Bumbung</p>
             </div>
           </div>
@@ -47,15 +47,6 @@
               <span class="material-icons">list_alt</span>
               Daftar Pengambilan
             </router-link>
-
-            <!-- <router-link
-              to="/petugas/peta"
-              class="nav-item"
-              active-class="active"
-            >
-              <span class="material-icons">map</span>
-              Peta TPS
-            </router-link> -->
 
             <router-link
               to="/petugas/kepatuhan"
@@ -87,7 +78,13 @@
 </template>
 
 <script setup>
-// layout only — logic nanti kalau perlu
+import { useRouter } from 'vue-router';
+const router = useRouter()
+
+function logout() {
+  localStorage.removeItem('token') // hapus token login
+  router.push('/') // redirect ke halaman login
+}
 </script>
 
 <style scoped src="@/assets/styles/petugas.css"></style>
