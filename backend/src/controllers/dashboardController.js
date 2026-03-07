@@ -26,6 +26,24 @@ async function getDashboard(req, res) {
     }
 }
 
+async function getDashboardMas(req, res) {
+    try {
+        const totalTPS = await dashboardModel.getTotalTPS()
+        const totalTPSPenuh = await dashboardModel.getTotalTPSPenuh()
+        const totalTPSHampirPenuh = await dashboardModel.getTotalTPSHampirPenuh()
+
+        res.json({
+          totalTPS,
+          totalTPSPenuh,
+          totalTPSHampirPenuh
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: "Terjadi kesalahan server" })   
+    }
+}
+
 async function getDashboardPetugas(req, res) {
   try {
     // petugas ID comes from token payload (auth middleware)
@@ -57,4 +75,4 @@ async function getDashboardPetugas(req, res) {
 }
 
 
-module.exports = { getDashboard, getDashboardPetugas }
+module.exports = { getDashboard, getDashboardPetugas, getDashboardMas }

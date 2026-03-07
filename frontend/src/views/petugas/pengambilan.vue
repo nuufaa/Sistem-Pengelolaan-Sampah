@@ -99,7 +99,6 @@ async function fetchPengambilan() {
   }
 }
 
-// onMounted(fetchPengambilan)
 onMounted(() => {
     fetchPengambilan(),
     fetchKendaraan()
@@ -113,7 +112,8 @@ const filteredData = computed(() => {
   )
 })
 
-function hariLabel(idx) {
+function hariLabel(hariStr) {
+  if (!hariStr) return '-';
   const labels = [
     'Senin',
     'Selasa',
@@ -123,7 +123,8 @@ function hariLabel(idx) {
     'Sabtu',
     'Minggu'
   ];
-  return labels[idx] || '-';
+  const hariArray = hariStr.split(',').map(h => parseInt(h.trim()));
+  return hariArray.map(idx => labels[idx] || '-').join(', ');
 }
 
 function openModal(item) {

@@ -72,7 +72,6 @@ const today = new Date().toLocaleDateString('id-ID', {
   day: 'numeric'
 })
 
-/* dummy data sementara */
 const total = ref(0)
 const pending = ref(0)
 const done = ref(0)
@@ -93,7 +92,6 @@ async function fetchDashboard() {
 }
 
 onMounted(fetchDashboard)
-
 
 </script>
 
