@@ -22,17 +22,17 @@
               <option
                 v-for="k in kendaraanList"
                 :key="k.nomor_kendaraan"
-                :value="k.nomor_kendaraan"
+                :value="k.id_kendaraan"
               >
                 {{ k.nomor_kendaraan }} ({{ k.nomor_polisi }})
               </option>
             </select>
           </div>
 
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label>Tanggal Pengambilan</label>
             <input type="date" v-model="form.tgl_pengambilan" class="form-control" required />
-          </div>
+          </div> -->
         </div>
 
         <!-- <div class="form-row">
@@ -57,7 +57,7 @@
             >
               <input
                 type="checkbox"
-                :value="tps.nama_tps"
+                :value="tps.id_tps"
                 v-model="form.tpsVisited"
               />
               {{ tps.nama_tps }}
@@ -65,14 +65,14 @@
           </div>
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>Catatan (Opsional)</label>
           <textarea
             v-model="form.catatan"
             class="form-control"
             rows="3"
           ></textarea>
-        </div>
+        </div> -->
 
         <div class="form-footer">
           <button type="button" class="btn-secondary" @click="resetForm">
@@ -171,29 +171,33 @@ import api from '@/services/api'
 const kendaraanList = ref([])
 const tpsList = ref([])
 const logbookData = ref([])
+const daftarTugas = ref([])
 
 const form = reactive({
+  // id_kendaraan: '',
+  // id_tps: '',
+  // id_petugas: '',
+  // hari_pengambilan: [],
+  // tgl_terakhir_diambil: null
   id_kendaraan: '',
-  id_tps: '',
-  id_petugas: '',
-  hari_pengambilan: [],
-  tgl_terakhir_diambil: null
+  // tgl_pengambilan: '',
+  tpsVisited: [] // WAJIB ADA dan HARUS ARRAY
 })
 
 const historyLogbook = computed(() => {
   return logbookData.value || []
 })
 
-async function fetchLogbook() {
-  try {
+// async function fetchLogbook() {
+//   try {
 
-    const res = await api.get('/api/logbook')
-    logbookData.value = res.data
+//     const res = await api.get('/api/logbook')
+//     logbookData.value = res.data
 
-  } catch (error) {
-    console.error("Gagal ambil logbook", error)
-  }
-}
+//   } catch (error) {
+//     console.error("Gagal ambil logbook", error)
+//   }
+// }
 
 async function fetchKendaraan() {
   const res = await api.get('/api/kendaraan')
@@ -204,31 +208,29 @@ async function fetchTPS() {
   const res = await api.get('/api/tps')
   tpsList.value = res.data
 }
+async function fetchDaftarTugas() {
+  const res = await api.get('/api/daftar-tugas')
+  daftarTugas.value = res.data
+}
 
-async function submitLogbook(form) {
+async function submitLogbook() {
   
-  if (!form.value.tpsVisited.length) {
+  if (!form.tpsVisited.length) {
     alert("Pilih minimal satu TPS")
     return
   }
   
   try {
-    
-    await api.post('/api/logbook', {
-      id_kendaraan: form.value.id_kendaraan,
-      tanggal: form.value.tanggal,
-      tpsVisited: form.value.tpsVisited,
-      catatan: form.value.catatan
+    await api.put('/api/daftar-tugas/logbook', {
+      id_kendaraan: form.id_kendaraan,
+      tpsVisited: form.tpsVisited
     })
     
-    await fetchLogbook()
-    
+    // await fetchLogbook()
     // resetForm()
-    
   } catch (error) {
     console.error("Gagal simpan logbook", error)
   }
-  
 }
 
 // const todayLabel = new Date().toLocaleDateString('id-ID', {
@@ -259,9 +261,10 @@ function formatDate(date) {
 }
 
 onMounted(() => {
-  fetchLogbook()
+  // fetchLogbook()
   fetchKendaraan()
   fetchTPS()
+  fetchDaftarTugas()
 })
 
 </script>

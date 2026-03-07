@@ -1,4 +1,5 @@
 const daftarTugasService = require("../services/daftarTugasService");
+const logbook = require("../models/daftarTugasModel");
 
 async function updateStatus(req, res) {
   try {
@@ -19,6 +20,30 @@ async function updateStatus(req, res) {
   }
 }
 
+async function updateLogbook(req, res) {
+  try {
+    const { id_kendaraan, tpsVisited } = req.body
+
+    if (!id_kendaraan || !tpsVisited || !tpsVisited.length) {
+      return res.status(400).json({
+        message: "TPS harus dipilih"
+      })
+    }
+    await logbook.addLogbook(
+      req.body
+    )
+
+    res.json({
+      message: "Kendaraan berhasil diperbarui"
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      message: "Gagal update kendaraan"
+    })
+  }
+}
+
 // GET /api/daftar-tugas
 // optionally filter by petugas id from auth
 async function listTugas(req, res) {
@@ -36,5 +61,6 @@ async function listTugas(req, res) {
 
 module.exports = {
   updateStatus,
-  listTugas
+  listTugas,
+  updateLogbook
 };

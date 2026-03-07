@@ -80,7 +80,7 @@ let laporanChart = null
 
 async function fetchDashboard() {
   try {
-    const res = await api.get('/api/dashboard')
+    const res = await api.get('/api/dashboard/admin')
 
     totalTPS.value = res.data.totalTPS
     totalPetugas.value = res.data.totalPetugas

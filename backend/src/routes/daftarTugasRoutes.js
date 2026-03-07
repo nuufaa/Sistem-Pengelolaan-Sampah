@@ -11,6 +11,7 @@ router.get("/", auth, daftarTugasController.listTugas);
 
 // update status (could be petugas or admin)
 router.put("/:id/status", auth, daftarTugasController.updateStatus);
+router.put("/logbook", auth, daftarTugasController.updateLogbook);
 
 // generate endpoint does not require auth for now (could be protected later)
 router.post("/generate", async (req, res) => {
