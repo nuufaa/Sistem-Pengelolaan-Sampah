@@ -143,20 +143,20 @@
                     <div class="card-body">
                         <div class="stats-grid">
                             <div class="stat-item">
-                                <div class="stat-number" id="statTotal">36</div>
+                                <div class="stat-number" id="statTotal">{{ totalTPS }}</div>
                                 <div class="stat-label">Total Titik</div>
                             </div>
                             <div class="stat-item warning">
-                                <div class="stat-number" id="statWarning">8</div>
+                                <div class="stat-number" id="statWarning">{{ totalTPSHampirPenuh }}</div>
                                 <div class="stat-label">Perlu Perhatian</div>
                             </div>
                             <div class="stat-item danger">
-                                <div class="stat-number" id="statDanger">3</div>
+                                <div class="stat-number" id="statDanger">{{ totalTPSPenuh }}</div>
                                 <div class="stat-label">Penuh</div>
                             </div>
                         </div>
                         <div class="last-update">
-                            Terakhir Diperbarui: <span id="lastUpdate">13:45</span>
+                            Terakhir Diperbarui: <span id="lastUpdate"></span>
                         </div>
                     </div>
                 </div>
@@ -372,10 +372,11 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick} from 'vue'
 import { fetchTitikTps, scheduleData, tpsData } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
+import api from '@/services/api'
 
 // Mobile detection
 let isMobile = ref(window.innerWidth <= 768);
@@ -406,6 +407,35 @@ const reportRef = ref(null)
 const wastePoints = ref([])
 const loading = ref(false)
 const error = ref(null)
+
+const totalTPS = ref(0)
+const totalTPSPenuh = ref(0)
+const totalTPSHampirPenuh = ref(0)
+
+async function fetchDashboard() {
+  try {
+    const res = await api.get('/api/dashboard')
+
+    totalTPS.value = res.data.totalTPS
+    totalTPSPenuh.value = res.data.totalTPSPenuh
+    totalTPSHampirPenuh.value = res.data.totalTPSHampirPenuh
+
+    // Update last update time
+       const now = new Date();
+       const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                         now.getMinutes().toString().padStart(2, '0');
+       
+       const lastUpdate = document.getElementById('lastUpdate');
+       const lastUpdateMobile = document.getElementById('lastUpdateMobile');
+       
+       if (lastUpdate) lastUpdate.textContent = timeString;
+       if (lastUpdateMobile) lastUpdateMobile.textContent = timeString;
+    await nextTick()
+  } catch (error) {
+    console.error("Gagal ambil dashboard:", error)
+  }
+}
+
 
 function openReport() {
     console.log('openReport called, reportRef=', reportRef.value)
@@ -601,6 +631,9 @@ onMounted(async () => {
   if (modalScheduleOverlay) {
     modalScheduleOverlay.addEventListener('click', closeScheduleModal)
   }
+
+  fetchDashboard()
+
 })
 
 function initMap() {
