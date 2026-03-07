@@ -8,14 +8,16 @@ async function getDashboard(req, res) {
         const totalTPSPenuh = await dashboardModel.getTotalTPSPenuh()
         const statusTPS = await dashboardModel.getStatusTPS()
         const laporan7Hari = await dashboardModel.getLaporan7Hari()
+        const totalTPSHampirPenuh = await dashboardModel.getTotalTPSHampirPenuh()
 
         res.json({
-        totalTPS,
-        totalPetugas,
-        totalLaporan,
-        totalTPSPenuh,
-        statusTPS,
-        laporan7Hari
+          totalTPS,
+          totalPetugas,
+          totalLaporan,
+          totalTPSPenuh,
+          statusTPS,
+          laporan7Hari,
+          totalTPSHampirPenuh
         })
 
     } catch (error) {

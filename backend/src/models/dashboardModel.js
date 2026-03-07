@@ -33,6 +33,15 @@ async function getTotalTPSPenuh() {
     return rows[0].total;
 }
 
+async function getTotalTPSHampirPenuh() {
+    const [rows] = await db.query(`
+        SELECT COUNT(*) as total
+        FROM tps
+        WHERE status_tps = 'hampir_penuh'
+        `)
+    return rows[0].total;
+}
+
 async function getStatusTPS() {
     const [rows] = await db.query(`
         SELECT status_tps, COUNT(*) as total
@@ -112,5 +121,6 @@ module.exports = {
     getTotalTugas,
     getPendingTugas,
     getDoneTugas,
-    getProgressTugas
+    getProgressTugas,
+    getTotalTPSHampirPenuh
 }
