@@ -17,7 +17,6 @@
         <div class="tps-info">
           <h3>{{ data.nama_tps }}</h3>
           <p>Hari Pengambilan: {{ hariLabel(data.hari_pengambilan) }}</p>
-          <!-- <p>Terakhir Diambil: {{ data.tgl_terakhir_diambil }}</p> -->
         </div>
 
         <!-- PILIH KENDARAAN -->
@@ -161,7 +160,7 @@ function hariLabel(idx) {
   return labels[idx] || '-';
 }
 
-// const close = () => emit('close')
+const close = () => emit('close')
 
 const submit = () => {
   emit('save', { ...form })

@@ -22,24 +22,51 @@ async function create(data) {
   }
 }
 
+// async function updateStatus(id, data) {
+//   if (data.status_angkut === "selesai" && !data.tgl_terakhir_diambil) {
+//     data.tgl_terakhir_diambil = new Date(); // frontend bisa kirim atau backend set otomatis
+//     await daftarTugasModel.updateStatus(id, data);
+//   }
+
+//   await db.query(
+//     `UPDATE daftar_tugas
+//      SET tgl_terakhir_diambil = ?, id_kendaraan = ?, status_angkut = ?, volume_sampah = ?
+//      WHERE id_daftar_tugas = ?`,
+//     [
+//       data.tgl_terakhir_diambil,
+//       data.id_kendaraan || null,
+//       data.status_angkut,
+//       data.volume_sampah,
+//       id
+//     ]
+//   );
+// }
+
 async function updateStatus(id, data) {
-  if (data.status_angkut === "selesai" && !data.tgl_terakhir_diambil) {
-    data.tgl_terakhir_diambil = new Date(); // frontend bisa kirim atau backend set otomatis
-    await daftarTugasModel.updateStatus(id, data);
+
+  let tglTerakhir = null;
+
+  // jika status selesai → set tanggal sekarang
+  if (data.status_angkut === "selesai") {
+    tglTerakhir = new Date();
   }
 
-  await db.query(
-    `UPDATE daftar_tugas
-     SET tgl_terakhir_diambil = ?, id_kendaraan = ?, status_angkut = ?, volume_sampah = ?
-     WHERE id_daftar_tugas = ?`,
-    [
-      data.tgl_terakhir_diambil,
-      data.id_kendaraan || null,
-      data.status_angkut,
-      data.volume_sampah,
-      id
-    ]
-  );
+await db.query(
+  `UPDATE daftar_tugas
+   SET 
+     tgl_terakhir_diambil = IF(? = 'selesai', NOW(), NULL),
+     id_kendaraan = ?,
+     status_angkut = ?,
+     volume_sampah = ?
+   WHERE id_daftar_tugas = ?`,
+  [
+    data.status_angkut,
+    data.id_kendaraan || null,
+    data.status_angkut,
+    data.volume_sampah || null,
+    id
+  ]
+);
 }
 
 async function findById(id) {

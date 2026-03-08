@@ -37,7 +37,14 @@
             <td>{{ item.nama_tps }}</td>
             <td>{{ hariLabel(item.hari_pengambilan) }}</td>
             <td>{{ formatDate(item.tgl_pengambilan)}}</td>
-            <td>{{ formatDate(item.tgl_terakhir_diambil) }}</td>
+            <!-- <td>{{ formatDate(item.tgl_terakhir_diambil) }}</td> -->
+            <td>
+              {{
+                item.status_angkut === 'selesai' && item.tgl_terakhir_diambil
+                  ? formatDate(item.tgl_terakhir_diambil)
+                  : '-'
+            }}
+            </td>
             <td>{{ item.id_kendaraan || '-' }}</td>
             <td>
               {{ item.volume_sampah != null ? item.volume_sampah : '-' }}
@@ -86,9 +93,6 @@ async function fetchKendaraan() {
 
 async function fetchPengambilan() {
   try {
-    // console.log('fetchPengambilan - token', localStorage.getItem('token'));
-    // hit backend route that returns current daftar tugas for logged-in petugas
-
     await api.post('/api/daftar-tugas/generate');
 
     const res = await api.get('/api/daftar-tugas');
@@ -181,16 +185,18 @@ function statusText(status) {
 }
 
 function formatDate(date) {
+  if (!date) return '-'
+
   const d = new Date(date)
 
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
 
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
+  // const hours = String(d.getHours()).padStart(2, '0')
+  // const minutes = String(d.getMinutes()).padStart(2, '0')
 
-  return `${year}-${month}-${day} ${hours}:${minutes}`
+  return `${year}-${month}-${day}` //  ${hours}:${minutes}`
 }
 
 </script>
