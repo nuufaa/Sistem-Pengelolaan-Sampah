@@ -66,8 +66,8 @@
 
         <!-- Identitas -->
         <div class="form-group">
-          <label>Nama Pelapor</label>
-          <input type="text" v-model="form.nama_pelapor" placeholder="Nama Anda" />
+          <label>Nama Pelapor <span class="required">*</span></label>
+          <input type="text" v-model="form.nama_pelapor" placeholder="Nama Anda" required />
         </div>
 
         <div class="modal-footer">
@@ -96,7 +96,6 @@ const form = ref({
   kondisi_tps: '',
   deskripsi: '',
   nama_pelapor: ''
-  // phone: ''
 })
 
 const selectedFile = ref(null)
@@ -140,7 +139,6 @@ async function submit() {
     await apiFetch("/api/lapor", {
       method: 'POST',
       body: formData,
-      // headers: { "Content-Type": "multipart/form-data" },
       auth: false
     })
 
