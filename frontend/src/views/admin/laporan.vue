@@ -12,11 +12,10 @@
           <tr>
             <th>No</th>
             <th>TPS</th>
-            <!-- <th>Desa</th> -->
             <th>Kondisi</th>
             <th>Pelapor</th>
             <th>Tanggal & Waktu</th>
-            <th>Deskripsi</th>
+            <th>Keterangan</th>
             <th>Aksi</th>
           </tr>
         </thead>
@@ -25,11 +24,10 @@
           <tr v-for="(laporan, i) in laporanList" :key="laporan.id_laporan">
             <td>{{ i + 1 }}</td>
             <td>{{ laporan.nama_tps }}</td>
-            <!-- <td>Desa {{ getTPS(laporan.id_tps)?.desa }}</td> -->
             <td>{{ kondisiText(laporan.kondisi_tps) }}</td>
-            <td>{{ laporan.nama_pelapor }}</td>
+            <td>{{ laporan.nama_pelapor}}</td>
             <td>{{ formatDate(laporan.tgl_laporan) }}</td>
-            <td>{{ laporan.deskripsi }}</td>
+            <td>{{ laporan.deskripsi || '-' }}</td>
             <td>
               <button class="btn-action" @click="openDetail(laporan)">
                 <span class="material-icons">visibility</span>
@@ -52,9 +50,6 @@
             <div class="data-card-title">
               {{ laporan.nama_pelapor }}
             </div>
-            <!-- <div class="data-card-subtitle">
-              Desa {{ getTPS(laporan.id_tps)?.desa }}
-            </div> -->
           </div>
         </div>
 
@@ -67,16 +62,16 @@
           </div>
           <div class="data-card-item">
             <span class="data-card-label">Pelapor:</span>
-            <span class="data-card-value">{{ laporan.nama_pelapor }}</span>
+            <span class="data-card-value">{{ laporan.nama_pelapor}}</span>
           </div>
           <div class="data-card-item">
             <span class="data-card-label">Tanggal:</span>
             <span class="data-card-value">{{ laporan.tgl_laporan }}</span>
           </div>
-          <!-- <div class="data-card-item">
+          <div class="data-card-item">
             <span class="data-card-label">Keterangan:</span>
-            <span class="data-card-value">{{ laporan.deskripsi }}</span>
-          </div> -->
+            <span class="data-card-value">{{ laporan.deskripsi || '-' }}</span>
+          </div>
         </div>
 
         <div class="data-card-footer">
@@ -121,11 +116,6 @@ async function fetchLaporan() {
 }
 
 onMounted(fetchLaporan)
-
-/* METHODS */
-// function getTPS(id) {
-//   return tpsData.value.find(t => t.id_tps === id)
-// }
 
 function kondisiText(kondisi) {
   return {

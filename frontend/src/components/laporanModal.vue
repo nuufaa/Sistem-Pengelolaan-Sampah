@@ -12,16 +12,14 @@
 
       <div class="modal-body">
         <div class="detail-item"><b>TPS:</b> {{ laporan?.nama_tps }}</div>
-        <!-- <div class="detail-item"><b>Desa:</b> Desa {{ tps?.desa }}</div> -->
         <div class="detail-item">
           <b>Kondisi:</b> {{ kondisiText(laporan?.kondisi_tps) }}
         </div>
         <div class="detail-item"><b>Pelapor:</b> {{ laporan?.nama_pelapor }}</div>
         <!-- <div class="detail-item"><b>No. HP:</b> {{ laporan?.no_hp }}</div> -->
-        <div class="detail-item"><b>Tanggal:</b> {{ formatDate(laporan?.tgl_laporan) }}</div>
+        <div class="detail-item"><b>Tanggal & Waktu:</b> {{ formatDate(laporan?.tgl_laporan) }}</div>
         <div class="detail-item">
-          <b>Keterangan:</b><br />
-          {{ laporan?.deskripsi }}
+          <b>Keterangan:</b> {{ laporan?.deskripsi || '-' }}
         </div>
       </div>
 
