@@ -22,51 +22,25 @@ async function create(data) {
   }
 }
 
-// async function updateStatus(id, data) {
-//   if (data.status_angkut === "selesai" && !data.tgl_terakhir_diambil) {
-//     data.tgl_terakhir_diambil = new Date(); // frontend bisa kirim atau backend set otomatis
-//     await daftarTugasModel.updateStatus(id, data);
-//   }
-
-//   await db.query(
-//     `UPDATE daftar_tugas
-//      SET tgl_terakhir_diambil = ?, id_kendaraan = ?, status_angkut = ?, volume_sampah = ?
-//      WHERE id_daftar_tugas = ?`,
-//     [
-//       data.tgl_terakhir_diambil,
-//       data.id_kendaraan || null,
-//       data.status_angkut,
-//       data.volume_sampah,
-//       id
-//     ]
-//   );
-// }
-
 async function updateStatus(id, data) {
+  const tglTerakhir =
+    data.status_angkut === "selesai" ? new Date() : null;
 
-  let tglTerakhir = null;
-
-  // jika status selesai → set tanggal sekarang
-  if (data.status_angkut === "selesai") {
-    tglTerakhir = new Date();
-  }
-
-await db.query(
-  `UPDATE daftar_tugas
-   SET 
-     tgl_terakhir_diambil = IF(? = 'selesai', NOW(), NULL),
-     id_kendaraan = ?,
-     status_angkut = ?,
-     volume_sampah = ?
-   WHERE id_daftar_tugas = ?`,
-  [
-    data.status_angkut,
-    data.id_kendaraan || null,
-    data.status_angkut,
-    data.volume_sampah || null,
-    id
-  ]
-);
+  const [result] = await db.query(
+    `UPDATE daftar_tugas SET
+      tgl_terakhir_diambil = ?,
+      id_kendaraan = ?,
+      status_angkut = ?,
+      volume_sampah = ?
+    WHERE id_daftar_tugas = ?`,
+    [
+      tglTerakhir,
+      data.id_kendaraan || null,
+      data.status_angkut,
+      data.volume_sampah || null,
+      id
+    ]
+  );
 }
 
 async function findById(id) {
@@ -96,15 +70,19 @@ async function getByPetugas(id_petugas) {
             dt.id_petugas,
             dt.tgl_pengambilan,
             dt.id_kendaraan,
+            k.nomor_kendaraan,
             dt.status_angkut,
             dt.volume_sampah,
+            p.nama,
             t.nama_tps,
-            GROUP_CONCAT(DISTINCT j2.hari_pengambilan ORDER BY j2.hari_pengambilan SEPARATOR ',') AS hari_pengambilan,
+            GROUP_CONCAT(DISTINCT j.hari_pengambilan ORDER BY j.hari_pengambilan) AS hari_pengambilan,
             MAX(j.tgl_terakhir_diambil) AS tgl_terakhir_diambil
      FROM daftar_tugas dt
      LEFT JOIN tps t ON dt.id_tps = t.id_tps
+     LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
      LEFT JOIN jadwal_pengambilan j ON dt.id_jadwal = j.id_jadwal
      LEFT JOIN jadwal_pengambilan j2 ON j.id_tps = j2.id_tps AND j.id_petugas = j2.id_petugas
+     LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
      WHERE dt.id_petugas = ?
      GROUP BY dt.id_daftar_tugas, dt.id_jadwal, dt.id_tps, dt.id_petugas, dt.tgl_pengambilan, dt.id_kendaraan, dt.status_angkut, dt.volume_sampah, t.nama_tps
      ORDER BY dt.tgl_pengambilan DESC`,
