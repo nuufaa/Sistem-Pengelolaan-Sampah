@@ -87,7 +87,6 @@ onMounted(() => {
   fetchTPS()
 })
 
-/* METHODS */
 function openAdd() {
   form.value = {
     id_jadwal: '',
@@ -127,10 +126,8 @@ async function save(data) {
       payload.tgl_terakhir_diambil = data.tgl_terakhir_diambil
     }
 
-    // choose POST or PUT depending on presence of id_jadwal
-    // determine create vs update by presence of id_jadwal
     if (data.id_jadwal && data.id_jadwal.length) {
-      // update: send to route identified by TPS
+
       await api.put(`/api/jadwal/${data.id_tps}`, payload);
     } else {
       await api.post('/api/jadwal', payload);

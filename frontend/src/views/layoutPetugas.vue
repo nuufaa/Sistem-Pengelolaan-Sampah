@@ -8,7 +8,7 @@
       </div>
 
       <div class="header-actions">
-        <span class="petugas-name">Petugas Desa</span>
+        <span class="petugas-name">{{ petugas?.nama || 'Petugas Desa' }}</span>
         <button class="btn-logout" @click="logout">
           <span class="material-icons">logout</span>
           Keluar
@@ -24,44 +24,28 @@
           <div class="sidebar-header">
             <span class="material-icons">badge</span>
             <div>
-              <h2>{{ user?.nama || 'Petugas Desa' }}</h2>
+              <h2>{{ petugas?.nama || 'Petugas Desa' }}</h2>
               <p>Desa Sembalun Bumbung</p>
             </div>
           </div>
 
           <nav class="sidebar-nav">
-            <router-link
-              to="/petugas"
-              class="nav-item"
-              exact-active-class="active"
-            >
+            <router-link to="/petugas" class="nav-item" exact-active-class="active">
               <span class="material-icons">dashboard</span>
               Dashboard
             </router-link>
 
-            <router-link
-              to="/petugas/pengambilan"
-              class="nav-item"
-              active-class="active"
-            >
+            <router-link to="/petugas/pengambilan" class="nav-item" active-class="active">
               <span class="material-icons">list_alt</span>
               Daftar Pengambilan
             </router-link>
 
-            <router-link
-              to="/petugas/kepatuhan"
-              class="nav-item"
-              active-class="active"
-            >
+            <router-link to="/petugas/kepatuhan" class="nav-item" active-class="active">
               <span class="material-icons">schedule</span>
               Kepatuhan Jadwal
             </router-link>
 
-            <router-link
-              to="/petugas/logbook"
-              class="nav-item"
-              active-class="active"
-            >
+            <router-link to="/petugas/logbook" class="nav-item" active-class="active">
               <span class="material-icons">description</span>
               Logbook Kendaraan
             </router-link>
@@ -78,14 +62,39 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
 const router = useRouter()
+const petugas = ref(null)
 
+// Fungsi decode JWT manual
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]))
+  } catch (e) {
+    return null
+  }
+}
 
+// Ambil nama petugas dari token saat mounted
+onMounted(() => {
+  const token = localStorage.getItem('token')
+  if (!token) return
 
+  const decoded = parseJwt(token)
+  if (decoded) {
+    petugas.value = {
+      nama: decoded.name,
+      role: decoded.role
+    }
+  }
+})
+
+// Logout
 function logout() {
-  localStorage.removeItem('token') // hapus token login
-  router.push('/') // redirect ke halaman login
+  localStorage.removeItem('token')
+  router.push('/')
 }
 </script>
 

@@ -50,20 +50,43 @@
       </div>
     </div>
 
-    <!-- Tugas Hari Ini -->
     <div class="today-tasks">
       <h3>Tugas Hari Ini</h3>
-      <p style="color:#757575">Belum ada tugas hari ini</p>
-      <div class="task-list" id="todayTaskList">
-        <!-- Dynamic content -->
+      <div v-if="todayTasks.length === 0" class="no-tasks" style="color:#757575; padding:20px; text-align:center;">
+        Tidak ada tugas hari ini
+      </div>
+      <div v-else class="task-list">
+        <div v-for="task in todayTasks" :key="task.id_daftar_tugas" class="task-item">
+          <div class="task-info">
+            <h4>{{ task.nama_tps }}</h4>
+            <!-- <p>Jumlah tugas hari ini: {{ todayTasks.length }}</p> -->
+            <p>
+              Terakhir diambil: {{ task.tgl_terakhir_diambil ? new Date(task.tgl_terakhir_diambil).toLocaleDateString('id-ID') : 'Belum diambil' }}
+              • Jadwal: {{ new Date(task.tgl_pengambilan).toLocaleDateString('id-ID') }}
+            </p>
+          </div>
+            <button class="btn-update" @click="openUpdateModal(task)">
+              <span class="material-icons">edit</span>
+              <span>Update</span>
+            </button>
+        </div>
       </div>
     </div>
+
+    <UpdatePengambilanModal
+      :show="showModal"
+      :data="selectedItem"
+      :kendaraanList="kendaraanList"
+      @close="showModal = false"
+      @save="handleSave"
+    />
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted} from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
+import UpdatePengambilanModal from '@/components/updateStatusModal.vue'
 
 const today = new Date().toLocaleDateString('id-ID', {
   weekday: 'long',
@@ -77,22 +100,80 @@ const pending = ref(0)
 const done = ref(0)
 const progress = ref(0)
 
+const tpsData = ref([])
+const pengambilanData = ref([])
+const kendaraanList = ref([])
+
+const showModal = ref(false)
+const selectedItem = ref(null)
+
+async function fetchPengambilan() {
+  try {
+    const res = await api.get('/api/daftar-tugas');
+    pengambilanData.value = res.data;
+    tpsData.value = res.data.tps || []
+  } catch (error) {
+    console.error("Gagal ambil daftar tugas:", error)
+  }
+}
+
+async function fetchKendaraan() {
+  const res = await api.get('/api/kendaraan')
+  kendaraanList.value = res.data
+}
+
 async function fetchDashboard() {
   try {
     const res = await api.get('/api/dashboard/petugas')
-
     total.value = res.data.total
     pending.value = res.data.pending
     done.value = res.data.done
     progress.value = res.data.progress
-
   } catch (error) {
     console.error("Gagal ambil dashboard:", error)
   }
 }
 
-onMounted(fetchDashboard)
+const todayTasks = computed(() => {
+  const todayDate = new Date()
+  return pengambilanData.value.filter(task => {
+    if (!task.tgl_pengambilan) return false
+    
+    const taskDate = new Date(task.tgl_pengambilan)
+    // tampilkan kalau tgl_pengambilan <= hari ini dan belum diambil
+    return taskDate <= todayDate && task.tgl_terakhir_diambil === null
+  })
+})
 
+async function handleSave(payload) {
+  if (!selectedItem.value) return;
+  
+  const body = {
+    status_angkut: payload.status_angkut,
+    id_kendaraan: payload.id_kendaraan || null,
+    volume_sampah: payload.volume_sampah || null
+  };
+  
+  try {
+    await api.put(`/api/daftar-tugas/${selectedItem.value.id}/status`, body)
+    showModal.value = false
+    await fetchPengambilan()
+  } catch (err) {
+    console.error('Gagal update status', err)
+  }
+}
+
+function openUpdateModal(id) {
+  selectedItem.value = id
+  showModal.value = true
+}
+
+onMounted(async () => {
+  fetchPengambilan()
+  fetchDashboard()
+  fetchKendaraan()
+})
 </script>
+
 
 <style scoped src="@/assets/styles/petugas.css"></style>
