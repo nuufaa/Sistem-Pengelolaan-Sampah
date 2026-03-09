@@ -1,6 +1,5 @@
 <template>
   <section class="content-section active">
-    <!-- HEADER -->
     <div class="section-header">
       <h2>Daftar Pengambilan Sampah</h2>
 
@@ -14,7 +13,6 @@
       </div>
     </div>
 
-    <!-- TABLE -->
     <div class="table-container desktop-only">
       <table class="data-table">
         <thead>
@@ -37,7 +35,6 @@
             <td>{{ item.nama_tps }}</td>
             <td>{{ hariLabel(item.hari_pengambilan) }}</td>
             <td>{{ formatDate(item.tgl_pengambilan)}}</td>
-            <!-- <td>{{ formatDate(item.tgl_terakhir_diambil) }}</td> -->
             <td>
               {{
                 item.status_angkut === 'selesai' && item.tgl_terakhir_diambil
@@ -64,7 +61,6 @@
       </table>
     </div>
 
-    <!-- MODAL UPDATE -->
     <UpdatePengambilanModal
       :show="showModal"
       :data="selectedItem"
@@ -96,7 +92,6 @@ async function fetchPengambilan() {
     await api.post('/api/daftar-tugas/generate');
 
     const res = await api.get('/api/daftar-tugas');
-    // console.log('GET /api/daftar-tugas response', res.data);
     pengambilanData.value = res.data;
   } catch (err) {
     console.error('Gagal ambil pengambilan', err);
@@ -108,7 +103,6 @@ onMounted(() => {
     fetchKendaraan()
 })
 
-/* FILTER */
 const filteredData = computed(() => {
   if (!filterStatus.value) return pengambilanData.value
   return pengambilanData.value.filter(
@@ -136,39 +130,16 @@ function openModal(item) {
   showModal.value = true
 }
 
-// function handleSave(payload) {
-//   if (!selectedItem.value) return
-
-//   selectedItem.value.status = payload.status
-//   selectedItem.value.kendaraan = payload.kendaraan
-//   selectedItem.value.volume = payload.volume
-//   selectedItem.value.volumeUnit = payload.unit
-//   selectedItem.value.notes = payload.notes
-
-//   if (payload.status === 'done') {
-//     selectedItem.value.lastPickup =
-//       new Date().toLocaleDateString('id-ID', {
-//         day: 'numeric',
-//         month: 'long',
-//         year: 'numeric'
-//       })
-//   }
-
-//   showModal.value = false
-// }
-
-// payload coming from modal has generic field names, convert to what backend expects
 async function handleSave(payload) {
   if (!selectedItem.value) return;
    console.log("PAYLOAD DARI MODAL:", payload)
-
 
   const body = {
     status_angkut: payload.status_angkut,
     id_kendaraan: payload.id_kendaraan || null,
     volume_sampah: payload.volume_sampah || null
   };
-console.log("BODY KE API:", body)
+
   try {
     await api.put(`/api/daftar-tugas/${selectedItem.value.id}/status`, body)
     showModal.value = false
@@ -190,15 +161,11 @@ function formatDate(date) {
   if (!date) return '-'
 
   const d = new Date(date)
-
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
 
-  // const hours = String(d.getHours()).padStart(2, '0')
-  // const minutes = String(d.getMinutes()).padStart(2, '0')
-
-  return `${year}-${month}-${day}` //  ${hours}:${minutes}`
+  return `${year}-${month}-${day}`
 }
 
 </script>

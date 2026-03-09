@@ -46,26 +46,7 @@ async function update({ id_petugas, nama, no_telp, username, password, status_pe
     WHERE id_petugas = ?`,
     [nama, no_telp,username, password, status_petugas, id_petugas]
   )
-
-//     if (password) {
-//     // Kalau password diganti
-//     return db.query(
-//       `UPDATE petugas
-//        SET nama = ?, no_telp = ?, username = ?, password = ?, status_petugas = ?
-//        WHERE id_petugas = ?`,
-//       [nama, no_telp, username, password, status_petugas, id_petugas]
-//     )
-//   } else {
-//     // Kalau password tidak diganti
-//     return db.query(
-//       `UPDATE petugas
-//        SET nama = ?, no_telp = ?, username = ?, status_petugas = ?
-//        WHERE id_petugas = ?`,
-//       [nama, no_telp, username, status_petugas, id_petugas]
-//     )
-//   }
 }
-
 
 module.exports = {
     create,
