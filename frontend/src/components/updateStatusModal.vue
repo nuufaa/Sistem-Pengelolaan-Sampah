@@ -79,27 +79,30 @@
 
           <div class="status-buttons">
             <button
+              type="button"
               class="status-btn"
-              :class="{ selected: form.status === 'belum_diangkut' }"
-              @click="form.status = 'belum_diangkut'"
+              :class="{ selected: form.status_angkut === 'belum_diangkut' }"
+              @click="form.status_angkut = 'belum_diangkut'"
             >
               <span class="material-icons">pending</span>
               Belum Mulai
             </button>
 
             <button
+              type="button"
               class="status-btn"
-              :class="{ selected: form.status === 'diangkut' }"
-              @click="form.status = 'diangkut'"
+              :class="{ selected: form.status_angkut === 'diangkut' }"
+              @click="form.status_angkut = 'diangkut'"
             >
               <span class="material-icons">autorenew</span>
               Sedang Berlangsung
             </button>
 
             <button
+              type="button"
               class="status-btn"
-              :class="{ selected: form.status === 'selesai' }"
-              @click="form.status = 'selesai'"
+              :class="{ selected: form.status_angkut === 'selesai' }"
+              @click="form.status_angkut = 'selesai'"
             >
               <span class="material-icons">check_circle</span>
               Selesai
@@ -108,14 +111,14 @@
         </div>
 
         <!-- CATATAN -->
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>Catatan (Opsional)</label>
           <textarea
             rows="3"
             v-model="form.notes"
             placeholder="Tambahkan catatan jika diperlukan"
           />
-        </div>
+        </div> -->
       </div>
 
       <!-- FOOTER -->
@@ -131,7 +134,7 @@
 </template>
 
 <script setup>
-import { reactive} from 'vue'
+import { reactive, watch } from 'vue'
 
 const props = defineProps({
   show: Boolean,
@@ -151,18 +154,36 @@ const form = reactive({
   id_kendaraan: '',
   volume: '',
   unit: 'kg',
-  status: 'belum_diangkut',
+  status_angkut: '',
   notes: ''
 })
 
-function hariLabel(idx) {
-  const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
-  return labels[idx] || '-';
+// function hariLabel(idx) {
+//   const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+//   return labels[idx] || '-';
+// }
+
+function hariLabel(hariStr) {
+  if (!hariStr) return '-'
+  const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']
+  const hariArray = hariStr.split(',').map(h => parseInt(h.trim()))
+  return hariArray.map(idx => labels[idx] || '-').join(', ')
 }
+
+watch(() => props.data, (val) => {
+    if (!val) return
+
+    form.id_kendaraan = val.id_kendaraan || ''
+    form.volume = val.volume_sampah || ''
+    form.status_angkut = val.status_angkut || ''
+  },
+   { immediate: true }
+)
 
 const close = () => emit('close')
 
 const submit = () => {
+  console.log("FORM SEBELUM DIKIRIM:", form)
   emit('save', { ...form })
   close()
 }

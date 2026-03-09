@@ -3,6 +3,7 @@ const logbook = require("../models/daftarTugasModel");
 
 async function updateStatus(req, res) {
   try {
+    console.log("BODY DARI FRONTEND:", req.body)
     await daftarTugasService.updateStatusTugas(
       req.params.id,
       req.body
@@ -45,13 +46,12 @@ async function updateLogbook(req, res) {
 }
 
 // GET /api/daftar-tugas
-// optionally filter by petugas id from auth
 async function listTugas(req, res) {
   try {
     const userId = req.user ? req.user.id : null;
-    console.log('Fetching tasks for userId:', userId);
+    // console.log('Fetching tasks for userId:', userId);
     const data = await daftarTugasService.listTugas(userId);
-    console.log('Tasks data:', data);
+    // console.log('Tasks data:', data);
     res.json(data);
   } catch (error) {
     console.error('Error in listTugas:', error);

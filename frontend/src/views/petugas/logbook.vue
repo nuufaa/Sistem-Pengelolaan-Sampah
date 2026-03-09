@@ -3,7 +3,7 @@
     <!-- HEADER -->
     <div class="section-header">
       <h2>Logbook Kendaraan</h2>
-      <div class="header-date">{{ todayLabel }}</div>
+      <!-- <div class="header-date">{{ todayLabel }}</div> -->
     </div>
 
     <!-- FORM TAMBAH LOGBOOK -->
@@ -78,9 +78,12 @@
           <button type="button" class="btn-secondary" @click="resetForm">
             Reset
           </button>
-          <button type="submit" class="btn-primary">
+          <!-- <button type="submit" class="btn-primary" >
             Simpan Logbook
-          </button>
+          </button> -->
+          <button type="submit" class="btn-primary" :disabled="loading">
+              {{ loading ? "Menyimpan..." : "Simpan Logbook" }}
+        </button>
         </div>
       </form>
     </div>
@@ -94,10 +97,16 @@
         </div>
 
         <div class="logbook-body">
-          <div v-if="todayLogbook">
+          <!-- <div v-if="todayLogbook"> -->
+          <template v-if="todayLogbook">
+
             <div class="logbook-info-item">
               <span class="label">Kendaraan</span>
-              <span class="value">{{ todayLogbook.kendaraan }}</span>
+              <span class="value">{{ todayLogbook?.nomor_kendaraan }}</span>
+            </div>
+            <div class="logbook-info-item">
+              <span class="label">Petugas</span>
+              <span class="value">{{ todayLogbook?.nama }}</span>
             </div>
             <div class="logbook-info-item">
               <span class="label">Jumlah TPS</span>
@@ -116,7 +125,8 @@
                 {{ todayLogbook?.tpsVisited?.join(', ') }}
               </span>
             </div>
-          </div>
+          </template>
+          <!-- </div> -->
 
           <div v-else class="no-logbook">
             Belum ada aktivitas hari ini
@@ -128,7 +138,7 @@
       <div class="logbook-history">
         <h3>Riwayat Logbook</h3>
 
-        <div v-if="historyLogbook.length">
+        <div v-if="historyLogbook.length" class="logbook-list">
           <div
             v-for="log in historyLogbook"
             :key="log.id"
@@ -141,8 +151,12 @@
 
             <div class="logbook-item-body">
               <div class="logbook-item-row">
+                <span class="label">Petugas</span>
+                <span class="value">{{ log.nama }}</span>
+              </div>
+              <div class="logbook-item-row">
                 <span class="label">Jumlah TPS</span>
-                <span class="value">{{ log.tpsVisited.length }}</span>
+                <span class="value">{{ log.tpsVisited.length }} TPS</span>
               </div>
               <!-- <div class="logbook-item-row">
                 <span class="label">Waktu</span>
@@ -170,34 +184,62 @@ import api from '@/services/api'
 
 const kendaraanList = ref([])
 const tpsList = ref([])
-const logbookData = ref([])
+// const logbookData = ref([])
 const daftarTugas = ref([])
 
+const loading = ref(false)
+
 const form = reactive({
-  // id_kendaraan: '',
-  // id_tps: '',
-  // id_petugas: '',
-  // hari_pengambilan: [],
-  // tgl_terakhir_diambil: null
   id_kendaraan: '',
-  // tgl_pengambilan: '',
-  tpsVisited: [] // WAJIB ADA dan HARUS ARRAY
+  tpsVisited: []
+})
+
+const todayLogbook = computed(() => {
+
+  if (!daftarTugas.value.length) return null
+
+  const today = new Date().toLocaleDateString('id-CA')
+  const todayData = daftarTugas.value.filter(item => {
+    const itemDate = new Date(item.tgl_pengambilan)
+      .toLocaleDateString('id-CA')
+
+    return itemDate === today
+  })
+
+  if (!todayData.length) return null
+  return {
+    nomor_kendaraan: todayData[0].nomor_kendaraan,
+    nama: todayData[0].nama,
+    tpsVisited: [...new Set(todayData.map(t => t.nama_tps))]
+  }
 })
 
 const historyLogbook = computed(() => {
-  return logbookData.value || []
+  if (!daftarTugas.value.length) return []
+
+  const grouped = {}
+
+  daftarTugas.value.forEach(item => {
+    const key = item.tgl_pengambilan + "-" + item.id_kendaraan
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: key,
+        tanggal: item.tgl_pengambilan,
+        kendaraan: item.nomor_kendaraan,
+        tpsVisited: [],
+        nama: item.nama
+      }
+    }
+
+    grouped[key].tpsVisited.push(item.nama_tps)
+  })
+
+  return Object.values(grouped).sort((a,b) =>
+    new Date(b.tanggal) - new Date(a.tanggal)
+  )
 })
 
-// async function fetchLogbook() {
-//   try {
-
-//     const res = await api.get('/api/logbook')
-//     logbookData.value = res.data
-
-//   } catch (error) {
-//     console.error("Gagal ambil logbook", error)
-//   }
-// }
 
 async function fetchKendaraan() {
   const res = await api.get('/api/kendaraan')
@@ -208,6 +250,7 @@ async function fetchTPS() {
   const res = await api.get('/api/tps')
   tpsList.value = res.data
 }
+
 async function fetchDaftarTugas() {
   const res = await api.get('/api/daftar-tugas')
   daftarTugas.value = res.data
@@ -219,34 +262,29 @@ async function submitLogbook() {
     alert("Pilih minimal satu TPS")
     return
   }
+  loading.value = true
   
   try {
     await api.put('/api/daftar-tugas/logbook', {
       id_kendaraan: form.id_kendaraan,
       tpsVisited: form.tpsVisited
     })
-    
-    // await fetchLogbook()
-    // resetForm()
+
+    alert("Logbook berhasil disimpan")
+    resetForm();
+    await fetchDaftarTugas()
+
   } catch (error) {
     console.error("Gagal simpan logbook", error)
+  }finally {
+    loading.value = false
   }
 }
 
-// const todayLabel = new Date().toLocaleDateString('id-ID', {
-//   weekday: 'long',
-//   day: 'numeric',
-//   month: 'long',
-//   year: 'numeric'
-// })
-
-// function formatDate(date) {
-//   return new Date(date).toLocaleDateString('id-ID', {
-//     day: 'numeric',
-//     month: 'long',
-//     year: 'numeric'
-//   })
-// }
+function resetForm() {
+  form.id_kendaraan = ""
+  form.tpsVisited = []
+}
 
 function formatDate(date) {
   if (!date) return '-'
@@ -261,7 +299,6 @@ function formatDate(date) {
 }
 
 onMounted(() => {
-  // fetchLogbook()
   fetchKendaraan()
   fetchTPS()
   fetchDaftarTugas()

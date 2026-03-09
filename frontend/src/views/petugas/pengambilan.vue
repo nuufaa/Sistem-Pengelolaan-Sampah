@@ -45,7 +45,7 @@
                   : '-'
             }}
             </td>
-            <td>{{ item.id_kendaraan || '-' }}</td>
+            <td>{{ item.nomor_kendaraan || '-' }}</td>
             <td>
               {{ item.volume_sampah != null ? item.volume_sampah : '-' }}
             </td>
@@ -68,7 +68,7 @@
     <UpdatePengambilanModal
       :show="showModal"
       :data="selectedItem"
-      :kendaraan-list="kendaraanList"
+      :kendaraanList="kendaraanList"
       @close="showModal = false"
       @save="handleSave"
     />
@@ -160,13 +160,15 @@ function openModal(item) {
 // payload coming from modal has generic field names, convert to what backend expects
 async function handleSave(payload) {
   if (!selectedItem.value) return;
+   console.log("PAYLOAD DARI MODAL:", payload)
+
 
   const body = {
-    status_angkut: payload.status,
+    status_angkut: payload.status_angkut,
     id_kendaraan: payload.id_kendaraan || null,
-    volume_sampah: payload.volume || null
+    volume_sampah: payload.volume_sampah || null
   };
-
+console.log("BODY KE API:", body)
   try {
     await api.put(`/api/daftar-tugas/${selectedItem.value.id}/status`, body)
     showModal.value = false

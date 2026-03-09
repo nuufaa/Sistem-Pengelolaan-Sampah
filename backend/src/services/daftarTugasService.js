@@ -3,13 +3,10 @@ const jadwalModel = require("../models/jadwalModel");
 
 async function updateStatusTugas(id, data) {
 
-  
-  if (data.status_angkut === "selesai") {
-    data.tgl_terakhir_diambil = new Date(); // frontend bisa kirim atau backend set otomatis
-    await daftarTugasModel.updateStatus(id, data);
-  }
+  // selalu update status tugas
+  await daftarTugasModel.updateStatus(id, data);
 
-  // Jika status selesai
+  // jika status selesai baru update jadwal
   if (data.status_angkut === "selesai") {
 
     const tugas = await daftarTugasModel.findById(id);
