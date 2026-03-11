@@ -1,5 +1,5 @@
 const petugasModel = require("../models/petugasModel");
-const bcrypt = require('bcrypt')\
+const bcrypt = require('bcrypt')
 
 async function createPetugas(req, res) {
   try {

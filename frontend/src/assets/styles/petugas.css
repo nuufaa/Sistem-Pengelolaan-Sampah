@@ -1,56 +1,3 @@
-/* ===== CSS Variables =====
-:petugas-page {
-    --primary: #2196F3;
-    --primary-dark: #1976D2;
-    --primary-light: #64B5F6;
-    --success: #4CAF50;
-    --warning: #FF9800;
-    --danger: #F44336;
-    
-    --status-pending: #FF9800;
-    --status-progress: #2196F3;
-    --status-done: #4CAF50;
-    
-    --bg-primary: #F5F5F5;
-    --bg-secondary: #FFFFFF;
-    --border: #E0E0E0;
-    --text-primary: #212121;
-    --text-secondary: #757575;
-    
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
-    
-    --sidebar-width: 280px;
-    --header-height: 70px;
-    
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.petugas-page {
-    min-height: 100vh;
-    background: var(--bg-primary);
-    position: relative;
-} */
-
-
-/* ===== Reset =====
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--text-primary);
-    background: var(--bg-primary);
-    line-height: 1.6;
-} */
-
-/* =========================
-   CSS VARIABLES (PETUGAS)
-========================= */
 .petugas-page {
   --primary: #2196f3;
   --primary-dark: #1976d2;
@@ -72,9 +19,6 @@ body {
   --header-height: 70px;
 }
 
-/* =========================
-   BASE
-========================= */
 .petugas-page {
   font-family: 'DM Sans', sans-serif;
   background: var(--bg-primary);
@@ -82,9 +26,6 @@ body {
   min-height: 100vh;
 }
 
-/* =========================
-   HEADER
-========================= */
 .petugas-page .petugas-header {
   position: fixed;
   top: 0;
@@ -132,18 +73,12 @@ body {
   border-color: var(--danger);
 }
 
-/* =========================
-   CONTAINER
-========================= */
 .petugas-page .petugas-container {
   display: flex;
   margin-top: var(--header-height);
   min-height: calc(100vh - var(--header-height));
 }
 
-/* =========================
-   SIDEBAR
-========================= */
 .petugas-page .petugas-sidebar {
   position: fixed;
   top: var(--header-height);
@@ -190,9 +125,6 @@ body {
   color: white;
 }
 
-/* =========================
-   MAIN CONTENT
-========================= */
 .petugas-page .petugas-main {
   flex: 1;
   margin-left: var(--sidebar-width);
@@ -213,9 +145,6 @@ body {
   margin-bottom: 32px;
 }
 
-/* =========================
-   STATS
-========================= */
 .petugas-page .stats-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -229,9 +158,6 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* =========================
-   TODAY TASKS
-========================= */
 .petugas-page .today-tasks {
   margin-top: 32px;
   background: white;
@@ -240,9 +166,6 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
 @media (max-width: 768px) {
   .petugas-page .petugas-sidebar {
     transform: translateX(-100%);
@@ -253,23 +176,6 @@ body {
     padding: 20px;
   }
 }
-
-/* ===== Header ===== */
-/* .petugas-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--header-height);
-    background: white;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    z-index: 1000;
-    box-shadow: var(--shadow-sm);
-} */
 
 .hamburger-menu {
     display: none;
@@ -333,14 +239,12 @@ body {
     border-color: var(--danger);
 }
 
-/* ===== Container ===== */
 .petugas-container {
     display: flex;
     margin-top: var(--header-height);
     min-height: calc(100vh - var(--header-height));
 }
 
-/* ===== Sidebar ===== */
 .petugas-sidebar {
     width: var(--sidebar-width);
     background: white;
@@ -393,77 +297,6 @@ body {
     gap: 4px;
 }
 
-/* ===== Sidebar ===== */
-/* .sidebar {
-    width: 380px;
-    background: var(--bg-secondary);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    position: relative;
-    transition: var(--transition);
-}
-
-.sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 3px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--text-disabled);
-}
-
-.sidebar-toggle {
-    position: absolute;
-    top: var(--spacing-md);
-    right: -15px;
-    width: 30px;
-    height: 30px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    transition: var(--transition);
-    box-shadow: var(--shadow-sm);
-}
-
-.sidebar-toggle:hover {
-    background: var(--primary);
-    color: white;
-    box-shadow: var(--shadow-md);
-}
-
-.sidebar-toggle .material-icons {
-    font-size: 20px;
-    transition: var(--transition);
-}
-
-.sidebar.collapsed {
-    width: 0;
-    border: none;
-}
-
-.sidebar.collapsed .sidebar-toggle .material-icons {
-    transform: rotate(180deg);
-}
-
-.sidebar-content {
-    padding: var(--spacing-lg);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
-} */
-
 .nav-item {
     display: flex;
     align-items: center;
@@ -491,11 +324,12 @@ body {
     font-size: 20px;
 }
 
-/* ===== Main Content ===== */
 .petugas-main {
     flex: 1;
     margin-left: var(--sidebar-width);
     padding: 32px;
+    overflow-y: auto;
+    height: calc(100vh - var(--header-height));
 }
 
 .content-section {
@@ -523,7 +357,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* ===== Stats Cards ===== */
 .stats-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -571,7 +404,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* ===== Today Tasks ===== */
 .today-tasks {
     background: white;
     padding: 24px;
@@ -617,7 +449,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* ===== Filter ===== */
 .filter-group {
     display: flex;
     gap: 12px;
@@ -637,7 +468,6 @@ body {
     border-color: var(--primary);
 }
 
-/* ===== Table ===== */
 .table-container {
     background: white;
     border-radius: 12px;
@@ -672,7 +502,6 @@ body {
     background: var(--bg-primary);
 }
 
-/* ===== Status Badge ===== */
 .status-badge {
     display: inline-flex;
     align-items: center;
@@ -702,7 +531,6 @@ body {
     font-size: 16px;
 }
 
-/* ===== Buttons ===== */
 .btn-update {
     padding: 8px 16px;
     background: var(--primary);
@@ -726,7 +554,6 @@ body {
     font-size: 18px;
 }
 
-/* ===== Card List Mobile ===== */
 .card-list {
     display: none;
     flex-direction: column;
@@ -780,7 +607,6 @@ body {
     border-top: 1px solid var(--border);
 }
 
-/* ===== Map ===== */
 .map-container {
     background: white;
     padding: 16px;
@@ -821,7 +647,6 @@ body {
     border-radius: 50%;
 }
 
-/* ===== Modal ===== */
 .modal {
     display: none;
     position: fixed;
@@ -903,7 +728,6 @@ body {
     justify-content: flex-end;
 }
 
-/* ===== TPS Info in Modal ===== */
 .tps-info {
     background: var(--bg-primary);
     padding: 16px;
@@ -923,7 +747,6 @@ body {
     margin-bottom: 4px;
 }
 
-/* ===== Status Buttons ===== */
 .form-group {
     margin-bottom: 20px;
 }
