@@ -27,7 +27,11 @@ import L from 'leaflet'
 
 const props = defineProps({
   lat: Number,
-  lng: Number
+  lng: Number,
+  mode: {
+    type: String,
+    default: 'default'
+  }
 })
 const emit = defineEmits(['select', 'close'])
 
@@ -36,54 +40,72 @@ let map, marker
 let selected = { lat: props.lat, lng: props.lng }
 
 onMounted(() => {
-  // default view dulu (sementara)
+
+  // koordinat default sembalun bumbung
+  const defaultLat = -8.384399
+  const defaultLng = 116.542617
+
   map = L.map(mapEl.value).setView(
-    [props.lat || -8.5, props.lng || 116.5],
-    14
+    [defaultLat, defaultLng],
+    15
   )
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     .addTo(map)
 
-  marker = L.marker(
-    [props.lat || -8.5, props.lng || 116.5]
-  ).addTo(map)
+  marker = L.marker([defaultLat, defaultLng]).addTo(map)
 
-  selected = {
-    lat: props.lat || -8.5,
-    lng: props.lng || 116.5
-  }
+  selected = { lat: defaultLat, lng: defaultLng }
 
-  // Jika tidak ada lat/lng dari parent → ambil GPS
-  if (props.lat == null || !props.lng == null) {
+  // jika mode current → ambil lokasi user
+  if (props.mode === 'current') {
     getCurrentLocation()
   }
 
-  // klik peta
+  // jika ada lat lng dari parent
+  if (props.lat && props.lng) {
+    marker.setLatLng([props.lat, props.lng])
+    map.setView([props.lat, props.lng], 16)
+
+    selected = {
+      lat: props.lat,
+      lng: props.lng
+    }
+  }
+
   map.on('click', e => {
     selected = e.latlng
     marker.setLatLng(selected)
   })
+
 })
 
 function getCurrentLocation() {
-  if (!navigator.geolocation) return
+
+  if (!navigator.geolocation) {
+    alert("Browser tidak mendukung lokasi")
+    return
+  }
 
   navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude
-      const lng = position.coords.longitude
+    (pos) => {
+
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
 
       selected = { lat, lng }
 
       marker.setLatLng([lat, lng])
-      map.setView([lat, lng], 16)
+      map.setView([lat, lng], 17)
+
     },
-    (error) => {
-      console.error(error)
+    (err) => {
+      console.error(err)
+      alert("Gagal mengambil lokasi")
     },
     { enableHighAccuracy: true }
   )
+
 }
 
 function confirm() {

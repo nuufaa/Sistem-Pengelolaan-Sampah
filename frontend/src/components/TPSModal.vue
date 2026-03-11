@@ -50,19 +50,38 @@
 
         <div class="form-group">
           <label class="form-label">Lokasi (Latitude, Longitude) *</label>
-          <div class="location-input-group">
-            <input type="number" step="0.0001" readonly v-model.number="form.latitude" class="form-control" placeholder="Latitude" />
-            <input type="number" step="0.0001" readonly v-model.number="form.longitude" class="form-control" placeholder="Longitude" />
-            <button type="button" class="btn btn-secondary" @click="showMap = true">
+          <div class="location-wrapper">
+            <div class="location-coordinates">
+              <input
+                type="number"
+                step="0.0001"
+                readonly
+                v-model.number="form.latitude"
+                class="form-control"
+                placeholder="Latitude"
+              />
+              <input
+                type="number"
+                step="0.0001"
+                readonly
+                v-model.number="form.longitude"
+                class="form-control"
+                placeholder="Longitude"
+              />
+            </div>
+          </div>
+          <div class="location-actions">
+            <button type="button" class="btn btn-secondary" @click="openMap">
               <span class="material-icons">map</span>
               Pilih di Peta
             </button>
-            <button type="button" class="btn btn-info" @click="getCurrentLocation">
+            <button type="button" class="btn btn-info" @click="openCurrentMap">
+              <span class="material-icons">my_location</span>
               Gunakan Lokasi Saya
             </button>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label class="form-label">Upload Foto TPS</label>
           <input
@@ -72,7 +91,6 @@
             @change="handleFileUpload"
           />
   
-          <!-- Preview gambar jika ada -->
           <div v-if="previewImage" class="mt-2">
             <img
               :src="previewImage"
@@ -98,6 +116,7 @@
       v-if="showMap"
       :lat="form.latitude"
       :lng="form.longitude"
+      :mode="mapMode"
       @close="showMap = false"
       @select="setLocation"
     />
@@ -116,6 +135,7 @@ const emit = defineEmits(['save', 'close'])
 
 const showMap = ref(false)
 const previewImage = ref(null)
+const mapMode = ref("default")
 
 function handleFileUpload(event) {
   const file = event.target.files[0]
@@ -123,10 +143,8 @@ function handleFileUpload(event) {
 
   form.value.foto_tps = file
 
-  // preview gambar
   previewImage.value = URL.createObjectURL(file)
 }
-
 
 const form = ref({
   id_tps: null,
@@ -146,7 +164,6 @@ watch(
     if (val) {
       Object.assign(form.value, val)
 
-      // jika sudah ada foto dari backend
       if (val.foto_tps) {
         previewImage.value = `http://localhost:3000/uploads/${val.foto_tps}`
       }
@@ -161,25 +178,14 @@ function setLocation({ lat, lng }) {
   showMap.value = false
 }
 
-function getCurrentLocation() {
-  if (!navigator.geolocation) {
-    alert("Browser tidak mendukung geolocation")
-    return
-  }
+function openMap(){
+  mapMode.value = "default"
+  showMap.value = true
+}
 
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      form.value.latitude = position.coords.latitude
-      form.value.longitude = position.coords.longitude
-    },
-    (error) => {
-      console.error(error)
-      alert("Gagal mengambil lokasi")
-    },
-    {
-      enableHighAccuracy: true
-    }
-  )
+function openCurrentMap(){
+  mapMode.value = "current"
+  showMap.value = true
 }
 
 function submit() {
@@ -281,11 +287,25 @@ function submit() {
   gap: 1rem;
 }
 
-.location-input-group {
+.location-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.location-coordinates {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  align-items: end;
+}
+
+.location-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.location-actions .btn {
+  flex: 1;
 }
 
 .modal-footer {
@@ -357,8 +377,12 @@ function submit() {
     grid-template-columns: 1fr;
   }
 
-  .location-input-group {
+  .location-coordinates {
     grid-template-columns: 1fr;
+  }
+
+  .location-actions {
+    flex-direction: column;
   }
 }
 </style>
