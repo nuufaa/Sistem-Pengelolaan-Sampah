@@ -48,7 +48,9 @@ async function findAllJadwal() {
             t.longitude,
             t.status_tps,
             jadwal.hari_pengambilan,
-            jadwal.tgl_terakhir_diambil
+            jadwal.tgl_terakhir_diambil,
+            dt.id_tps,
+            dt.status_angkut
 
         FROM tps t
 
@@ -60,6 +62,8 @@ async function findAllJadwal() {
             FROM jadwal_pengambilan
             GROUP BY id_tps
         ) jadwal ON t.id_tps = jadwal.id_tps
+        LEFT JOIN daftar_tugas dt 
+            ON t.id_tps = dt.id_tps
 
         ORDER BY t.id_tps DESC
     `);
@@ -118,6 +122,27 @@ async function update(id, data) {
 //   return rows;
 // }
 
+async function findStatusTPS(statusList = []) {
+    let query = `
+        SELECT id_tps, nama_tps, tps.id_dusun, alamat, dusun.nama_dusun,
+        latitude, longitude, kapasitas, status_tps, foto_tps
+        FROM tps
+        JOIN dusun ON tps.id_dusun = dusun.id_dusun
+    `;
+
+    const params = [];
+
+    if (statusList.length > 0) {
+        query += ` WHERE status_tps IN (${statusList.map(() => '?').join(',')})`;
+        params.push(...statusList);
+    }
+
+    query += ` ORDER BY id_tps DESC`;
+
+    const [rows] = await db.query(query, params);
+    return rows;
+}
+
 async function remove(id) {
     await db.query(
         "DELETE FROM tps WHERE id_tps = ?",
@@ -150,5 +175,6 @@ module.exports = {
     update,
     remove,
     findForMap,
-    getStatistics
+    getStatistics,
+    findStatusTPS
 }

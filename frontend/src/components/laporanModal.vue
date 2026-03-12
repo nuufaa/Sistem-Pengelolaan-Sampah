@@ -1,5 +1,5 @@
 <template>
-  <div class="modal show">
+  <div class="modal">
     <div class="modal-overlay" @click="$emit('close')" />
 
     <div class="modal-content">
@@ -33,10 +33,10 @@
 </template>
 
 <script setup>
-const props = defineProps({
-  laporan: Object,
-  // tps: Object
-})
+// const props = defineProps({
+//   laporan: Object,
+//   // tps: Object
+// })
 
 function kondisiText(kondisi) {
   return {

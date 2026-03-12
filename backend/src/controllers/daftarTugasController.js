@@ -3,7 +3,6 @@ const logbook = require("../models/daftarTugasModel");
 
 async function updateStatus(req, res) {
   try {
-    console.log("BODY DARI FRONTEND:", req.body)
     await daftarTugasService.updateStatusTugas(
       req.params.id,
       req.body
