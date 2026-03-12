@@ -758,10 +758,16 @@ input, select, textarea {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 2000;
+    z-index: 4001;
     animation: fadeIn 0.3s ease;
     align-items: center;
     justify-content: center;
+    /* position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000; */
 }
 
 .modal.show {
@@ -780,13 +786,18 @@ input, select, textarea {
 }
 
 .modal-overlay {
-    position: absolute;
+    /* position: absolute; */
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
+    display: flex;              /* tambah */
+    align-items: center;        /* tambah */
+    justify-content: center;    /* tambah */
+    z-index: 1;               /* tambah */
 }
 
 .modal-content {
@@ -799,7 +810,7 @@ input, select, textarea {
     box-shadow: var(--shadow-xl);
     overflow: hidden;
     animation: slideUp 0.3s ease;
-    z-index: 1;
+    z-index: 2;
 }
 
 .modal-schedule {
@@ -961,17 +972,17 @@ input, select, textarea {
     font-weight: 600;
 }
 
-.tps-status-badge.pending {
+.tps-status-badge.belum_diangkut {
     background: var(--border);
     color: var(--text-secondary);
 }
 
-.tps-status-badge.active {
+.tps-status-badge.diangkut {
     background: var(--status-warning-bg);
     color: var(--secondary-dark);
 }
 
-.tps-status-badge.completed {
+.tps-status-badge.selesai {
     background: var(--status-normal-bg);
     color: var(--status-normal);
 }

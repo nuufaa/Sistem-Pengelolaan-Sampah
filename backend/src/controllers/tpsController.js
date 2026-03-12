@@ -61,6 +61,25 @@ async function getAllTpsJadwal(req, res) {
 //     });
 //   }
 // }
+async function getStatusTPS(req, res) {
+  try {
+    let { status } = req.query;
+
+    let statusList = [];
+
+    if (status) {
+      statusList = status.split(',');
+    }
+
+    const data = await TpsModel.findStatusTPS(statusList);
+
+    res.json(data);
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
 
 async function getTpsById(req, res) {
     try {
@@ -159,5 +178,6 @@ module.exports = {
     updateTps,
     deleteTps,
     getTpsMap,
-    getTpsStatistics
+    getTpsStatistics,
+    getStatusTPS
 }

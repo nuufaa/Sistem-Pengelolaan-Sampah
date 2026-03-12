@@ -49,7 +49,7 @@
               <input
                 type="number"
                 class="form-control"
-                v-model="form.volume"
+                v-model="form.volume_sampah"
                 :placeholder="form.unit === 'kg'
                   ? 'Masukkan volume dalam kilogram'
                   : 'Masukkan persentase (0–100)'"

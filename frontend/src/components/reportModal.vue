@@ -1,6 +1,6 @@
 <template>
   <div class="modal" :class="{ show: isOpen }" v-if="isOpen">
-    <div class="modal-overlay" @click="close"></div>
+    <div class="modal-overlay" @click="closeModal"></div>
 
     <div class="modal-content">
       <div class="modal-header">
@@ -8,7 +8,7 @@
           <span class="material-icons">edit_note</span>
           Laporan Kondisi Sampah
         </h2>
-        <button class="modal-close" @click="close">
+        <button class="modal-close" @click="closeModal">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -90,6 +90,11 @@ import { apiFetch } from '../services/api'
 import '@/assets/styles/report.css'
 
 const isOpen = ref(false)
+const selectedTPS = ref(null)
+const selectedFile = ref(null)
+const imagePreview = ref(null)
+const tpsList = ref([])
+const fileLabel = ref('Pilih foto')
 
 const form = ref({
   id_tps: '',
@@ -98,17 +103,21 @@ const form = ref({
   nama_pelapor: ''
 })
 
-const selectedFile = ref(null)
-const imagePreview = ref(null)
-const fileLabel = ref('Pilih foto')
-
-const tpsList = ref([])
-
 const conditions = [
   "Hampir penuh",
   "Penuh",
   "Sampah berserakan"
 ]
+
+async function fetchTps() {
+  try {
+    const res = await apiFetch("/api/tps")
+    tpsList.value = res
+    console.log(res.data)
+  } catch (err) {
+    console.error("Gagal ambil TPS:", err)
+  }
+}
 
 function previewImage(e) {
   const file = e.target.files[0]
@@ -141,12 +150,10 @@ async function submit() {
       body: formData,
       auth: false
     })
-
-
     alert("Laporan berhasil dikirim")
 
     resetForm()
-    close()
+    closeModal()
 
   } catch (err) {
     console.error("Gagal kirim laporan:", err)
@@ -167,25 +174,28 @@ function resetForm() {
   fileLabel.value = "Pilih foto"
 }
 
-function open() {
+function openModal(id_tps = null) {
+  selectedTPS.value = id_tps
   isOpen.value = true
+
+  if (id_tps) {
+    form.value.id_tps = id_tps
+  } else {
+    form.value.id_tps = '' 
+  }
+
 }
 
-function close() {
+function closeModal() {
   isOpen.value = false
 }
 
-async function fetchTps() {
-  try {
-    const res = await apiFetch("/api/tps")
-    tpsList.value = res
-    console.log(res.data)
-  } catch (err) {
-    console.error("Gagal ambil TPS:", err)
-  }
-}
+defineExpose({
+  openModal,
+  closeModal
+})
 
 onMounted(fetchTps)
 
-defineExpose({ open, close })
+// defineExpose({ open, close })
 </script>

@@ -17,7 +17,7 @@ async function getDashboard(req, res) {
           totalTPSPenuh,
           statusTPS,
           laporan7Hari,
-          totalTPSHampirPenuh
+          totalTPSHampirPenuh,
         })
 
     } catch (error) {
@@ -31,11 +31,17 @@ async function getDashboardMas(req, res) {
         const totalTPS = await dashboardModel.getTotalTPS()
         const totalTPSPenuh = await dashboardModel.getTotalTPSPenuh()
         const totalTPSHampirPenuh = await dashboardModel.getTotalTPSHampirPenuh()
+        const volumeSampahHarian = await dashboardModel.getVolumeSampah()
+        const rankingTPS = await dashboardModel.getRankingTPS()
+        const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita()
 
         res.json({
           totalTPS,
           totalTPSPenuh,
-          totalTPSHampirPenuh
+          totalTPSHampirPenuh,
+          volumeSampahHarian,
+          rankingTPS,
+          timbulanPerKapita
         })
 
     } catch (error) {
@@ -74,5 +80,22 @@ async function getDashboardPetugas(req, res) {
   }
 }
 
+async function getDashboardStat(req, res) {
+    try {
+        const volumeSampahHarian = await dashboardModel.getVolumeSampah()
+        const rankingTPS = await dashboardModel.getRankingTPS()
+        const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita()
 
-module.exports = { getDashboard, getDashboardPetugas, getDashboardMas }
+        res.json({
+          volumeSampahHarian,
+          rankingTPS,
+          timbulanPerKapita
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: "Terjadi kesalahan server" })   
+    }
+}
+
+module.exports = { getDashboard, getDashboardPetugas, getDashboardMas, getDashboardStat }
