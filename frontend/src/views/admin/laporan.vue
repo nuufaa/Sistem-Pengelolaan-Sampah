@@ -28,7 +28,7 @@
             <td>{{ laporan.nama_pelapor}}</td>
             <td>{{ formatDate(laporan.tgl_laporan) }}</td>
             <td>{{ laporan.deskripsi || '-' }}</td>
-            <td>
+            <td class="action-buttons">
               <button class="btn-action" @click="openDetail(laporan)">
                 <span class="material-icons">visibility</span>
               </button>
