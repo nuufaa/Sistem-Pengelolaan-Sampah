@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-header d-flex justify-content-between align-items-center">
         <h3 class="modal-title">{{ form.id_tps ? 'Edit TPS' : 'Tambah TPS' }}</h3>
-        <button type="button" class="btn-close" @click="$emit('close')">
+        <button type="button" class="modal-close" @click="$emit('close')">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -204,6 +204,7 @@ function submit() {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .modal-dialog {
@@ -300,6 +301,7 @@ function submit() {
 .location-actions {
   display: flex;
   gap: 0.5rem;
+  margin-top: 10px;
 }
 
 .location-actions .btn {

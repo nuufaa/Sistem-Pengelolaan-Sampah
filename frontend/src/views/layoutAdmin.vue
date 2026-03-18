@@ -8,7 +8,6 @@
       </div>
 
       <div class="header-actions">
-        <span class="admin-name">Admin Desa</span>
         <button class="btn-logout" @click="logout">
           <span class="material-icons">logout</span>
           Keluar
