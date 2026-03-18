@@ -34,8 +34,8 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Kapasitas (%) *</label>
-            <input type="number" v-model.number="form.kapasitas" class="form-control" min="0" max="100" placeholder="0-100" required />
+            <label class="form-label">Kapasitas TPS (Kg) *</label>
+            <input type="number" v-model.number="form.kapasitas" class="form-control" min="0" placeholder="0" required />
           </div>
         </div>
 
@@ -54,16 +54,14 @@
             <div class="location-coordinates">
               <input
                 type="number"
-                step="0.0001"
-                readonly
+                step="any"
                 v-model.number="form.latitude"
                 class="form-control"
                 placeholder="Latitude"
               />
               <input
                 type="number"
-                step="0.0001"
-                readonly
+                step="any"
                 v-model.number="form.longitude"
                 class="form-control"
                 placeholder="Longitude"

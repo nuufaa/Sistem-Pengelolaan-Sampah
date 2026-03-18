@@ -17,7 +17,7 @@
             <th>Alamat</th>
             <th>Dusun</th>
             <th>Lokasi</th>
-            <th>Kapasitas</th>
+            <th>Kapasitas TPS (Kg)</th>
             <th>Status TPS</th>
             <th>Foto TPS</th>
             <th>Aksi</th>
@@ -31,13 +31,13 @@
             <td>{{ tps.alamat }}</td>
             <td>{{ tps.nama_dusun }}</td>
             <td>{{ tps.latitude }}, {{ tps.longitude }}</td>
-            <td>{{ tps.kapasitas }}%</td>
+            <td>{{ tps.kapasitas }} kg</td>
             <td>
               <span class="status-badge" :class="tps.status_tps">
                 {{ statusText(tps.status_tps) }}
               </span>
             </td>
-            <td>{{ tps.foto_tps }}%</td>
+            <td>{{ tps.foto_tps || '-' }}</td>
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(tps)">
                 <span class="material-icons">edit</span>

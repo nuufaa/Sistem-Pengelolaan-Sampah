@@ -1,5 +1,5 @@
 <template>
-  <div class="modal">
+  <div class="modal show">
     <div class="modal-overlay" @click="$emit('close')" />
 
     <div class="modal-content">
@@ -16,7 +16,6 @@
           <b>Kondisi:</b> {{ kondisiText(laporan?.kondisi_tps) }}
         </div>
         <div class="detail-item"><b>Pelapor:</b> {{ laporan?.nama_pelapor }}</div>
-        <!-- <div class="detail-item"><b>No. HP:</b> {{ laporan?.no_hp }}</div> -->
         <div class="detail-item"><b>Tanggal & Waktu:</b> {{ formatDate(laporan?.tgl_laporan) }}</div>
         <div class="detail-item">
           <b>Keterangan:</b> {{ laporan?.deskripsi || '-' }}
@@ -33,10 +32,10 @@
 </template>
 
 <script setup>
-// const props = defineProps({
-//   laporan: Object,
-//   // tps: Object
-// })
+const props = defineProps({
+  laporan: Object,
+  // tps: Object
+})
 
 function kondisiText(kondisi) {
   return {
