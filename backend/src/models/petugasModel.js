@@ -48,10 +48,18 @@ async function update({ id_petugas, nama, no_telp, username, password, status_pe
   )
 }
 
+async function remove(id) {
+    await db.query(
+        "DELETE FROM petugas WHERE id_petugas = ?",
+        [id]
+    );
+}
+
 module.exports = {
     create,
     findById,
     findAll,
     findPetugas,
-    update
+    update,
+    remove
 }

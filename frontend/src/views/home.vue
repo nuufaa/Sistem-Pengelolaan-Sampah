@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/multi-word-component-names -->
 <template>
     <header class="header">
         <div class="header-left">
@@ -55,7 +54,6 @@
                         <div v-for="desa in dusunList" :key="desa.desaCode" class="desa-card">
                             <div class="desa-header">
                                 <span class="material-icons">{{ desa.icon }}</span>
-                                <!-- <h3>{{ desa.desa }}</h3> -->
                                 <h3>Desa Sembalun Bumbung</h3>
                             </div>
                             <div class="desa-tps-info">
@@ -77,24 +75,6 @@
                         <h2>Filter Tampilan</h2>
                     </div>
                     <div class="card-body">
-                        <!-- <div class="filter-group">
-                            <label class="filter-label">Pilih Desa:</label>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="village" value="utara" checked>
-                                    <span>Desa Utara</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="village" value="selatan">
-                                    <span>Desa Selatan</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="village" value="all">
-                                    <span>Semua Desa</span>
-                                </label>
-                            </div>
-                        </div> -->
-
                         <div class="filter-group">
                         <label class="filter-label">Status Titik Sampah:</label>
 
@@ -144,10 +124,6 @@
                                 <span class="legend-dot danger"></span>
                                 <span>Penuh - Perlu Segera</span>
                             </div>
-                            <!-- <div class="legend-item">
-                                <span class="material-icons legend-icon">person_pin_circle</span>
-                                <span>Lokasi Anda</span>
-                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -190,28 +166,6 @@
                         <canvas ref="volumeSampahChartRef" class="bar-chart"></canvas>
                     </div>
                 </div>
-
-                <!-- Tren Bulanan Card -->
-                <!-- <div class="card">
-                    <div class="card-header">
-                        <span class="material-icons">trending_up</span>
-                        <h2>Tren Sampah Bulanan</h2>
-                    </div>
-                    <div class="card-body">
-                        <div id="trenBulananSidebar"></div>
-                    </div>
-                </div> -->
-
-                <!-- Status TPS Card -->
-                <!-- <div class="card">
-                    <div class="card-header">
-                        <span class="material-icons">info</span>
-                        <h2>Status TPS</h2>
-                    </div>
-                    <div class="card-body">
-                        <div id="statusTPSSidebar"></div>
-                    </div>
-                </div> -->
 
                 <!-- Ranking TPS Card -->
                 <div class="card">
@@ -439,7 +393,9 @@
             <div class="modal-content modal-schedule">
                 <div class="modal-header">
             <h3>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</h3>
-            <button @click="closeScheduleModal">✕</button>
+            <button class="modal-close" @click="closeScheduleModal">
+                <span class="material-icons">close</span>
+            </button>
         </div>
         <div class="modal-body">
             <div 
@@ -456,7 +412,7 @@
                         <div class="tps-interval">
                             <span class="material-icons">update</span>
                             <span>
-                                Jadwal Pengambilan Setiap Hari {{ tps.hari_pengambilan || '-' }}
+                                Jadwal pengambilan setiap hari {{ tps.hari_pengambilan || '-' }}
                             </span>
                         </div>
                     </div>
@@ -505,12 +461,6 @@ const jadwalTPS = ref([])
 const selectedDesa = ref(null)
 const isModalScheduleOpen = ref(false)
 
-// // Bottom sheet state
-// let isBottomSheetOpen = false;
-
-// // TPS detail sheet for mobile
-// let currentTpsDetail = null;
-
 const map = ref(null)
 const markerCluster = ref(null)
 let markers = ref([]);
@@ -538,15 +488,15 @@ const modalTPSList = ref([])
 const statusInfo = {
   belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
   diangkut: { text: 'Sedang Berlangsung', icon: 'local_shipping' },
-  selesai: { text: 'Selesai', icon: 'check_circle' }
-}
-
-const getStatusIcon = (status) => {
-  return statusInfo[status]?.icon || 'help'
+  selesai: { text: 'Selesai', icon: 'check_circle' },
 }
 
 const getStatusText = (status) => {
-  return statusInfo[status]?.text || '-'
+  return statusInfo[status]?.text || 'Belum Dimulai'
+}
+
+const getStatusIcon = (status) => {
+  return statusInfo[status]?.icon || 'schedule'
 }
 
 function renderVolumeSampahChart(data) {
@@ -650,16 +600,6 @@ async function fetchDashboard() {
     rankingTPS.value = res.data.rankingTPS
     timbulanPerKapita.value = res.data.timbulanPerKapita
 
-    // Update last update time
-    //    const now = new Date();
-    //    const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
-    //                      now.getMinutes().toString().padStart(2, '0');
-       
-    //    const lastUpdate = document.getElementById('lastUpdate');
-    //    const lastUpdateMobile = document.getElementById('lastUpdateMobile');
-       
-    //    if (lastUpdate) lastUpdate.textContent = timeString;
-    //    if (lastUpdateMobile) lastUpdateMobile.textContent = timeString;
     await nextTick()
     renderVolumeSampahChart(res.data.volumeSampahHarian)
 
@@ -890,7 +830,7 @@ function createPopupContent(point) {
                 <div class="popup-info">
                     <div class="popup-status ${statusClass}">
                         <span style="font-size: 10px;">●</span>
-                        ${statusText} (${point.kapasitas}%)
+                        ${statusText}
                     </div>
                 </div>
                 <div class="popup-info">
@@ -899,7 +839,7 @@ function createPopupContent(point) {
                 </div>
                 <div class="popup-info">
                     <span class="material-icons">schedule</span>
-                    <span>${point.hari_pengambilan}</span>
+                    <span>Setiap hari: ${point.hari_pengambilan || '-'}</span>
                 </div>
                 <div class="popup-info">
                     <span class="material-icons">update</span>
@@ -907,9 +847,6 @@ function createPopupContent(point) {
                 </div>
             </div>
             <div class="popup-footer">
-                <button class="popup-btn popup-btn-secondary" onclick="viewDetail(${point.id})">
-                    Lihat Detail
-                </button>
                 <button class="popup-btn popup-btn-primary" onclick="openReport(${point.id_tps})">
                     Laporkan
                 </button>

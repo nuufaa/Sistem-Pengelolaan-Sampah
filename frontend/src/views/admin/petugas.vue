@@ -18,7 +18,6 @@
             <th>Nama</th>
             <th>No. HP</th>
             <th>Username</th>
-            <th>Password</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
@@ -30,7 +29,6 @@
             <td>{{ p.nama }}</td>
             <td>{{ p.no_telp }}</td>
             <td>{{ p.username }}</td>
-            <td>{{ p.password }}</td>
             <td>
               <span class="status-badge" :class="p.status_petugas">
                 {{ p.status_petugas === 1 ? 'Aktif' : 'Non-Aktif' }}
@@ -75,7 +73,6 @@ async function fetchPetugas() {
 
 onMounted(fetchPetugas)
 
-/* METHODS */
 function openAdd() {
   form.value = {
     id_petugas: null,
@@ -88,11 +85,6 @@ function openAdd() {
   showModal.value = true
 }
 
-// function openEdit(p) {
-//   form.value = { ...p }
-//   showModal.value = true
-// }
-
 function openEdit(p) {
   form.value = {
     id_petugas: p.id_petugas,
@@ -104,33 +96,6 @@ function openEdit(p) {
   }
   showModal.value = true
 }
-
-// async function save(data) {
-//   if (data.id_petugas) {
-//     await api.put(`/api/petugas/${data.id_petugas}`, data)
-//   } else {
-//     await api.post('/api/petugas', data)
-//   }
-//   showModal.value = false
-//   await fetchPetugas()
-// }
-
-// async function save(data) {
-//   const payload = {
-//     nama: data.nama,
-//     no_telp: data.no_telp,
-//     status_petugas: data.status_petugas
-//   }
-
-//   if (data.id_petugas) {
-//     await api.put(`/api/petugas/${data.id_petugas}`, payload)
-//   } else {
-//     await api.post('/api/petugas', payload)
-//   }
-
-//   showModal.value = false
-//   await fetchPetugas()
-// }
 
 async function save(data) {
   try {

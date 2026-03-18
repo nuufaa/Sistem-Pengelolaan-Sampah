@@ -390,6 +390,7 @@ body {
 .data-table {
     width: 100%;
     border-collapse: collapse;
+    text-align: center;
 }
 
 .data-table thead {
@@ -398,7 +399,6 @@ body {
 
 .data-table th {
     padding: 16px;
-    text-align: left;
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);

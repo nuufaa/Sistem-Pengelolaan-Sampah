@@ -82,36 +82,6 @@ watch(
   { immediate: true }
 )
 
-// watch(
-//   () => props.modelValue,
-//   val => {
-//     Object.assign(
-//       localForm,
-//       val || {
-//         id_petugas: null,
-//         nama: '',
-//         no_telp: '',
-//         status_petugas: 'aktif'
-//       }
-//     )
-//   },
-//   { immediate: true }
-// )
-
-// function submit() {
-//   emit('save', { ...localForm })
-// }
-
-// function submit() {
-//   if (!localForm.nama || !localForm.no_telp) {
-//     alert('Nama dan No HP wajib diisi')
-//     return
-//   }
-  
-//   emit('save', { ...localForm })
-// }
-
-
 function submit() {
   emit('save', { ...localForm })
 }
