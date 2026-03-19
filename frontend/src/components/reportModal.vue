@@ -197,5 +197,4 @@ defineExpose({
 
 onMounted(fetchTps)
 
-// defineExpose({ open, close })
 </script>

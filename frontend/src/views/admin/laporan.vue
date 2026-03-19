@@ -96,7 +96,7 @@
 <script setup>
 import { ref, computed, onMounted} from 'vue'
 import api from '@/services/api.js'
-import LaporanDetailModal from '@/components/laporanModal.vue'
+import LaporanDetailModal from '@/components/laporanModalAdmin.vue'
 
 const laporanList = ref([])
 const showModal = ref(false)

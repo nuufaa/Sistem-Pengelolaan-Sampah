@@ -10,12 +10,17 @@
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-login-header" @click="loginRef.open()">
+            <!-- <button class="btn-login-header" @click="loginRef.open()">
+                <span class="material-icons">login</span>
+                <span>Masuk</span>
+            </button> -->
+            <button class="btn-login-header" @click="openLogin">
                 <span class="material-icons">login</span>
                 <span>Masuk</span>
             </button>
 
-            <LoginModal ref="loginRef" />
+            <!-- <LoginModal ref="loginRef" /> -->
+             <LoginModal ref="loginRef" @closed="isLoginOpen = false" />
 
             <button class="btn-report" @click="openReport()">
                 <span class="material-icons">report_problem</span>
@@ -62,7 +67,9 @@
     </main>
 
     <!-- Mobile Bottom Sheet (Clone of Sidebar for Mobile) -->
-    <div class="bottom-sheet" id="bottomSheet" :class="{ open: isBottomSheetOpen }">
+    <div class="bottom-sheet"
+  :class="{ open: isBottomSheetOpen }"
+  v-show="!isLoginOpen">
         <div class="bottom-sheet-header" @click="toggleBottomSheet" @touchstart.prevent="toggleBottomSheet">
             <div class="bottom-sheet-handle"></div>
             <h3>Jadwal Pengambilan Sampah</h3>
@@ -116,7 +123,7 @@
     </div>
 
     <!-- Modal Login Popup -->
-    <div class="modal-login-overlay" id="modalLoginOverlay"></div>
+    <!-- <div class="modal-login-overlay" id="modalLoginOverlay"></div>
     <div class="modal-login" id="modalLogin">
         <div class="modal-login-header">
             <div class="modal-login-logo">
@@ -193,7 +200,7 @@
                 <br>Masyarakat tidak perlu login untuk melihat informasi.
             </p>
         </div>
-    </div>
+    </div> -->
 
         <div v-if="isModalScheduleOpen" class="modal" :class="{ show: isModalScheduleOpen }">
             <div class="modal-overlay" @click="closeScheduleModal" />
@@ -400,8 +407,6 @@ onMounted(async () => {
 
 })
 
-
-
 function initMap() {
     //kordinat desa bumbung
     map.value = L.map('map').setView([-8.384399, 116.542617], 14)
@@ -535,6 +540,18 @@ function updateMarkers() {
 
 }
 
+const isLoginOpen = ref(false)
+
+function openLogin() {
+  isBottomSheetOpen.value = false
+  isLoginOpen.value = true
+  loginRef.value.open()
+}
+
 </script>
 
-<style src="@/assets/styles/home.css"></style>
+<style src="@/assets/styles/home.css">
+.leaflet-pane {
+    z-index: 1 !important;
+}
+</style>

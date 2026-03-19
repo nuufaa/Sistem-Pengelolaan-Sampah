@@ -1546,7 +1546,7 @@ input, select, textarea {
     background: #fff;
     border-radius: 20px 20px 0 0;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-    z-index: 1999;
+    z-index: 9999;
     transform: translateY(calc(100% - 80px)); /* show header only */
     transition: transform 0.25s ease;
     flex-direction: column;
