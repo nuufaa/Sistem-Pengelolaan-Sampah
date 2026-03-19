@@ -602,12 +602,17 @@ input, select, textarea {
 .map-container {
     flex: 1;
     position: relative;
+    z-index: 1;
 }
 
 #map {
+    /* width: 100%;
+    height: 100%;
+    height: 100vh; */
     width: 100%;
-    /* height: 100%; */
-    height: 100vh;
+    height: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 .map-controls {
@@ -1536,13 +1541,17 @@ input, select, textarea {
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    height: 70vh;
+    max-height: 75vh;
+    background: #fff;
     border-radius: 20px 20px 0 0;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-    z-index: 1500;
-    max-height: 70vh;
-    transform: translateY(calc(100% - 80px)); /* Show only header */
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    z-index: 1999;
+    transform: translateY(calc(100% - 80px)); /* show header only */
+    transition: transform 0.25s ease;
+    flex-direction: column;
+    pointer-events: auto;
+    touch-action: pan-y;
 }
 
 .bottom-sheet.open {
@@ -1579,6 +1588,10 @@ input, select, textarea {
     font-weight: 600;
     color: var(--text-primary);
     margin-top: 8px;
+
+    margin-left: 50px;
+    margin-right: auto;
+    text-align: center;
 }
 
 .bottom-sheet-close {
@@ -1631,7 +1644,7 @@ input, select, textarea {
     border: 2px solid var(--primary);
     border-radius: 30px;
     box-shadow: var(--shadow-lg);
-    z-index: 1400;
+    z-index: 10000;
     align-items: center;
     gap: var(--spacing-sm);
     font-size: 14px;
@@ -1651,6 +1664,13 @@ input, select, textarea {
 
 .bottom-sheet-trigger.hidden {
     display: none;
+}
+
+.bottom-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 9998;
 }
 
 /* Mobile TPS Detail Bottom Sheet */
@@ -1776,17 +1796,11 @@ input, select, textarea {
     
     /* Show bottom sheet on mobile */
     .bottom-sheet {
-        display: block;
+        display: flex;
     }
     
     .bottom-sheet-trigger {
         display: flex;
-    }
-    
-    /* When bottom sheet is open, hide trigger */
-    .bottom-sheet.open ~ .map-container .bottom-sheet-trigger {
-        opacity: 0;
-        pointer-events: none;
     }
     
     .map-container {

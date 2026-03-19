@@ -145,7 +145,8 @@ async function getRankingTPS() {
       ON t.id_dusun = d.id_dusun
 
     GROUP BY t.id_tps
-
+    HAVING COALESCE(SUM(dt.volume_sampah),0) > 0
+    
     ORDER BY score ASC
     LIMIT 5
   `)
@@ -180,6 +181,7 @@ async function getTimbulanPerKapita() {
       AND dt.tgl_pengambilan >= CURDATE() - INTERVAL 7 DAY
 
     GROUP BY d.id_dusun
+    HAVING COALESCE(SUM(dt.volume_sampah),0) > 0
 
     ORDER BY timbulan_kg_per_kk_per_hari DESC
   `)

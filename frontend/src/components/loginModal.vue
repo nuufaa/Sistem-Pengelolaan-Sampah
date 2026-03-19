@@ -4,7 +4,7 @@
     class="modal-login-overlay"
     :class="{ active: isOpen }"
     @click="close"
-  ></div>
+  >
 
   <!-- Modal -->
   <div class="modal-login" :class="{ active: isOpen }">
@@ -94,16 +94,6 @@
           <span class="login-error">{{ errorPass }}</span>
         </div>
 
-        <!-- Hint -->
-        <div class="login-hint">
-          <span class="material-icons">tips_and_updates</span>
-          <span>
-            Demo:
-            <code>{{ role }}</code> /
-            <code>{{ role === 'admin' ? 'admin123' : '1234' }}</code>
-          </span>
-        </div>
-
         <!-- Submit -->
         <button class="login-submit-btn" :disabled="loading">
           <span v-if="!loading">
@@ -125,13 +115,13 @@
       </p>
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiFetch, decodeJwtPayload } from '../services/api'
-import '@/assets/styles/login.css'
 
 const router = useRouter();
 
@@ -220,3 +210,5 @@ async function submit() {
 
 defineExpose({ open })
 </script>
+
+<style src="@/assets/styles/login.css" scoped></style>
