@@ -308,8 +308,10 @@ const toggleBottomSheet = () => {
   isBottomSheetOpen.value = !isBottomSheetOpen.value
   console.log('toggleBottomSheet (after):', isBottomSheetOpen.value)
 }
-
+const isReportOpen = ref(false)
 function openReport(id_tps = null) {
+    isBottomSheetOpen.value = false
+    isReportOpen.value = true
     if (reportRef.value && typeof reportRef.value.openModal === 'function') {
         reportRef.value.openModal(id_tps)
         return
