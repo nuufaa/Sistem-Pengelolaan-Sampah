@@ -141,12 +141,6 @@ function close() {
   emit('closed')
 }
 
-// function close() {
-//   isOpen.value = false
-//   document.body.style.overflow = ''
-//   reset()
-// }
-
 function switchRole(r) {
   role.value = r
   reset()
