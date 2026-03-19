@@ -1772,7 +1772,7 @@ input, select, textarea {
     }
     
     .logo-text p {
-        display: none;
+        display: block;
     }
     
     .btn-report span:last-child {
