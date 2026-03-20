@@ -239,7 +239,16 @@ const selectedVillage = ref('all')
 const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
 
 const loginRef = ref(null)
-const reportRef = ref(null)
+
+const emit = defineEmits(['reportOpened'])
+
+// Receive reportRef from parent (home.vue)
+const props = defineProps({
+  reportRef: {
+    type: Object,
+    default: null
+  }
+})
 
 const wastePoints = ref([])
 const loading = ref(false)
@@ -380,12 +389,13 @@ async function fetchDashboard() {
 }
 
 function openReport(id_tps = null) {
-    if (reportRef.value && typeof reportRef.value.openModal === 'function') {
-        reportRef.value.openModal(id_tps)
-        return
+    // Open modal using reportRef from parent (home.vue)
+    if (props.reportRef && typeof props.reportRef.openModal === 'function') {
+        props.reportRef.openModal(id_tps)
     }
-
-    alert('Modal laporan tidak tersedia (reportRef null). Periksa console untuk detail.')
+    
+    // Always emit to notify parent component to close bottom sheet (mobile)
+    emit('reportOpened')
 }
 
 // ===== Date and Schedule Functions =====
@@ -568,7 +578,7 @@ watch(selectedStatus, () => {
 // }
 
 onMounted(() => {
-    window.openReport = openReport
+    // window.openReport = openReport  // Moved to home.vue to ensure bottom sheet closes
 })
 
 // function formatTgl(date) {

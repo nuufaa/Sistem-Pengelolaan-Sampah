@@ -40,7 +40,7 @@
             </button>
 
             <div class="sidebar-content">
-                <sidebarContent />
+                <sidebarContent :reportRef="reportRef" @reportOpened="closeBottomSheet" />
             </div>
     </aside>
 
@@ -79,7 +79,7 @@
         </div>
         <div class="bottom-sheet-content" id="bottomSheetContent">
             <!-- Dynamic content - same as sidebar -->
-             <sidebarContent />
+             <sidebarContent :reportRef="reportRef" @reportOpened="closeBottomSheet" />
         </div>
     </div>
     <div 
@@ -549,6 +549,11 @@ function openLogin() {
   isLoginOpen.value = true
   loginRef.value.open()
 }
+
+// Set global function untuk popup marker
+onMounted(() => {
+  window.openReport = openReport
+})
 
 </script>
 
