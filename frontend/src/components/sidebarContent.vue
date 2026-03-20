@@ -362,7 +362,7 @@ async function fetchTPSByStatus() {
 
     wastePoints.value = data
 
-    updateMarkers()
+    // updateMarkers()
 
   } catch (err) {
     console.error('Gagal filter TPS:', err)
