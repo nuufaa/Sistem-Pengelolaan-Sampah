@@ -27,7 +27,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" :class="{ 'modal-backdrop-active': isModalScheduleOpen }">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <button class="sidebar-toggle" id="sidebarToggle">
@@ -60,7 +60,7 @@
             </button>
         </div>
     </main>
-    <div class="bottom-sheet" id="bottomSheet" :class="{ open: isBottomSheetOpen }">
+    <div class="bottom-sheet" id="bottomSheet" :class="{ open: isBottomSheetOpen, 'modal-backdrop-active': isModalScheduleOpen }">
         <div class="bottom-sheet-header" @click="toggleBottomSheet" @touchstart.prevent="toggleBottomSheet">
             <div class="bottom-sheet-handle"></div>
             <h3>Jadwal Pengambilan Sampah</h3>
@@ -85,20 +85,32 @@
     <!-- Report modal provided by ReportModal component -->
 
     <!-- Modal TPS Schedule -->
-    <div class="modal" id="modalSchedule">
-        <div class="modal-overlay" id="modalScheduleOverlay"></div>
+    <div class="modal" id="modalSchedule" v-if="isModalScheduleOpen" :class="{ show: isModalScheduleOpen }">
+        <div class="modal-overlay" id="modalScheduleOverlay" @click="isModalScheduleOpen = false"></div>
         <div class="modal-content modal-schedule">
             <div class="modal-header">
                 <h2>
                     <span class="material-icons">calendar_month</span>
-                    <span id="scheduleModalTitle">Jadwal Lengkap TPS Desa A</span>
+                    <span id="scheduleModalTitle">Jadwal Lengkap TPS {{ selectedDesa?.desa }}</span>
                 </h2>
-                <button class="modal-close" id="modalScheduleClose">
+                <button class="modal-close" @click="isModalScheduleOpen = false">
                     <span class="material-icons">close</span>
                 </button>
             </div>
             <div class="modal-body" id="tpsScheduleContent">
                 <!-- Dynamic TPS schedule list -->
+                <div v-for="tps in modalTPSList" :key="tps.id_tps" class="tps-item">
+                    <div class="tps-header">
+                        <span class="material-icons">delete</span>
+                        <div class="tps-info">
+                            <h3>{{ tps.nama_tps }}</h3>
+                            <div class="tps-interval">
+                                <span class="material-icons">schedule</span>
+                                Jadwal: {{ tps.hari_pengambilan || '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
