@@ -1774,6 +1774,10 @@ input, select, textarea {
     .sidebar {
         display: none !important;
     }
+
+    .card {
+        margin-bottom: 20px;
+    }
     
     /* Show bottom sheet on mobile */
     .bottom-sheet {
