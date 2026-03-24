@@ -274,6 +274,15 @@ const jadwalTPS = ref([])
 const selectedDesa = ref(null)
 const isModalScheduleOpen = ref(false)
 const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
+const emit = defineEmits(['reportOpened', 'openScheduleModal'])
+
+// Receive reportRef from parent (home.vue)
+const props = defineProps({
+  reportRef: {
+    type: Object,
+    default: null
+  },
+})
 
 const wastePoints = ref([])
 const loading = ref(false)
@@ -413,6 +422,16 @@ async function fetchDashboard() {
   }
 }
 
+function openReport(id_tps = null) {
+    // Open modal using reportRef from parent (home.vue)
+    if (props.reportRef && typeof props.reportRef.openModal === 'function') {
+        props.reportRef.openModal(id_tps)
+    }
+    
+    // Always emit to notify parent component to close bottom sheet (mobile)
+    emit('reportOpened')
+}
+
 // ===== Date and Schedule Functions =====
 function formatDate(date = new Date()) {
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
@@ -521,6 +540,14 @@ onMounted(async () => {
     //Set tanggal & schedule
     initializeDateTime()
 
+    //Inisialisasi map
+    // initMap()
+
+    //Render marker setelah map siap
+    // nextTick(() => {
+    //   updateMarkers()
+    // })
+
   } catch (err) {
     console.error('Gagal ambil data TPS:', err.message)
     wastePoints.value = []
@@ -530,11 +557,147 @@ onMounted(async () => {
   }
 
   fetchDashboard()
+
 })
 
 watch(selectedStatus, () => {
   fetchTPSByStatus()
 })
+
+// function initMap() {
+//     //kordinat desa bumbung
+//     map.value = L.map('map').setView([-8.384399, 116.542617], 14)
+
+//     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//     attribution: '© OpenStreetMap'
+//     }).addTo(map.value)
+
+//     markerCluster.value = L.markerClusterGroup()
+//     map.value.addLayer(markerCluster.value)
+//     // updateMarkers()
+//     watch(wastePoints, () => {
+//         if (map.value) {
+//             updateMarkers()
+//         }
+//     })
+// }
+
+// function getMarkerIcon(status_tps) {
+//     const colors = {
+//         normal: '#4CAF50',
+//         hampir_penuh: '#FFC107',
+//         penuh: '#F44336'
+//     };
+
+//     return L.divIcon({
+//         className: 'custom-marker',
+//         html: `
+//             <div style="
+//                 width: 30px;
+//                 height: 30px;
+//                 background: ${colors[status_tps]};
+//                 border: 3px solid white;
+//                 border-radius: 50%;
+//                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+//                 display: flex;
+//                 align-items: center;
+//                 justify-content: center;
+//             ">
+//                 <span class="material-icons" style="font-size: 16px; color: white;">delete</span>
+//             </div>
+//         `,
+//         iconSize: [30, 30],
+//         iconAnchor: [15, 15]
+//     });
+// }
+
+// onMounted(() => {
+//     window.openReport = openReport  // Moved to home.vue to ensure bottom sheet closes
+// })
+
+// function formatTgl(date) {
+//   if (!date) return '-'
+
+//   const d = new Date(date)
+//   const year = d.getFullYear()
+//   const month = String(d.getMonth() + 1).padStart(2, '0')
+//   const day = String(d.getDate()).padStart(2, '0')
+
+//   return `${year}-${month}-${day}`
+// }
+
+// pop up titik tps
+// function createPopupContent(point) {
+//     const statusClass = point.status_tps;
+//     const statusText = {
+//         normal: 'Normal',
+//         hampir_penuh: 'Hampir Penuh',
+//         penuh: 'Penuh'
+//     }[point.status_tps];
+
+//     return `
+//         <div class="popup-content">
+//             <div class="popup-header">
+//                 <span class="material-icons">delete</span>
+//                 <div class="popup-title">${point.nama_tps}</div>
+//             </div>
+//             <div class="popup-body">
+//                 <div class="popup-info">
+//                     <div class="popup-status ${statusClass}">
+//                         <span style="font-size: 10px;">●</span>
+//                         ${statusText}
+//                     </div>
+//                 </div>
+//                 <div class="popup-info">
+//                     <span class="material-icons">location_on</span>
+//                     <span>${point.alamat}</span>
+//                 </div>
+//                 <div class="popup-info">
+//                     <span class="material-icons">schedule</span>
+//                     <span>Setiap hari: ${point.hari_pengambilan || '-'}</span>
+//                 </div>
+//                 <div class="popup-info">
+//                     <span class="material-icons">update</span>
+//                     <span>Tgl terakhir diambil: ${formatTgl(point.tgl_terakhir_diambil)}</span>
+//                 </div>
+//             </div>
+//             <div class="popup-footer">
+//                 <button class="popup-btn popup-btn-primary" onclick="openReport(${point.id_tps})">
+//                     Laporkan
+//                 </button>
+//             </div>
+//         </div>
+//     `;
+// }
+
+// function updateMarkers() {
+//     markerCluster.value.clearLayers()
+
+//     const filtered = wastePoints.value.filter(p =>
+//     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
+//     selectedStatus.value.includes(p.status_tps)
+//     )
+
+//     filtered.forEach(point => {
+//     const marker = L.marker(
+//         [parseFloat(point.latitude), parseFloat(point.longitude)],
+//         { icon: getMarkerIcon(point.status_tps) }
+//     );
+
+//     // Use popup for both desktop and mobile
+//     marker.bindPopup(createPopupContent(point), {
+//         maxWidth: isMobile.value ? 280 : 300,
+//         className: 'custom-popup',
+//         autoPan: true,
+//         autoPanPadding: [10, 10]
+//     });
+
+//     markerCluster.value.addLayer(marker);
+//     markers.value.push({ marker, point });
+
+//     });
+
+// }
 
 </script>
 

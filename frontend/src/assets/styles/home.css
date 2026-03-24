@@ -245,6 +245,7 @@ input, select, textarea {
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
     overflow: hidden;
+    margin-bottom: 22px;
 }
 
 .card:hover {
