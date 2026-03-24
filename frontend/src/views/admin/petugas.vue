@@ -47,6 +47,56 @@
       </table>
     </div>
 
+    <!-- MOBILE CARD -->
+    <div class="card-list mobile-only">
+      <div 
+        class="data-card" 
+        v-for="(p, i) in petugasList" 
+        :key="p.id_petugas"
+      >
+
+        <!-- HEADER -->
+        <div class="data-card-header">
+          <div>
+            <div class="data-card-title">
+              {{ p.nama }}
+            </div>
+            <div class="data-card-subtitle">
+              {{ p.username }}
+            </div>
+          </div>
+
+          <span 
+            class="status-badge" 
+            :class="p.status_petugas === 1 ? 'aktif' : 'nonaktif'"
+          >
+            {{ p.status_petugas === 1 ? 'Aktif' : 'Non-Aktif' }}
+          </span>
+        </div>
+
+        <!-- BODY -->
+        <div class="data-card-body">
+          <div class="data-card-item">
+            <span class="data-card-label">No. HP</span>
+            <span class="data-card-value">{{ p.no_telp }}</span>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="data-card-footer">
+          <button class="btn-card-action edit" @click="openEdit(p)">
+            <span class="material-icons">edit</span>
+            Edit
+          </button>
+
+          <button class="btn-card-action delete" @click="remove(p.id_petugas)">
+            <span class="material-icons">delete</span>
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL COMPONENT -->
     <PetugasModal
       v-if="showModal"

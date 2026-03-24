@@ -2,7 +2,7 @@
   <div class="modal show">
     <div class="modal-overlay" @click="$emit('close')" />
 
-    <div class="modal-content">
+    <div class="modal-content laporan-modal">
       <div class="modal-header">
         <h2>Detail Laporan</h2>
         <button class="modal-close" @click="$emit('close')">
