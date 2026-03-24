@@ -188,8 +188,8 @@
                         <div class="sidebar-timbulan-value">{{ item.timbulan_kg_per_kk_per_hari }}</div>
                         <div class="sidebar-timbulan-unit">kg/KK/hari</div>
                     </div>
-                    <div v-if="timbulanPerKapita.length === 0 && !loading" class="empty-state">
-                    Tidak ada data tersedia
+                    <div v-if="timbulanPerKapita.length === 0 && !loading">
+                        Tidak ada data tersedia
                     </div>
 
                     <div v-if="loading" class="loading-state">
@@ -205,10 +205,57 @@
                     </div>
                 </div>
             </div>
+
+            <div v-if="isModalScheduleOpen" class="modal" :class="{ show: isModalScheduleOpen }">
+            <div class="modal-overlay" @click="closeScheduleModal" />
+            <div class="modal-content modal-schedule">
+                <div class="modal-header">
+            <h3>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</h3>
+            <button class="modal-close" @click="closeScheduleModal">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div 
+                v-for="tps in modalTPSList"
+                :key="tps.id_tps"
+                class="tps-schedule-item"
+            >
+                <div class="tps-header">
+                    <span class="material-icons">delete</span>
+
+                    <div class="tps-info">
+                        <h3>{{ tps.nama_tps }}</h3>
+
+                        <div class="tps-interval">
+                            <span class="material-icons">update</span>
+                            <span>
+                                Jadwal pengambilan setiap hari {{ tps.hari_pengambilan || '-' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tps-body">
+                    <div class="tps-status-row">
+                        <span class="tps-status-label">Status Pengambilan:</span>
+                        <div class="tps-status-badge" :class="tps.status_angkut">
+                            <span class="material-icons" :class="tps.status_angkut">
+                                {{ getStatusIcon(tps.status_angkut) }}
+                            </span>
+                            <span>
+                                {{ getStatusText(tps.status_angkut) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
 </template>
 
 <script setup>
-import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
@@ -216,39 +263,17 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 import { ref, onMounted, watch, nextTick, computed} from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
-import LoginModal from '@/components/loginModal.vue'
-import ReportModal from '@/components/reportModal.vue'
 import api from '@/services/api'
 import Chart from 'chart.js/auto'
-
-// Mobile detection
-let isMobile = ref(window.innerWidth <= 768);
 
 // Date and Schedule
 const currentDate = ref('')
 const todaySchedules = ref([])
+
 const jadwalTPS = ref([])
 const selectedDesa = ref(null)
 const isModalScheduleOpen = ref(false)
-
-const map = ref(null)
-const markerCluster = ref(null)
-let markers = ref([]);
-
-const selectedVillage = ref('all')
 const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
-
-const loginRef = ref(null)
-
-const emit = defineEmits(['reportOpened'])
-
-// Receive reportRef from parent (home.vue)
-const props = defineProps({
-  reportRef: {
-    type: Object,
-    default: null
-  }
-})
 
 const wastePoints = ref([])
 const loading = ref(false)
@@ -257,8 +282,8 @@ const error = ref(null)
 const totalTPS = ref(0)
 const totalTPSPenuh = ref(0)
 const totalTPSHampirPenuh = ref(0)
-const rankingTPS = ref(0)
-const timbulanPerKapita = ref(0)
+const rankingTPS = ref([])
+const timbulanPerKapita = ref([])
 
 const volumeSampahChartRef = ref(null)
 let volumeSampahChart = null
@@ -388,16 +413,6 @@ async function fetchDashboard() {
   }
 }
 
-function openReport(id_tps = null) {
-    // Open modal using reportRef from parent (home.vue)
-    if (props.reportRef && typeof props.reportRef.openModal === 'function') {
-        props.reportRef.openModal(id_tps)
-    }
-    
-    // Always emit to notify parent component to close bottom sheet (mobile)
-    emit('reportOpened')
-}
-
 // ===== Date and Schedule Functions =====
 function formatDate(date = new Date()) {
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
@@ -506,14 +521,6 @@ onMounted(async () => {
     //Set tanggal & schedule
     initializeDateTime()
 
-    //Inisialisasi map
-    // initMap()
-
-    //Render marker setelah map siap
-    // nextTick(() => {
-    //   updateMarkers()
-    // })
-
   } catch (err) {
     console.error('Gagal ambil data TPS:', err.message)
     wastePoints.value = []
@@ -523,147 +530,11 @@ onMounted(async () => {
   }
 
   fetchDashboard()
-
 })
 
 watch(selectedStatus, () => {
   fetchTPSByStatus()
 })
-
-// function initMap() {
-//     //kordinat desa bumbung
-//     map.value = L.map('map').setView([-8.384399, 116.542617], 14)
-
-//     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//     attribution: '© OpenStreetMap'
-//     }).addTo(map.value)
-
-//     markerCluster.value = L.markerClusterGroup()
-//     map.value.addLayer(markerCluster.value)
-//     // updateMarkers()
-//     watch(wastePoints, () => {
-//         if (map.value) {
-//             updateMarkers()
-//         }
-//     })
-// }
-
-// function getMarkerIcon(status_tps) {
-//     const colors = {
-//         normal: '#4CAF50',
-//         hampir_penuh: '#FFC107',
-//         penuh: '#F44336'
-//     };
-
-//     return L.divIcon({
-//         className: 'custom-marker',
-//         html: `
-//             <div style="
-//                 width: 30px;
-//                 height: 30px;
-//                 background: ${colors[status_tps]};
-//                 border: 3px solid white;
-//                 border-radius: 50%;
-//                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-//                 display: flex;
-//                 align-items: center;
-//                 justify-content: center;
-//             ">
-//                 <span class="material-icons" style="font-size: 16px; color: white;">delete</span>
-//             </div>
-//         `,
-//         iconSize: [30, 30],
-//         iconAnchor: [15, 15]
-//     });
-// }
-
-onMounted(() => {
-    // window.openReport = openReport  // Moved to home.vue to ensure bottom sheet closes
-})
-
-// function formatTgl(date) {
-//   if (!date) return '-'
-
-//   const d = new Date(date)
-//   const year = d.getFullYear()
-//   const month = String(d.getMonth() + 1).padStart(2, '0')
-//   const day = String(d.getDate()).padStart(2, '0')
-
-//   return `${year}-${month}-${day}`
-// }
-
-// pop up titik tps
-// function createPopupContent(point) {
-//     const statusClass = point.status_tps;
-//     const statusText = {
-//         normal: 'Normal',
-//         hampir_penuh: 'Hampir Penuh',
-//         penuh: 'Penuh'
-//     }[point.status_tps];
-
-//     return `
-//         <div class="popup-content">
-//             <div class="popup-header">
-//                 <span class="material-icons">delete</span>
-//                 <div class="popup-title">${point.nama_tps}</div>
-//             </div>
-//             <div class="popup-body">
-//                 <div class="popup-info">
-//                     <div class="popup-status ${statusClass}">
-//                         <span style="font-size: 10px;">●</span>
-//                         ${statusText}
-//                     </div>
-//                 </div>
-//                 <div class="popup-info">
-//                     <span class="material-icons">location_on</span>
-//                     <span>${point.alamat}</span>
-//                 </div>
-//                 <div class="popup-info">
-//                     <span class="material-icons">schedule</span>
-//                     <span>Setiap hari: ${point.hari_pengambilan || '-'}</span>
-//                 </div>
-//                 <div class="popup-info">
-//                     <span class="material-icons">update</span>
-//                     <span>Tgl terakhir diambil: ${formatTgl(point.tgl_terakhir_diambil)}</span>
-//                 </div>
-//             </div>
-//             <div class="popup-footer">
-//                 <button class="popup-btn popup-btn-primary" onclick="openReport(${point.id_tps})">
-//                     Laporkan
-//                 </button>
-//             </div>
-//         </div>
-//     `;
-// }
-
-// function updateMarkers() {
-//     markerCluster.value.clearLayers()
-
-//     const filtered = wastePoints.value.filter(p =>
-//     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
-//     selectedStatus.value.includes(p.status_tps)
-//     )
-
-//     filtered.forEach(point => {
-//     const marker = L.marker(
-//         [parseFloat(point.latitude), parseFloat(point.longitude)],
-//         { icon: getMarkerIcon(point.status_tps) }
-//     );
-
-//     // Use popup for both desktop and mobile
-//     marker.bindPopup(createPopupContent(point), {
-//         maxWidth: isMobile.value ? 280 : 300,
-//         className: 'custom-popup',
-//         autoPan: true,
-//         autoPanPadding: [10, 10]
-//     });
-
-//     markerCluster.value.addLayer(marker);
-//     markers.value.push({ marker, point });
-
-//     });
-
-// }
 
 </script>
 

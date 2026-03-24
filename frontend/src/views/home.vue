@@ -10,17 +10,12 @@
             </div>
         </div>
         <div class="header-right">
-            <!-- <button class="btn-login-header" @click="loginRef.open()">
-                <span class="material-icons">login</span>
-                <span>Masuk</span>
-            </button> -->
-            <button class="btn-login-header" @click="openLogin">
+            <button class="btn-login-header" @click="loginRef.open()">
                 <span class="material-icons">login</span>
                 <span>Masuk</span>
             </button>
 
-            <!-- <LoginModal ref="loginRef" /> -->
-             <LoginModal ref="loginRef" @closed="isLoginOpen = false" />
+            <LoginModal ref="loginRef" />
 
             <button class="btn-report" @click="openReport()">
                 <span class="material-icons">report_problem</span>
@@ -40,9 +35,10 @@
             </button>
 
             <div class="sidebar-content">
-                <sidebarContent :reportRef="reportRef" @reportOpened="closeBottomSheet" />
+                <sidebarContent   
+                    @openScheduleModal="openScheduleModal" />
             </div>
-    </aside>
+            </aside>
 
         <!-- Map Container -->
         <div class="map-container">
@@ -52,24 +48,19 @@
                     <span class="material-icons">my_location</span>
                 </button>
             </div>
-            
+
             <!-- Mobile Bottom Sheet Toggle Button -->
-            <button
+              <button
                 class="bottom-sheet-trigger"
                 :class="{ hidden: isBottomSheetOpen }"
                 @click="openBottomSheet"
                 @touchstart.prevent="openBottomSheet"
             >
-                <span class="material-icons">expand_less</span>
-                <!-- <span class="trigger-text">Jadwal Pengambilan</span> -->
+             <!-- <span class="trigger-text">Jadwal Pengambilan</span> -->
             </button>
         </div>
     </main>
-
-    <!-- Mobile Bottom Sheet (Clone of Sidebar for Mobile) -->
-    <div class="bottom-sheet"
-  :class="{ open: isBottomSheetOpen }"
-  v-show="!isLoginOpen">
+    <div class="bottom-sheet" id="bottomSheet" :class="{ open: isBottomSheetOpen }">
         <div class="bottom-sheet-header" @click="toggleBottomSheet" @touchstart.prevent="toggleBottomSheet">
             <div class="bottom-sheet-handle"></div>
             <h3>Jadwal Pengambilan Sampah</h3>
@@ -77,9 +68,11 @@
                 <span class="material-icons">expand_more</span>
             </button>
         </div>
-        <div class="bottom-sheet-content" id="bottomSheetContent">
+        <div class="bottom-sheet-content">
             <!-- Dynamic content - same as sidebar -->
-             <sidebarContent :reportRef="reportRef" @reportOpened="closeBottomSheet" />
+            <sidebarContent
+                @openScheduleModal="openScheduleModal"
+            />
         </div>
     </div>
     <div 
@@ -111,9 +104,12 @@
     </div>
 
     <!-- Toast Notification -->
-    <div class="toast" id="toast">
-        <span class="material-icons toast-icon">check_circle</span>
-        <span class="toast-message" id="toastMessage">Laporan berhasil dikirim!</span>
+    <div class="toast"  
+        :class="{ show: isToastVisible }" 
+        :style="{ background: toastColor }"
+    >
+        <span class="material-icons toast-icon">{{ toastIcon }}</span>
+        <span class="toast-message">{{ toastMessage }}</span>
     </div>
 
     <!-- Loading Overlay -->
@@ -123,7 +119,7 @@
     </div>
 
     <!-- Modal Login Popup -->
-    <!-- <div class="modal-login-overlay" id="modalLoginOverlay"></div>
+    <div class="modal-login-overlay" id="modalLoginOverlay"></div>
     <div class="modal-login" id="modalLogin">
         <div class="modal-login-header">
             <div class="modal-login-logo">
@@ -200,54 +196,6 @@
                 <br>Masyarakat tidak perlu login untuk melihat informasi.
             </p>
         </div>
-    </div> -->
-
-        <div v-if="isModalScheduleOpen" class="modal" :class="{ show: isModalScheduleOpen }">
-            <div class="modal-overlay" @click="closeScheduleModal" />
-            <div class="modal-content modal-schedule">
-                <div class="modal-header">
-            <h3>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</h3>
-            <button class="modal-close" @click="closeScheduleModal">
-                <span class="material-icons">close</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div 
-                v-for="tps in modalTPSList"
-                :key="tps.id_tps"
-                class="tps-schedule-item"
-            >
-                <div class="tps-header">
-                    <span class="material-icons">delete</span>
-
-                    <div class="tps-info">
-                        <h3>{{ tps.nama_tps }}</h3>
-
-                        <div class="tps-interval">
-                            <span class="material-icons">update</span>
-                            <span>
-                                Jadwal pengambilan setiap hari {{ tps.hari_pengambilan || '-' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tps-body">
-                    <div class="tps-status-row">
-                        <span class="tps-status-label">Status Pengambilan:</span>
-                        <div class="tps-status-badge" :class="tps.status_angkut">
-                            <span class="material-icons" :class="tps.status_angkut">
-                                {{ getStatusIcon(tps.status_angkut) }}
-                            </span>
-                            <span>
-                                {{ getStatusText(tps.status_angkut) }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     </div>
 </template>
 
@@ -258,11 +206,12 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { ref, onMounted, watch, nextTick, computed} from 'vue'
+import { ref, onMounted, watch, nextTick} from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
 import sidebarContent from '@/components/sidebarContent.vue'
+import { useToast } from '@/services/useToast'
 
 // Mobile detection
 let isMobile = ref(window.innerWidth <= 768);
@@ -288,8 +237,14 @@ const wastePoints = ref([])
 const loading = ref(false)
 const error = ref(null)
 const modalTPSList = ref([])
-
 const isBottomSheetOpen = ref(false)
+
+const { 
+  isToastVisible, 
+  toastMessage, 
+  toastIcon, 
+  toastColor 
+} = useToast()
 
 const openBottomSheet = () => {
   console.log('openBottomSheet clicked (before):', isBottomSheetOpen.value)
@@ -308,16 +263,23 @@ const toggleBottomSheet = () => {
   isBottomSheetOpen.value = !isBottomSheetOpen.value
   console.log('toggleBottomSheet (after):', isBottomSheetOpen.value)
 }
-const isReportOpen = ref(false)
+
 function openReport(id_tps = null) {
-    isBottomSheetOpen.value = false
-    isReportOpen.value = true
     if (reportRef.value && typeof reportRef.value.openModal === 'function') {
         reportRef.value.openModal(id_tps)
         return
     }
 
     alert('Modal laporan tidak tersedia (reportRef null). Periksa console untuk detail.')
+}
+
+function openScheduleModal(desa) { 
+    selectedDesa.value = desa
+    isModalScheduleOpen.value = true
+
+    modalTPSList.value = jadwalTPS.value.filter(
+        tps => tps.nama_dusun === desa.desaCode
+    )
 }
 
 // ===== Date and Schedule Functions =====
@@ -372,7 +334,6 @@ function getTodaySchedules() {
     return schedules
 }
 
-
 function initializeDateTime() {
     currentDate.value = formatDate()
     todaySchedules.value = getTodaySchedules()
@@ -405,8 +366,6 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-
-
 })
 
 function initMap() {
@@ -455,8 +414,6 @@ function getMarkerIcon(status_tps) {
         iconAnchor: [15, 15]
     });
 }
-
-
 
 function formatTgl(date) {
   if (!date) return '-'
@@ -542,23 +499,6 @@ function updateMarkers() {
 
 }
 
-const isLoginOpen = ref(false)
-
-function openLogin() {
-  isBottomSheetOpen.value = false
-  isLoginOpen.value = true
-  loginRef.value.open()
-}
-
-// Set global function untuk popup marker
-onMounted(() => {
-  window.openReport = openReport
-})
-
 </script>
 
-<style src="@/assets/styles/home.css">
-.leaflet-pane {
-    z-index: 1 !important;
-}
-</style>
+<style src="@/assets/styles/home.css"></style>

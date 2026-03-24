@@ -89,8 +89,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { apiFetch } from '../services/api'
-// import '@/assets/styles/report.css'
+import { useToast } from '@/services/useToast'
 
+const { showToast } = useToast()
 const isOpen = ref(false)
 const selectedTPS = ref(null)
 const selectedFile = ref(null)
@@ -154,7 +155,8 @@ async function submit() {
       body: formData,
       auth: false
     })
-    alert("Laporan berhasil dikirim")
+    // alert("Laporan berhasil dikirim")
+    showToast('Laporan berhasil dikirim! Terima kasih atas partisipasi Anda.');
 
     resetForm()
     close ()
@@ -193,11 +195,6 @@ function openModal(id_tps = null) {
 
 }
 
-// function closeModal() {
-//   isOpen.value = false
-// }
-
-
 const emit = defineEmits(['closed'])
 
 function close() {
@@ -208,7 +205,6 @@ function close() {
 
 defineExpose({
   openModal
-  // closeModal
 })
 
 onMounted(fetchTps)
