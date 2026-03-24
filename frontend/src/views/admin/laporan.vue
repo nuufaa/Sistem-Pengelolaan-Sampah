@@ -48,7 +48,7 @@
         <div class="data-card-header">
           <div>
             <div class="data-card-title">
-              {{ laporan.nama_pelapor }}
+              {{ laporan.nama_tps}}
             </div>
           </div>
         </div>
@@ -65,8 +65,8 @@
             <span class="data-card-value">{{ laporan.nama_pelapor}}</span>
           </div>
           <div class="data-card-item">
-            <span class="data-card-label">Tanggal:</span>
-            <span class="data-card-value">{{ laporan.tgl_laporan }}</span>
+            <span class="data-card-label">Tanggal & Waktu:</span>
+            <span class="data-card-value">{{ formatDate(laporan.tgl_laporan) }}</span>
           </div>
           <div class="data-card-item">
             <span class="data-card-label">Keterangan:</span>

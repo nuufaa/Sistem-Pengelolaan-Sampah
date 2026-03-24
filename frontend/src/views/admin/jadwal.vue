@@ -42,6 +42,58 @@
       </table>
     </div>
 
+    <!-- MOBILE CARD -->
+    <div class="card-list mobile-only">
+      <div 
+        class="data-card" 
+        v-for="(j, i) in jadwalList" 
+        :key="j.id_jadwal"
+      >
+
+        <!-- HEADER -->
+        <div class="data-card-header">
+          <div>
+            <div class="data-card-title">
+              {{ j.nama_tps }}
+            </div>
+            <div class="data-card-subtitle">
+              {{ j.nama }}
+            </div>
+          </div>
+        </div>
+
+        <!-- BODY -->
+        <div class="data-card-body">
+          <div class="data-card-item">
+            <span class="data-card-label">Hari</span>
+            <span class="data-card-value">
+              Setiap {{ j.hari_label }}
+            </span>
+          </div>
+
+          <div class="data-card-item">
+            <span class="data-card-label">Terakhir Diambil</span>
+            <span class="data-card-value">
+              {{ formatDate(j.tgl_terakhir_diambil) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="data-card-footer">
+          <button class="btn-card-action edit" @click="openEdit(j)">
+            <span class="material-icons">edit</span>
+            Edit
+          </button>
+
+          <button class="btn-card-action delete" @click="remove(j.id_jadwal)">
+            <span class="material-icons">delete</span>
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL COMPONENT -->
     <JadwalModal
       v-if="showModal"

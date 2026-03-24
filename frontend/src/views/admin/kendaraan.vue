@@ -45,6 +45,49 @@
       </table>
     </div>
 
+    <!-- MOBILE CARD -->
+    <div class="card-list mobile-only">
+      <div 
+        class="data-card" 
+        v-for="(k, i) in kendaraanList" 
+        :key="k.id_kendaraan"
+      >
+        <div class="data-card-header">
+          <div>
+            <div class="data-card-title">
+              {{ k.nomor_kendaraan }}
+            </div>
+            <div class="data-card-subtitle">
+              {{ k.nomor_polisi }}
+            </div>
+          </div>
+
+          <span class="status-badge" :class="k.status_kendaraan">
+            {{ statusText(k.status_kendaraan) }}
+          </span>
+        </div>
+
+        <div class="data-card-body">
+          <div class="data-card-item">
+            <span class="data-card-label">Kapasitas</span>
+            <span class="data-card-value">{{ k.kapasitas_angkut }}</span>
+          </div>
+        </div>
+
+        <div class="data-card-footer">
+          <button class="btn-card-action edit" @click="openEdit(k)">
+            <span class="material-icons">edit</span>
+            Edit
+          </button>
+
+          <button class="btn-card-action delete" @click="remove(k.id_kendaraan)">
+            <span class="material-icons">delete</span>
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL COMPONENT -->
     <KendaraanModal
       v-if="showModal"
