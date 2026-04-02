@@ -113,11 +113,11 @@ async function getVolumeSampah() {
             t.nama_tps,
             COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
             t.kapasitas,
-            DATE(dt.tgl_pengambilan) AS tanggal,
+            DATE(COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan)) AS tanggal,
             ROUND(COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100, 1) AS persentase
         FROM tps t
         LEFT JOIN daftar_tugas dt ON t.id_tps = dt.id_tps AND dt.status_angkut = 'selesai'
-        GROUP BY DATE(dt.tgl_pengambilan), t.id_tps
+        GROUP BY DATE(COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan)), t.id_tps
         ORDER BY total_volume DESC
         `);
     return rows;
@@ -178,13 +178,15 @@ async function getTimbulanPerKapita() {
     LEFT JOIN daftar_tugas dt
       ON t.id_tps = dt.id_tps
       AND dt.status_angkut='selesai'
-      AND dt.tgl_pengambilan >= CURDATE() - INTERVAL 7 DAY
-
-    GROUP BY d.id_dusun
-    HAVING COALESCE(SUM(dt.volume_sampah),0) > 0
-
-    ORDER BY timbulan_kg_per_kk_per_hari DESC
-  `)
+      
+      GROUP BY d.id_dusun
+      HAVING COALESCE(SUM(dt.volume_sampah),0) > 0
+      
+      ORDER BY timbulan_kg_per_kk_per_hari DESC
+      `)
+      
+    //   AND dt.tgl_pengambilan >= CURDATE() - INTERVAL 7 DAY
+    console.log("HASIL QUERY:", rows)
 
   return rows
 }

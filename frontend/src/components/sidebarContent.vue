@@ -190,6 +190,7 @@
                     </div>
                     <div v-if="timbulanPerKapita.length === 0 && !loading" class="empty-state">
                     Tidak ada data tersedia
+                    <pre>{{ timbulanPerKapita }}</pre>
                     </div>
 
                     <div v-if="loading" class="loading-state">
@@ -294,7 +295,7 @@ function renderVolumeSampahChart(data) {
 
   const tpsList = [...new Set(data.map(item => item.nama_tps))]
 
-  const datasets = tpsList.map((tps, index) => {
+  const datasets = tpsList.map((tps) => {
     return {
       label: tps,
       data: labels.map(label => {
@@ -303,7 +304,7 @@ function renderVolumeSampahChart(data) {
         )
         return found ? found.total_volume : 0
       }),
-      backgroundColor: index % 2 === 0 ? '#66BB6A' : '#FFA726'
+    //   backgroundColor: '#66BB6A'
     }
   })
 
