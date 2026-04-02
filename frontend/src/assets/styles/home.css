@@ -805,6 +805,13 @@ input, select, textarea {
     overflow: hidden;
     animation: slideUp 0.3s ease;
     z-index: 2;
+    overscroll-behavior: contain;
+    touch-action: auto;
+}
+
+.modal, .modal-overlay, .modal-body {
+    touch-action: none;
+    overscroll-behavior: none;
 }
 
 .modal-schedule {
@@ -2598,21 +2605,40 @@ input, select, textarea {
     color: var(--status-normal);
 }
 
-/* ===== Mobile: modal jadi bottom sheet ===== */
+.empty-text {
+    display: flex;
+    /* flex-direction: column; */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 20px;
+    text-align: center;
+
+    color: #9E9E9E;
+    font-size: 14px;
+}
+
+.empty-text .material-icons {
+    font-size: 28px;
+    opacity: 0.7;
+}
+
+/* ===== Mobile: modal di tengah layar ===== */
 @media (max-width: 768px) {
     .modal-schedule {
-        width: 95%;
-        max-width: 100%;
-        border-radius: 20px 20px 0 0;
-        max-height: 50vh;        /* ← ubah ini untuk perpendek */
-        align-self: flex-end;
-        animation: slideUpMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-bottom: 120px;
+        width: 90%;
+        max-width: 90%;
+        border-radius: 16px;
+        max-height: 85vh;
+        animation: slideInCenter 0.25s ease-out;
+        margin: 0 auto;
+        align-self: center;
     }
 
-    @keyframes slideUpMobile {
-        from { transform: translateY(100%); }
-        to   { transform: translateY(0); }
+    @keyframes slideInCenter {
+        from { transform: translateY(20px); opacity: 0; }
+        to   { transform: translateY(0); opacity: 1; }
     }
 
     .modal-schedule::before {
@@ -2685,8 +2711,14 @@ input, select, textarea {
     }
 
     .tps-schedule-item .tps-status-row {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 6px;
+    }
+
+    .tps-status-badge {
+        flex-direction: row;
+        white-space: nowrap;
     }
 }

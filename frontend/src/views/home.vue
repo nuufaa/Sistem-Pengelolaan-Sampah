@@ -85,9 +85,9 @@
     <!-- Report modal provided by ReportModal component -->
 
     <!-- Modal TPS Schedule -->
-    <div class="modal" id="modalSchedule" v-if="isModalScheduleOpen" :class="{ show: isModalScheduleOpen }">
-        <div class="modal-overlay" id="modalScheduleOverlay" @click="isModalScheduleOpen = false"></div>
-        <div class="modal-content modal-schedule">
+    <div class="modal" id="modalSchedule" v-if="isModalScheduleOpen" :class="{ show: isModalScheduleOpen }" @touchmove.stop>
+        <div class="modal-overlay" id="modalScheduleOverlay" @click="isModalScheduleOpen = false" @touchmove.stop></div>
+        <div class="modal-content modal-schedule" @touchmove.stop>
             <div class="modal-header">
                 <h2>
                     <span class="material-icons">calendar_month</span>
@@ -99,14 +99,28 @@
             </div>
             <div class="modal-body" id="tpsScheduleContent">
                 <!-- Dynamic TPS schedule list -->
-                <div v-for="tps in modalTPSList" :key="tps.id_tps" class="tps-item">
+                <div v-for="tps in modalTPSList" :key="tps.id_tps" class="tps-schedule-item">
                     <div class="tps-header">
                         <span class="material-icons">delete</span>
                         <div class="tps-info">
                             <h3>{{ tps.nama_tps }}</h3>
                             <div class="tps-interval">
-                                <span class="material-icons">schedule</span>
-                                Jadwal: {{ tps.hari_pengambilan || '-' }}
+                                <span class="material-icons">update</span>
+                                <span>Jadwal pengambilan setiap hari {{ tps.hari_pengambilan || '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tps-body">
+                        <div class="tps-status-row">
+                            <span class="tps-status-label">Status Pengambilan:</span>
+                            <div class="tps-status-badge" :class="tps.status_angkut">
+                                <span class="material-icons" :class="tps.status_angkut">
+                                    {{ getStatusIcon(tps.status_angkut) }}
+                                </span>
+                                <span>
+                                    {{ getStatusText(tps.status_angkut) }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -257,6 +271,20 @@ const {
   toastIcon, 
   toastColor 
 } = useToast()
+
+const statusInfo = {
+  belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
+  diangkut: { text: 'Sedang Berlangsung', icon: 'local_shipping' },
+  selesai: { text: 'Selesai', icon: 'check_circle' },
+}
+
+const getStatusText = (status) => {
+  return statusInfo[status]?.text || 'Belum Dimulai'
+}
+
+const getStatusIcon = (status) => {
+  return statusInfo[status]?.icon || 'schedule'
+}
 
 const openBottomSheet = () => {
   console.log('openBottomSheet clicked (before):', isBottomSheetOpen.value)

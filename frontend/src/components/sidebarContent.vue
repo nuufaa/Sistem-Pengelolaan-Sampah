@@ -113,9 +113,9 @@
                                 <div class="stat-label">Penuh</div>
                             </div>
                         </div>
-                        <div class="last-update">
+                        <!-- <div class="last-update">
                             Terakhir Diperbarui: <span id="lastUpdate"></span>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -137,38 +137,56 @@
                         <span class="material-icons">emoji_events</span>
                         <h2>Ranking TPS Terbaik</h2>
                     </div>
-                    <div class="card-body">
-                        <div class="ranking-list">
-                        <div
-                        v-for="(item,index) in rankingTPS"
-                        :key="item.id_tps"
-                        class="sidebar-ranking-item"
-                        >
-                            <!-- medal / ranking -->
-                            <div class="sidebar-ranking-medal">
-                                <span v-if="index===0">🥇</span>
-                                <span v-else-if="index===1">🥈</span>
-                                <span v-else-if="index===2">🥉</span>
-                                <span v-else>{{ index+1 }}.</span>
-                            </div>
 
-                            <!-- info TPS -->
-                            <div class="sidebar-ranking-info">
-                            <div class="sidebar-ranking-name">
-                                {{ item.nama_tps }}
+                    <div class="card-body">
+                        <!-- LOADING -->
+                        <div v-if="loading" class="loading-state">
+                            <div
+                                v-for="n in 2"
+                                :key="n"
+                                class="sidebar-ranking-item skeleton"
+                            >
+                                <div class="skeleton-line short"></div>
+                                <div class="skeleton-line tall"></div>
+                                <div class="skeleton-line xshort"></div>
                             </div>
-                            <div class="sidebar-ranking-desa">
-                                {{ item.nama_dusun }}
-                            </div>
-                            </div>
-                            <!-- score -->
-                            <div class="sidebar-ranking-score">
-                            {{ item.score }}
-                            </div>
+                        </div>
+                        <!-- EMPTY -->
+                        <div v-else-if="rankingTPS.length === 0" class="empty-text">
+                            <span class="material-icons">info</span>
+                            <p>Tidak ada data tersedia</p>
+                        </div>
+                        <!-- DATA -->
+                        <div v-else class="ranking-list">
+                            <div
+                                v-for="(item,index) in rankingTPS"
+                                :key="item.id_tps"
+                                class="sidebar-ranking-item"
+                            >
+                                <div class="sidebar-ranking-medal">
+                                    <span v-if="index===0">🥇</span>
+                                    <span v-else-if="index===1">🥈</span>
+                                    <span v-else-if="index===2">🥉</span>
+                                    <span v-else>{{ index+1 }}.</span>
+                                </div>
+
+                                <div class="sidebar-ranking-info">
+                                    <div class="sidebar-ranking-name">
+                                        {{ item.nama_tps }}
+                                    </div>
+                                    <div class="sidebar-ranking-desa">
+                                        {{ item.nama_dusun }}
+                                    </div>
+                                </div>
+
+                                <div class="sidebar-ranking-score">
+                                    {{ item.score }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
 
                 <!-- Timbulan Per Kapita Card -->
                 <div class="card">
@@ -176,83 +194,46 @@
                         <span class="material-icons">people</span>
                         <h2>Timbulan Per Kapita</h2>
                     </div>
+
                     <div class="card-body">
-                        <!-- <div id="timbulanSidebar"></div> -->
-                        <div
-                            v-for="(item, index) in timbulanPerKapita"
-                            :key="item.nama_dusun"
-                            class="sidebar-timbulan-item"
-                            :style="{ animationDelay: `${index * 0.1}s` }"
-                        >
-                        <div class="sidebar-timbulan-desa">{{ item.nama_dusun }}</div>
-                        <div class="sidebar-timbulan-value">{{ item.timbulan_kg_per_kk_per_hari }}</div>
-                        <div class="sidebar-timbulan-unit">kg/KK/hari</div>
-                    </div>
-                    <div v-if="timbulanPerKapita.length === 0 && !loading">
-                        Tidak ada data tersedia
-                    </div>
-
-                    <div v-if="loading" class="loading-state">
-                        <div
-                            v-for="n in 2"
-                            :key="n"
-                            class="sidebar-timbulan-item skeleton"
-                        >
-                            <div class="skeleton-line short"></div>
-                            <div class="skeleton-line tall"></div>
-                            <div class="skeleton-line xshort"></div>
+                        <!-- LOADING -->
+                        <div v-if="loading" class="loading-state">
+                            <div
+                                v-for="n in 2"
+                                :key="n"
+                                class="sidebar-timbulan-item skeleton"
+                            >
+                                <div class="skeleton-line short"></div>
+                                <div class="skeleton-line tall"></div>
+                                <div class="skeleton-line xshort"></div>
+                            </div>
+                        </div>
+                        <!-- EMPTY -->
+                        <div v-else-if="timbulanPerKapita.length === 0" class="empty-text">
+                            <span class="material-icons">info</span>
+                            <p>Tidak ada data tersedia</p>
+                        </div>
+                        <!-- DATA -->
+                        <div v-else>
+                            <div
+                                v-for="(item, index) in timbulanPerKapita"
+                                :key="item.nama_dusun"
+                                class="sidebar-timbulan-item"
+                                :style="{ animationDelay: `${index * 0.1}s` }"
+                            >
+                                <div class="sidebar-timbulan-desa">
+                                    {{ item.nama_dusun }}
+                                </div>
+                                <div class="sidebar-timbulan-value">
+                                    {{ item.timbulan_kg_per_kk_per_hari }}
+                                </div>
+                                <div class="sidebar-timbulan-unit">
+                                    kg/KK/hari
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div v-if="isModalScheduleOpen" class="modal" :class="{ show: isModalScheduleOpen }">
-            <div class="modal-overlay" @click="closeScheduleModal" />
-            <div class="modal-content modal-schedule">
-                <div class="modal-header">
-            <h3>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</h3>
-            <button class="modal-close" @click="closeScheduleModal">
-                <span class="material-icons">close</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div 
-                v-for="tps in modalTPSList"
-                :key="tps.id_tps"
-                class="tps-schedule-item"
-            >
-                <div class="tps-header">
-                    <span class="material-icons">delete</span>
-
-                    <div class="tps-info">
-                        <h3>{{ tps.nama_tps }}</h3>
-
-                        <div class="tps-interval">
-                            <span class="material-icons">update</span>
-                            <span>
-                                Jadwal pengambilan setiap hari {{ tps.hari_pengambilan || '-' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tps-body">
-                    <div class="tps-status-row">
-                        <span class="tps-status-label">Status Pengambilan:</span>
-                        <div class="tps-status-badge" :class="tps.status_angkut">
-                            <span class="material-icons" :class="tps.status_angkut">
-                                {{ getStatusIcon(tps.status_angkut) }}
-                            </span>
-                            <span>
-                                {{ getStatusText(tps.status_angkut) }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
 </template>
 
 <script setup>
@@ -271,8 +252,6 @@ const currentDate = ref('')
 const todaySchedules = ref([])
 
 const jadwalTPS = ref([])
-const selectedDesa = ref(null)
-const isModalScheduleOpen = ref(false)
 const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
 const emit = defineEmits(['reportOpened', 'openScheduleModal'])
 
@@ -296,8 +275,6 @@ const timbulanPerKapita = ref([])
 
 const volumeSampahChartRef = ref(null)
 let volumeSampahChart = null
-const modalTPSList = ref([])
-
 
 const statusInfo = {
   belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
@@ -510,17 +487,8 @@ const dusunList = computed(() => {
 })
 
 function openScheduleModal(desa) {
-    selectedDesa.value = desa
-    isModalScheduleOpen.value = true
-
-    modalTPSList.value = jadwalTPS.value.filter(
-        tps => tps.nama_dusun === desa.desaCode
-    )
-}
-
-function closeScheduleModal() {
-    isModalScheduleOpen.value = false
-    selectedDesa.value = null
+    // Emit event to parent (home.vue) so the central modal and backdrop class are used
+    emit('openScheduleModal', desa)
 }
 
 function initializeDateTime() {

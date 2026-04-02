@@ -19,7 +19,7 @@
             <th>Lokasi</th>
             <th>Kapasitas TPS (Kg)</th>
             <th>Status TPS</th>
-            <th>Foto TPS</th>
+            <!-- <th>Foto TPS</th> -->
             <th>Aksi</th>
           </tr>
         </thead>
@@ -37,7 +37,7 @@
                 {{ statusText(tps.status_tps) }}
               </span>
             </td>
-            <td>{{ tps.foto_tps || '-' }}</td>
+            <!-- <td>{{ tps.foto_tps || '-' }}</td> -->
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(tps)">
                 <span class="material-icons">edit</span>
