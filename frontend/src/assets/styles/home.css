@@ -253,7 +253,7 @@ input, select, textarea {
 
 .card-header {
     display: flex;
-    align-items: center;
+    align-items: right;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
     background: linear-gradient(135deg, rgba(46, 125, 50, 0.05) 0%, rgba(46, 125, 50, 0.02) 100%);
@@ -602,17 +602,12 @@ input, select, textarea {
 .map-container {
     flex: 1;
     position: relative;
-    z-index: 1;
 }
 
 #map {
-    /* width: 100%;
-    height: 100%;
-    height: 100vh; */
     width: 100%;
-    height: 100%;
-    position: relative;
-    z-index: 1;
+    /* height: 100%; */
+    height: 100vh;
 }
 
 .map-controls {
@@ -810,6 +805,13 @@ input, select, textarea {
     overflow: hidden;
     animation: slideUp 0.3s ease;
     z-index: 2;
+    overscroll-behavior: contain;
+    touch-action: auto;
+}
+
+.modal, .modal-overlay, .modal-body {
+    touch-action: none;
+    overscroll-behavior: none;
 }
 
 .modal-schedule {
@@ -867,6 +869,12 @@ input, select, textarea {
 .modal-close .material-icons {
     font-size: 24px;
     color: var(--text-secondary);
+}
+
+.modal-backdrop-active .map-container,
+.modal-backdrop-active .bottom-sheet {
+    filter: blur(4px);
+    pointer-events: none;
 }
 
 .modal-body {
@@ -1136,157 +1144,6 @@ input, select, textarea {
     color: var(--primary);
 }
 
-/* ===== TPS Schedule Item (Modal) ===== */
-.tps-schedule-item {
-    padding: var(--spacing-lg);
-    border: 2px solid var(--border);
-    border-radius: var(--radius-md);
-    background: white;
-    transition: var(--transition);
-    margin-bottom: var(--spacing-lg);
-}
-
-.tps-schedule-item:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.tps-schedule-item.status-pending {
-    border-left: 4px solid var(--text-secondary);
-}
-
-.tps-schedule-item.status-active {
-    border-left: 4px solid var(--secondary);
-    background: rgba(255, 167, 38, 0.02);
-}
-
-.tps-schedule-item.status-completed {
-    border-left: 4px solid var(--status-normal);
-    background: rgba(76, 175, 80, 0.02);
-}
-
-.tps-item-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-}
-
-.tps-item-header .material-icons {
-    font-size: 24px;
-    color: var(--primary);
-}
-
-.tps-item-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.tps-item-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.tps-item-info {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    font-size: 14px;
-    color: var(--text-secondary);
-    padding: var(--spacing-sm) 0;
-}
-
-.tps-item-info .material-icons {
-    font-size: 18px;
-    color: var(--primary);
-    opacity: 0.7;
-}
-
-.tps-item-status {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.status-badge.status-pending {
-    background: var(--border);
-    color: var(--text-secondary);
-}
-
-.status-badge.status-active {
-    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-    color: var(--secondary-dark);
-}
-
-.status-badge.status-completed {
-    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-    color: var(--status-normal);
-}
-
-.schedule-footer-info {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-xl);
-    padding: var(--spacing-md);
-    background: var(--bg-primary);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-.schedule-footer-info .material-icons {
-    font-size: 18px;
-    color: var(--text-disabled);
-    margin-top: 2px;
-    flex-shrink: 0;
-}
-
-.officer-note {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm);
-    background: var(--status-warning-bg);
-    border-left: 3px solid var(--secondary);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    color: var(--secondary-dark);
-    margin-top: var(--spacing-md);
-}
-
-.officer-note .material-icons {
-    font-size: 16px;
-}
-
-.public-note {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm);
-    background: var(--bg-primary);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: var(--spacing-md);
-}
-
-.public-note .material-icons {
-    font-size: 16px;
-}
-
 /* ===== Form ===== */
 .form-group {
     margin-bottom: var(--spacing-lg);
@@ -1541,17 +1398,13 @@ input, select, textarea {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 70vh;
-    max-height: 75vh;
-    background: #fff;
+    background: white;
     border-radius: 20px 20px 0 0;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-    z-index: 9999;
-    transform: translateY(calc(100% - 80px)); /* show header only */
-    transition: transform 0.25s ease;
-    flex-direction: column;
-    pointer-events: auto;
-    touch-action: pan-y;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1500;
+    max-height: 70vh;
+    transform: translateY(calc(100% - 80px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bottom-sheet.open {
@@ -1588,10 +1441,7 @@ input, select, textarea {
     font-weight: 600;
     color: var(--text-primary);
     margin-top: 8px;
-
     margin-left: 50px;
-    margin-right: auto;
-    text-align: center;
 }
 
 .bottom-sheet-close {
@@ -1644,7 +1494,7 @@ input, select, textarea {
     border: 2px solid var(--primary);
     border-radius: 30px;
     box-shadow: var(--shadow-lg);
-    z-index: 10000;
+    z-index: 1400;
     align-items: center;
     gap: var(--spacing-sm);
     font-size: 14px;
@@ -1664,13 +1514,6 @@ input, select, textarea {
 
 .bottom-sheet-trigger.hidden {
     display: none;
-}
-
-.bottom-sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    z-index: 9998;
 }
 
 /* Mobile TPS Detail Bottom Sheet */
@@ -1793,14 +1636,24 @@ input, select, textarea {
     .sidebar {
         display: none !important;
     }
+
+    .card {
+        margin-bottom: 20px;
+    }
     
     /* Show bottom sheet on mobile */
     .bottom-sheet {
-        display: flex;
+        display: block;
     }
     
     .bottom-sheet-trigger {
         display: flex;
+    }
+    
+    /* When bottom sheet is open, hide trigger */
+    .bottom-sheet.open ~ .map-container .bottom-sheet-trigger {
+        opacity: 0;
+        pointer-events: none;
     }
     
     .map-container {
@@ -2013,7 +1866,7 @@ input, select, textarea {
     transition: var(--transition);
     backdrop-filter: blur(4px);
     position: relative;
-    z-index: 4010;
+    z-index: 4000;
 }
 
 .btn-login-header .material-icons {
@@ -2605,3 +2458,267 @@ input, select, textarea {
     margin-top: 4px;
 }
 
+/* ===== Modal Schedule - Desktop & Mobile ===== */
+
+/* Desktop: modal tampil di tengah layar */
+.modal-schedule {
+    max-width: 700px;
+    width: 90%;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+.modal-schedule .modal-header {
+    flex-shrink: 0;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.06) 0%, rgba(46, 125, 50, 0.02) 100%);
+}
+
+.modal-schedule .modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: 0;
+}
+
+.modal-schedule .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    max-height: calc(90vh - 72px);
+}
+
+/* TPS schedule item */
+.tps-schedule-item {
+    padding: var(--spacing-lg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: white;
+    transition: var(--transition);
+}
+
+.tps-schedule-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.tps-schedule-item:has(.tps-status-badge.belum_diangkut) {
+    border-left: 4px solid var(--text-disabled);
+}
+
+.tps-schedule-item:has(.tps-status-badge.diangkut) {
+    border-left: 4px solid var(--secondary);
+    background: rgba(255, 167, 38, 0.02);
+}
+
+.tps-schedule-item:has(.tps-status-badge.selesai) {
+    border-left: 4px solid var(--status-normal);
+    background: rgba(76, 175, 80, 0.02);
+}
+
+.tps-schedule-item .tps-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border);
+}
+
+.tps-schedule-item .tps-header .material-icons {
+    font-size: 28px;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.tps-schedule-item .tps-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.tps-schedule-item .tps-interval {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+}
+
+.tps-schedule-item .tps-interval .material-icons {
+    font-size: 15px;
+}
+
+.tps-schedule-item .tps-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.tps-schedule-item .tps-status-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.tps-schedule-item .tps-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.tps-schedule-item .tps-status-badge .material-icons {
+    font-size: 16px;
+}
+
+.tps-schedule-item .tps-status-badge.belum_diangkut {
+    background: var(--border);
+    color: var(--text-secondary);
+}
+
+.tps-schedule-item .tps-status-badge.diangkut {
+    background: var(--status-warning-bg);
+    color: var(--secondary-dark);
+}
+
+.tps-schedule-item .tps-status-badge.selesai {
+    background: var(--status-normal-bg);
+    color: var(--status-normal);
+}
+
+.empty-text {
+    display: flex;
+    /* flex-direction: column; */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 20px;
+    text-align: center;
+
+    color: #9E9E9E;
+    font-size: 14px;
+}
+
+.empty-text .material-icons {
+    font-size: 28px;
+    opacity: 0.7;
+}
+
+/* ===== Mobile: modal di tengah layar ===== */
+@media (max-width: 768px) {
+    .modal-schedule {
+        width: 90%;
+        max-width: 90%;
+        border-radius: 16px;
+        max-height: 85vh;
+        animation: slideInCenter 0.25s ease-out;
+        margin: 0 auto;
+        align-self: center;
+    }
+
+    @keyframes slideInCenter {
+        from { transform: translateY(20px); opacity: 0; }
+        to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-schedule::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 10px auto 0;
+    }
+
+    .modal-schedule .modal-header {
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+
+    .modal-schedule .modal-header h3 {
+        font-size: 15px;
+    }
+
+    .modal-schedule .modal-body {
+        padding: var(--spacing-md) var(--spacing-lg);
+        gap: var(--spacing-md);
+        max-height: calc(50vh - 60px);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tps-schedule-item {
+        padding: var(--spacing-md);
+    }
+
+    .tps-schedule-item .tps-header .material-icons {
+        font-size: 22px;
+    }
+
+    .tps-schedule-item .tps-info h3 {
+        font-size: 14px;
+    }
+
+    .tps-schedule-item .tps-interval {
+        font-size: 12px;
+        padding: 3px 8px;
+    }
+
+    .tps-schedule-item .tps-status-badge {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+
+    .tps-schedule-item .tps-status-label {
+        font-size: 12px;
+    }
+
+    .tps-schedule-item:has(.tps-status-badge.diangkut),
+    .tps-schedule-item:has(.tps-status-badge.selesai),
+    .tps-schedule-item:has(.tps-status-badge.belum_diangkut) {
+        border-left-width: 1.5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-schedule {
+        max-height: 75vh;
+        border-radius: 16px 16px 16px 16px;
+    }
+
+    .modal-schedule .modal-body {
+        padding: var(--spacing-sm) var(--spacing-md);
+        max-height: calc(92vh - 56px);
+    }
+
+    .tps-schedule-item .tps-status-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+    .tps-status-badge {
+        flex-direction: row;
+        white-space: nowrap;
+    }
+}
