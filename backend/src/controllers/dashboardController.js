@@ -34,7 +34,7 @@ async function getDashboardMas(req, res) {
         const volumeSampahHarian = await dashboardModel.getVolumeSampah()
         const rankingTPS = await dashboardModel.getRankingTPS()
         const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita()
-
+        
         res.json({
           totalTPS,
           totalTPSPenuh,
@@ -43,7 +43,7 @@ async function getDashboardMas(req, res) {
           rankingTPS,
           timbulanPerKapita
         })
-
+        
     } catch (error) {
         console.error(error)
         res.status(500).json({ message: "Terjadi kesalahan server" })   
