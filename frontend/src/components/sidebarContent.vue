@@ -46,7 +46,8 @@
                             <input 
                             type="checkbox"
                             value="normal"
-                            v-model="selectedStatus"
+                            :checked="props.selectedStatus.includes('normal')"
+                            @change="handleStatusChange('normal', $event)"
                             >
                             <span class="status-icon">●</span>
                             <span>Normal <span class="count">({{ totalTPS - totalTPSHampirPenuh - totalTPSPenuh }})</span></span>
@@ -56,7 +57,8 @@
                             <input 
                             type="checkbox"
                             value="hampir_penuh"
-                            v-model="selectedStatus"
+                            :checked="props.selectedStatus.includes('hampir_penuh')"
+                            @change="handleStatusChange('hampir_penuh', $event)"
                             >
                             <span class="status-icon">●</span>
                             <span>Hampir Penuh <span class="count">({{ totalTPSHampirPenuh }})</span></span>
@@ -66,7 +68,8 @@
                             <input 
                             type="checkbox"
                             value="penuh"
-                            v-model="selectedStatus"
+                            :checked="props.selectedStatus.includes('penuh')"
+                            @change="handleStatusChange('penuh', $event)"
                             >
                             <span class="status-icon">●</span>
                             <span>Penuh <span class="count">({{ totalTPSPenuh }})</span></span>
@@ -209,14 +212,14 @@
                             </div>
                         </div>
                         <!-- EMPTY -->
-                        <div v-else-if="timbulanPerKapita.length === 0" class="empty-text">
+                        <div v-else-if="!hasTimbulanData" class="empty-text">
                             <span class="material-icons">info</span>
                             <p>Tidak ada data tersedia</p>
                         </div>
                         <!-- DATA -->
                         <div v-else>
                             <div
-                                v-for="(item, index) in timbulanPerKapita"
+                                v-for="(item, index) in filterTimbulanData"
                                 :key="item.nama_dusun"
                                 class="sidebar-timbulan-item"
                                 :style="{ animationDelay: `${index * 0.1}s` }"
@@ -252,14 +255,17 @@ const currentDate = ref('')
 const todaySchedules = ref([])
 
 const jadwalTPS = ref([])
-const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
-const emit = defineEmits(['reportOpened', 'openScheduleModal'])
+const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged'])
 
-// Receive reportRef from parent (home.vue)
+// Receive reportRef and selectedStatus from parent (home.vue)
 const props = defineProps({
   reportRef: {
     type: Object,
     default: null
+  },
+  selectedStatus: {
+    type: Array,
+    default: () => ['normal', 'hampir_penuh', 'penuh']
   },
 })
 
@@ -290,34 +296,58 @@ const getStatusIcon = (status) => {
   return statusInfo[status]?.icon || 'schedule'
 }
 
+const filterTimbulanData = computed(() =>
+  timbulanPerKapita.value.filter(item => parseFloat(item.timbulan_kg_per_kk_per_hari) > 0)
+)
+
+const hasTimbulanData = computed(() =>
+  filterTimbulanData.value.length > 0
+)
+
 function renderVolumeSampahChart(data) {
+  // destroy chart lama
   if (volumeSampahChart) volumeSampahChart.destroy()
 
+  // format tanggal ke "10 Mar"
   const formatDate = (dateStr) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('id-ID', {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('id-ID', {
       day: '2-digit',
       month: 'short'
     })
   }
 
-  const labels = [...new Set(data.map(item => formatDate(item.tanggal)))]
+  // generate 7 hari terakhir
+  const labels = [...Array(7)].map((_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - i))
+    return d.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short'
+    })
+  })
 
+  // ambil daftar TPS unik
   const tpsList = [...new Set(data.map(item => item.nama_tps))]
 
+  // optimasi: ubah data jadi lookup (biar gak pakai find berulang)
+  const dataMap = {}
+  data.forEach(d => {
+    const key = `${formatDate(d.tanggal)}-${d.nama_tps}`
+    dataMap[key] = d.total_volume
+  })
+
+  // buat dataset
   const datasets = tpsList.map((tps) => {
     return {
       label: tps,
       data: labels.map(label => {
-        const found = data.find(d => 
-          formatDate(d.tanggal) === label && d.nama_tps === tps
-        )
-        return found ? found.total_volume : 0
-      }),
-    //   backgroundColor: '#66BB6A'
+        return dataMap[`${label}-${tps}`] || 0
+      })
     }
   })
 
+  //render chart
   volumeSampahChart = new Chart(volumeSampahChartRef.value, {
     type: 'bar',
     data: {
@@ -325,55 +355,161 @@ function renderVolumeSampahChart(data) {
       datasets
     },
     options: {
-     barPercentage: 0.5,
-        categoryPercentage: 0.5,
-        maxBarThickness: 40,
-        responsive: true,
-        maintainAspectRatio: false,
-        borderRadius: 5,
-        scales: {
-            y: {
-            beginAtZero: true,
-            ticks: {
-                callback: (value) => value + ' kg'
-            }
-            }
-        },
-        plugins: {
-            legend: {
-            position: 'top',
-            pointStyle: 'circle',
-                labels: {
-                    font: {
-                        size: 12,
-                        weight: 'bold'
-                    },
-                padding: 8,
-                usePointStyle: true,
-                pointStyle: 'circle'
-                }
-            },
-            tooltip: {
-            callbacks: {
-                label: (context) => `${context.dataset.label}: ${context.raw} kg`
-            }
-            }
+      responsive: true,
+      maintainAspectRatio: false,
+      barPercentage: 0.4,
+      categoryPercentage: 0.7,
+      barThickness: 5,
+      maxBarThickness: 20,
+      borderRadius: 5,
+
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => value + ' kg'
+          }
         }
+      },
+
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              size: 12,
+              weight: 'bold'
+            },
+            padding: 8,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              return `${context.dataset.label}: ${context.raw} kg`
+            }
+          }
+        }
+      }
     }
   })
+}
+
+// function renderVolumeSampahChart(data) {
+//   if (volumeSampahChart) volumeSampahChart.destroy()
+
+//   const formatDate = (dateStr) => {
+//     const date = new Date(dateStr)
+//     return date.toLocaleDateString('id-ID', {
+//       day: '2-digit',
+//       month: 'short'
+//     })
+//   }
+
+//     const labels = [...Array(7)].map((_, i) => {
+//     const d = new Date()
+//     d.setDate(d.getDate() - (6 - i))
+//     return d.toLocaleDateString('id-ID', {
+//         day: '2-digit',
+//         month: 'short'
+//     })
+//     })
+
+// //   const labels = [...new Set(data.map(item => formatDate(item.tanggal)))]
+
+//   const tpsList = [...new Set(data.map(item => item.nama_tps))]
+
+//   const datasets = tpsList.map((tps) => {
+//     return {
+//       label: tps,
+//       data: labels.map(label => {
+//         const found = data.find(d => 
+//           formatDate(d.tanggal) === label && d.nama_tps === tps
+//         )
+//         return found ? found.total_volume : 0
+//       }),
+//     //   backgroundColor: '#66BB6A'
+//     }
+//   })
+
+//   volumeSampahChart = new Chart(volumeSampahChartRef.value, {
+//     type: 'bar',
+//     data: {
+//       labels,
+//       datasets
+//     },
+//     options: {
+//      barPercentage: 0.5,
+//         categoryPercentage: 0.5,
+//         maxBarThickness: 40,
+//         responsive: true,
+//         maintainAspectRatio: false,
+//         borderRadius: 5,
+//         scales: {
+//             y: {
+//             beginAtZero: true,
+//             ticks: {
+//                 callback: (value) => value + ' kg'
+//             }
+//             }
+//         },
+//         plugins: {
+//             legend: {
+//             position: 'top',
+//             pointStyle: 'circle',
+//                 labels: {
+//                     font: {
+//                         size: 12,
+//                         weight: 'bold'
+//                     },
+//                 padding: 8,
+//                 usePointStyle: true,
+//                 pointStyle: 'circle'
+//                 }
+//             },
+//             tooltip: {
+//             callbacks: {
+//                 label: (context) => `${context.dataset.label}: ${context.raw} kg`
+//             }
+//             }
+//         }
+//     }
+//   })
+// }
+
+function handleStatusChange(status, event) {
+  const newStatus = [...props.selectedStatus]
+  
+  if (event.target.checked) {
+    // Add status if checked
+    if (!newStatus.includes(status)) {
+      newStatus.push(status)
+    }
+  } else {
+    // Remove status if unchecked
+    const index = newStatus.indexOf(status)
+    if (index > -1) {
+      newStatus.splice(index, 1)
+    }
+  }
+  
+  // Emit update untuk parent
+  emit('update:selectedStatus', newStatus)
 }
 
 async function fetchTPSByStatus() {
   try {
 
-    const statusQuery = selectedStatus.value.join(',')
+    const statusQuery = props.selectedStatus.join(',')
 
     const res = await fetch(`/api/tps/status?status=${statusQuery}`)
     const data = await res.json()
 
     wastePoints.value = data
 
-    // updateMarkers()
+    // Emit event untuk memberitahu parent bahwa status telah berubah
+    emit('statusChanged')
 
   } catch (err) {
     console.error('Gagal filter TPS:', err)
@@ -528,9 +664,9 @@ onMounted(async () => {
 
 })
 
-watch(selectedStatus, () => {
+watch(() => props.selectedStatus, () => {
   fetchTPSByStatus()
-})
+}, { deep: true })
 
 // function initMap() {
 //     //kordinat desa bumbung

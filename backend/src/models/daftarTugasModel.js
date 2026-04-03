@@ -1,26 +1,26 @@
 const {db} = require("../config/db");
 
-async function create(data) {
-    const [rows] = await db.query(
-      `SELECT id_daftar_tugas FROM daftar_tugas
-      WHERE id_jadwal = ?
-      AND tgl_pengambilan = CURDATE()`,
-      [data.id_jadwal]
-    );
+  async function create(data) {
+      const [rows] = await db.query(
+        `SELECT id_daftar_tugas FROM daftar_tugas
+        WHERE id_jadwal = ?
+        AND tgl_pengambilan = CURDATE()`,
+        [data.id_jadwal]
+      );
 
-  if (rows.length === 0) {
-    await db.query(
-      `INSERT IGNORE INTO daftar_tugas
-      (id_jadwal, id_petugas, id_tps, tgl_pengambilan)
-      VALUES (?, ?, ?, CURDATE())`,
-      [
-        data.id_jadwal,
-        data.id_petugas,
-        data.id_tps
-      ]
-    );
+    if (rows.length === 0) {
+      await db.query(
+        `INSERT IGNORE INTO daftar_tugas
+        (id_jadwal, id_petugas, id_tps, tgl_pengambilan)
+        VALUES (?, ?, ?, CURDATE())`,
+        [
+          data.id_jadwal,
+          data.id_petugas,
+          data.id_tps
+        ]
+      );
+    }
   }
-}
 
 async function updateStatus(id, data) {
   const tglTerakhir =
@@ -114,11 +114,57 @@ async function getAll() {
   return rows;
 }
 
+async function updatePetugasByTpsToday(id_tps, id_petugas, id_jadwal) {
+  await db.query(
+    `UPDATE daftar_tugas
+     SET id_petugas = ?, id_jadwal = ?
+     WHERE id_tps = ?
+     AND tgl_pengambilan = CURDATE()`,
+    [id_petugas, id_jadwal, id_tps]
+  );
+}
+
+async function syncTugasByTps(id_tps) {
+  // ambil hari ini (0 = Senin, 6 = Minggu)
+  const [result] = await db.query(
+    "SELECT WEEKDAY(CURDATE()) as hariIndex"
+  );
+  const hariIndex = result[0].hariIndex;
+
+  // ambil jadwal terbaru untuk hari ini
+  const jadwalList = await require("./jadwalModel").findByHari(hariIndex);
+  const jadwal = jadwalList.find(j => j.id_tps == id_tps);
+
+  // 🔥 1. hapus tugas hari ini
+  await db.query(
+    `DELETE FROM daftar_tugas 
+     WHERE id_tps = ? 
+     AND tgl_pengambilan = CURDATE()`,
+    [id_tps]
+  );
+
+  // 🔥 2. insert ulang kalau ada jadwal
+  if (jadwal) {
+    await db.query(
+      `INSERT INTO daftar_tugas 
+      (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
+      VALUES (?, ?, ?, CURDATE(), 'belum')`,
+      [
+        jadwal.id_jadwal,
+        jadwal.id_petugas,
+        jadwal.id_tps
+      ]
+    );
+  }
+}
+
 module.exports = {
   create,
   updateStatus,
   findById,
   getByPetugas,
   getAll,
-  addLogbook
+  addLogbook,
+  updatePetugasByTpsToday,
+  syncTugasByTps
 };

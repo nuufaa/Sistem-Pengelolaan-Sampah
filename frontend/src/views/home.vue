@@ -36,7 +36,11 @@
 
             <div class="sidebar-content">
                 <sidebarContent   
-                    @openScheduleModal="openScheduleModal" />
+                    :selectedStatus="selectedStatus"
+                    @openScheduleModal="openScheduleModal"
+                    @statusChanged="updateMarkers"
+                    @update:selectedStatus="selectedStatus = $event"
+                />
             </div>
             </aside>
 
@@ -71,7 +75,10 @@
         <div class="bottom-sheet-content">
             <!-- Dynamic content - same as sidebar -->
             <sidebarContent
+                :selectedStatus="selectedStatus"
                 @openScheduleModal="openScheduleModal"
+                @statusChanged="updateMarkers"
+                @update:selectedStatus="selectedStatus = $event"
             />
         </div>
     </div>
@@ -538,6 +545,13 @@ function updateMarkers() {
     });
 
 }
+
+// Watch untuk trigger updateMarkers ketika selectedStatus berubah
+watch(selectedStatus, () => {
+  if (map.value) {
+    updateMarkers()
+  }
+}, { deep: true })
 
 </script>
 

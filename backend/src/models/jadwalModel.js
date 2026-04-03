@@ -159,8 +159,8 @@ async function update(db, id_tps, id_petugas, hari_pengambilan = [], id_admin) {
     await conn.beginTransaction();
     // hapus jadwal lama
     await conn.query(
-      `DELETE FROM jadwal_pengambilan WHERE id_tps = ? AND id_petugas = ?`,
-      [id_tps, id_petugas]
+      `DELETE FROM jadwal_pengambilan WHERE id_tps = ?`,
+      [id_tps]
     );
 
     // bersihkan duplikat
@@ -184,6 +184,38 @@ async function update(db, id_tps, id_petugas, hari_pengambilan = [], id_admin) {
     throw err;
   }
 }
+// async function update(db, id_tps, id_petugas, hari_pengambilan = [], id_admin) {
+//   // reuse imported db from top of file
+//   const conn = await db.getConnection();
+//   try {
+//     await conn.beginTransaction();
+//     // hapus jadwal lama
+//     await conn.query(
+//       `DELETE FROM jadwal_pengambilan WHERE id_tps = ? AND id_petugas = ?`,
+//       [id_tps, id_petugas]
+//     );
+
+//     // bersihkan duplikat
+//     const hariUnique = [...new Set(hari_pengambilan)];
+
+//     // insert baru
+//     if (hariUnique.length > 0) {
+//       const values = hariUnique.map(hari => [id_tps, id_petugas, hari, id_admin]);
+//       const placeholders = values.map(() => `(?, ?, ?, ?)`).join(', ');
+
+//       await conn.query(
+//         `INSERT INTO jadwal_pengambilan (id_tps, id_petugas, hari_pengambilan, id_admin) VALUES ${placeholders}`,
+//         values.flat()
+//       );
+//     }
+
+//     await conn.commit();
+//     return { success: true };
+//   } catch (err) {
+//     await conn.rollback();
+//     throw err;
+//   }
+// }
 
 async function updateTanggalTerakhir(id_jadwal) {
   await db.query(

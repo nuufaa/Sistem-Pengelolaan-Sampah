@@ -1,6 +1,7 @@
 const JadwalModel = require("../models/jadwalModel");
 const jadwalService = require("../services/jadwalService");
 const {db} = require("../config/db"); 
+const daftarTugasModel = require("../models/daftarTugasModel")
 
 async function createJadwal(req, res) {
   try {
@@ -50,10 +51,32 @@ async function updateJadwal(req, res) {
     return res.status(400).json({ error: "id_tps dan id_petugas wajib diisi" });
   }
 
+  
   try {
     // call the model helper; hari_pengambilan may be undefined
     console.log('Body:', req.body);
     await JadwalModel.update(db, id_tps, id_petugas, hari_pengambilan || [], id_admin);
+  //   const [result] = await db.query(
+  //   "SELECT WEEKDAY(CURDATE()) as hariIndex"
+  // );
+  
+//   const hariIndex = result[0].hariIndex;
+  
+//   const jadwalList = await JadwalModel.findByHari(hariIndex);
+//   const jadwal = jadwalList.find(j => j.id_tps == id_tps);
+
+//   if (!jadwal) {
+//   return res.status(200).json({
+//     message: "Jadwal berhasil diperbarui (tidak ada jadwal hari ini, tugas tidak dibuat)"
+//   });
+// }
+    await daftarTugasModel.syncTugasByTps(id_tps);
+
+//     await daftarTugasModel.updatePetugasByTpsToday(
+//   id_tps,
+//   jadwal.id_petugas,
+//   jadwal.id_jadwal
+// );
 
     return res.status(200).json({ message: "Jadwal berhasil diperbarui" });
   } catch (error) {

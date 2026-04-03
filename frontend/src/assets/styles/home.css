@@ -706,7 +706,7 @@ input, select, textarea {
     color: var(--status-normal);
 }
 
-.popup-status.warning {
+.popup-status.hampir_penuh {
     background: var(--status-warning-bg);
     color: var(--secondary-dark);
 }
