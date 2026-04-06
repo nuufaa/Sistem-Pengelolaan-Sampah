@@ -53,6 +53,26 @@
             </router-link>
 
             <router-link
+              to="/admin/jam-operasional"
+              class="nav-item"
+              exact-active-class="active"
+              @click="sidebarOpen = false"
+            >
+              <span class="material-icons">event</span>
+              Jam Operasional
+            </router-link>
+
+            <router-link
+              to="/admin/dusun"
+              class="nav-item"
+              exact-active-class="active"
+              @click="sidebarOpen = false"
+            >
+              <span class="material-icons">domain</span>
+              Kelola Dusun
+            </router-link>
+
+            <router-link
               to="/admin/kendaraan"
               class="nav-item"
               exact-active-class="active"

@@ -125,36 +125,73 @@ async function updatePetugasByTpsToday(id_tps, id_petugas, id_jadwal) {
 }
 
 async function syncTugasByTps(id_tps) {
-  // ambil hari ini (0 = Senin, 6 = Minggu)
-  const [result] = await db.query(
-    "SELECT WEEKDAY(CURDATE()) as hariIndex"
-  );
-  const hariIndex = result[0].hariIndex;
+  try {
 
-  // ambil jadwal terbaru untuk hari ini
-  const jadwalList = await require("./jadwalModel").findByHari(hariIndex);
-  const jadwal = jadwalList.find(j => j.id_tps == id_tps);
-
-  // 🔥 1. hapus tugas hari ini
-  await db.query(
-    `DELETE FROM daftar_tugas 
-     WHERE id_tps = ? 
-     AND tgl_pengambilan = CURDATE()`,
-    [id_tps]
-  );
-
-  // 🔥 2. insert ulang kalau ada jadwal
-  if (jadwal) {
-    await db.query(
-      `INSERT INTO daftar_tugas 
-      (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
-      VALUES (?, ?, ?, CURDATE(), 'belum')`,
-      [
-        jadwal.id_jadwal,
-        jadwal.id_petugas,
-        jadwal.id_tps
-      ]
+    // ambil jadwal terbaru untuk TPS ini
+    const [jadwalRows] = await db.query(
+      `SELECT j.id_jadwal, j.hari_pengambilan, j.id_petugas
+       FROM jadwal_pengambilan j
+       WHERE j.id_tps = ?`,
+      [id_tps]
     );
+
+    if (jadwalRows.length === 0) {
+      // tidak ada jadwal, hapus semua tugas untuk TPS ini
+      await db.query(
+        `DELETE FROM daftar_tugas WHERE id_tps = ?`,
+        [id_tps]
+      );
+      return;
+    }
+
+    // Ambil petugas dari jadwal (semuanya seharusnya sama untuk 1 TPS)
+    const id_petugas = jadwalRows[0].id_petugas;
+
+    // 1. Update tugas yang sudah ada dan belum selesai
+    const [updateResult] = await db.query(
+      `UPDATE daftar_tugas
+       SET id_petugas = ?
+       WHERE id_tps = ?
+       AND status_angkut != 'selesai'`,
+      [id_petugas, id_tps]
+    );
+
+    // 2. Generate tugas untuk semua hari dalam jadwal (sampai 7 hari ke depan)
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+      const targetDate = new Date(today);
+      targetDate.setDate(targetDate.getDate() + i);
+      
+      // hitung hari dalam minggu (0 = Senin, 6 = Minggu)
+      const dayOfWeek = (targetDate.getDay() + 6) % 7;
+      
+      // cari jadwal untuk hari ini
+      const jadwalForDay = jadwalRows.find(j => j.hari_pengambilan == dayOfWeek);
+      
+      if (jadwalForDay) {
+        // check apakah tugas sudah ada untuk tanggal ini
+        const [existing] = await db.query(
+          `SELECT id_daftar_tugas FROM daftar_tugas
+           WHERE id_tps = ? AND tgl_pengambilan = DATE(?)`,
+          [id_tps, targetDate.toISOString().split('T')[0]]
+        );
+
+        if (existing.length === 0) {
+          // insert tugas baru
+          const dateStr = targetDate.toISOString().split('T')[0];
+          await db.query(
+            `INSERT INTO daftar_tugas 
+            (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
+            VALUES (?, ?, ?, ?, 'belum_diangkut')`,
+            [jadwalForDay.id_jadwal, id_petugas, id_tps, dateStr]
+          );
+        }
+      }
+    }
+
+  } catch (error) {
+    throw error;
   }
 }
 

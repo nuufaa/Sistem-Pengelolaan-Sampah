@@ -1,242 +1,267 @@
 <template>
-                <!-- Schedule Card - Desa List -->
-                <div class="card schedule-card">
-                    <div class="card-header">
-                        <span class="material-icons">event</span>
-                        <h2>Jadwal Pengambilan Sampah</h2>
-                    </div>
-                    <div class="card-body">
-                        <!-- Current Date Info -->
-                        <div class="schedule-info">
-                            <div class="info-item">
-                                <span class="material-icons">event</span>
-                                <span>{{ currentDate }}</span>
-                            </div>
-                        </div>
+  <div class="card schedule-card">
+      <div class="card-header">
+          <span class="material-icons">event</span>
+          <h2>Jadwal Pengambilan Sampah</h2>
+      </div>
+      <div class="card-body">
+          <!-- Current Date Info -->
+          <div class="schedule-info">
+              <div class="info-item">
+                  <span class="material-icons">event</span>
+                  <span>{{ currentDate }}</span>
+              </div>
+            </div>
+            <div class="desa-card">
+              <div class="desa-header">
+                <span class="material-icons">event</span>
+                <h3>JAM OPERASIONAL</h3>
+              </div>  
+              <div class="desa-tps-info">
+                <span>
+                  Jam buang warga
+                </span>
+                <span>
+                  {{ formatJam(jadwal.jam_buang_mulai) }}–{{ formatJam(jadwal.jam_buang_selesai) }}
+                </span>
+            </div>
 
-                        <!-- Desa Cards -->
-                        <div v-for="desa in dusunList" :key="desa.desaCode" class="desa-card">
-                            <div class="desa-header">
-                                <span class="material-icons">{{ desa.icon }}</span>
-                                <h3>Desa Sembalun Bumbung</h3>
-                            </div>
-                            <div class="desa-tps-info">
-                                <span class="material-icons">delete</span>
-                                <span class="tps-count">{{ getTpsCountByDesa(desa.desaCode) }} TPS Terdaftar</span>
-                            </div>
-                            <button class="btn-lihat-jadwal" @click="openScheduleModal(desa)">
-                                <span class="material-icons">event_note</span>
-                                <span>Lihat Jadwal Lengkap TPS {{ desa.desa }}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div class="desa-tps-info">
+              <span>
+                Pengambilan 
+              </span>
+              <span>
+                {{ formatJam(jadwal.jam_ambil_mulai) }}–{{ formatJam(jadwal.jam_ambil_selesai) }}
+              </span>
+            </div>
+            <div class="desa-tps-info">
+              <p>Harap buang sampah sebelum jam {{ formatJam(jadwal.jam_buang_mulai) }} agar tidak tertinggal oleh truk.</p>
+            </div>
+          </div>
 
-                <!-- Filter Card -->
-                <div class="card filter-card">
-                    <div class="card-header">
-                        <span class="material-icons">filter_list</span>
-                        <h2>Filter Tampilan</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="filter-group">
-                        <label class="filter-label">Status Titik Sampah:</label>
+          <!-- Desa Cards -->
+          <div v-for="desa in dusunList" :key="desa.desaCode" class="desa-card">
+              <div class="desa-header">
+                  <span class="material-icons">{{ desa.icon }}</span>
+                  <h3>Desa Sembalun Bumbung</h3>
+              </div>
+              <div class="desa-tps-info">
+                  <span class="material-icons">delete</span>
+                  <span class="tps-count">{{ getTpsCountByDesa(desa.desaCode) }} TPS Terdaftar</span>
+              </div>
+              <button class="btn-lihat-jadwal" @click="openScheduleModal(desa)">
+                  <span class="material-icons">event_note</span>
+                  <span>Lihat Jadwal Lengkap TPS {{ desa.desa }}</span>
+              </button>
+          </div>
+      </div>
+  </div>
 
-                        <label class="checkbox-label status-normal">
-                            <input 
-                            type="checkbox"
-                            value="normal"
-                            :checked="props.selectedStatus.includes('normal')"
-                            @change="handleStatusChange('normal', $event)"
-                            >
-                            <span class="status-icon">●</span>
-                            <span>Normal <span class="count">({{ totalTPS - totalTPSHampirPenuh - totalTPSPenuh }})</span></span>
-                        </label>
+  <!-- Filter Card -->
+  <div class="card filter-card">
+      <div class="card-header">
+          <span class="material-icons">filter_list</span>
+          <h2>Filter Tampilan</h2>
+      </div>
+      <div class="card-body">
+          <div class="filter-group">
+          <label class="filter-label">Status Titik Sampah:</label>
 
-                        <label class="checkbox-label status-warning">
-                            <input 
-                            type="checkbox"
-                            value="hampir_penuh"
-                            :checked="props.selectedStatus.includes('hampir_penuh')"
-                            @change="handleStatusChange('hampir_penuh', $event)"
-                            >
-                            <span class="status-icon">●</span>
-                            <span>Hampir Penuh <span class="count">({{ totalTPSHampirPenuh }})</span></span>
-                        </label>
+          <label class="checkbox-label status-normal">
+              <input 
+              type="checkbox"
+              value="normal"
+              :checked="props.selectedStatus.includes('normal')"
+              @change="handleStatusChange('normal', $event)"
+              >
+              <span class="status-icon">●</span>
+              <span>Normal <span class="count">({{ totalTPS - totalTPSHampirPenuh - totalTPSPenuh }})</span></span>
+          </label>
 
-                        <label class="checkbox-label status-danger">
-                            <input 
-                            type="checkbox"
-                            value="penuh"
-                            :checked="props.selectedStatus.includes('penuh')"
-                            @change="handleStatusChange('penuh', $event)"
-                            >
-                            <span class="status-icon">●</span>
-                            <span>Penuh <span class="count">({{ totalTPSPenuh }})</span></span>
-                        </label>
+          <label class="checkbox-label status-warning">
+              <input 
+              type="checkbox"
+              value="hampir_penuh"
+              :checked="props.selectedStatus.includes('hampir_penuh')"
+              @change="handleStatusChange('hampir_penuh', $event)"
+              >
+              <span class="status-icon">●</span>
+              <span>Hampir Penuh <span class="count">({{ totalTPSHampirPenuh }})</span></span>
+          </label>
 
-                        </div>
+          <label class="checkbox-label status-danger">
+              <input 
+              type="checkbox"
+              value="penuh"
+              :checked="props.selectedStatus.includes('penuh')"
+              @change="handleStatusChange('penuh', $event)"
+              >
+              <span class="status-icon">●</span>
+              <span>Penuh <span class="count">({{ totalTPSPenuh }})</span></span>
+          </label>
 
-                        <div class="legend">
-                            <h3>Informasi Peta:</h3>
-                            <div class="legend-item">
-                                <span class="legend-dot normal"></span>
-                                <span>Normal - Aman</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-dot warning"></span>
-                                <span>Hampir Penuh - Perhatian</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-dot danger"></span>
-                                <span>Penuh - Perlu Segera</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          </div>
 
-                <!-- Statistics Card -->
-                <div class="card stats-card">
-                    <div class="card-header">
-                        <span class="material-icons">bar_chart</span>
-                        <h2>Statistik Hari Ini</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="stat-number" id="statTotal">{{ totalTPS }}</div>
-                                <div class="stat-label">Total Titik</div>
-                            </div>
-                            <div class="stat-item warning">
-                                <div class="stat-number" id="statWarning">{{ totalTPSHampirPenuh }}</div>
-                                <div class="stat-label">Perlu Perhatian</div>
-                            </div>
-                            <div class="stat-item danger">
-                                <div class="stat-number" id="statDanger">{{ totalTPSPenuh }}</div>
-                                <div class="stat-label">Penuh</div>
-                            </div>
-                        </div>
-                        <!-- <div class="last-update">
-                            Terakhir Diperbarui: <span id="lastUpdate"></span>
-                        </div> -->
-                    </div>
-                </div>
+          <div class="legend">
+              <h3>Informasi Peta:</h3>
+              <div class="legend-item">
+                  <span class="legend-dot normal"></span>
+                  <span>Normal - Aman</span>
+              </div>
+              <div class="legend-item">
+                  <span class="legend-dot warning"></span>
+                  <span>Hampir Penuh - Perhatian</span>
+              </div>
+              <div class="legend-item">
+                  <span class="legend-dot danger"></span>
+                  <span>Penuh - Perlu Segera</span>
+              </div>
+          </div>
+      </div>
+  </div>
 
-                <!-- Volume Sampah Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="material-icons">assessment</span>
-                        <h2>Volume Sampah TPS</h2>
-                    </div>
-                    <div class="card-body">
-                        <!-- <div id="volumeSampahSidebar"></div> -->
-                        <canvas ref="volumeSampahChartRef" class="bar-chart"></canvas>
-                    </div>
-                </div>
+  <!-- Statistics Card -->
+  <div class="card stats-card">
+      <div class="card-header">
+          <span class="material-icons">bar_chart</span>
+          <h2>Statistik Hari Ini</h2>
+      </div>
+      <div class="card-body">
+          <div class="stats-grid">
+              <div class="stat-item">
+                  <div class="stat-number" id="statTotal">{{ totalTPS }}</div>
+                  <div class="stat-label">Total Titik</div>
+              </div>
+              <div class="stat-item warning">
+                  <div class="stat-number" id="statWarning">{{ totalTPSHampirPenuh }}</div>
+                  <div class="stat-label">Perlu Perhatian</div>
+              </div>
+              <div class="stat-item danger">
+                  <div class="stat-number" id="statDanger">{{ totalTPSPenuh }}</div>
+                  <div class="stat-label">Penuh</div>
+              </div>
+          </div>
+          <!-- <div class="last-update">
+              Terakhir Diperbarui: <span id="lastUpdate"></span>
+          </div> -->
+      </div>
+  </div>
 
-                <!-- Ranking TPS Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="material-icons">emoji_events</span>
-                        <h2>Ranking TPS Terbaik</h2>
-                    </div>
+  <!-- Volume Sampah Card -->
+  <div class="card">
+      <div class="card-header">
+          <span class="material-icons">assessment</span>
+          <h2>Volume Sampah TPS</h2>
+      </div>
+      <div class="card-body">
+          <!-- <div id="volumeSampahSidebar"></div> -->
+          <canvas ref="volumeSampahChartRef" class="bar-chart"></canvas>
+      </div>
+  </div>
 
-                    <div class="card-body">
-                        <!-- LOADING -->
-                        <div v-if="loading" class="loading-state">
-                            <div
-                                v-for="n in 2"
-                                :key="n"
-                                class="sidebar-ranking-item skeleton"
-                            >
-                                <div class="skeleton-line short"></div>
-                                <div class="skeleton-line tall"></div>
-                                <div class="skeleton-line xshort"></div>
-                            </div>
-                        </div>
-                        <!-- EMPTY -->
-                        <div v-else-if="rankingTPS.length === 0" class="empty-text">
-                            <span class="material-icons">info</span>
-                            <p>Tidak ada data tersedia</p>
-                        </div>
-                        <!-- DATA -->
-                        <div v-else class="ranking-list">
-                            <div
-                                v-for="(item,index) in rankingTPS"
-                                :key="item.id_tps"
-                                class="sidebar-ranking-item"
-                            >
-                                <div class="sidebar-ranking-medal">
-                                    <span v-if="index===0">🥇</span>
-                                    <span v-else-if="index===1">🥈</span>
-                                    <span v-else-if="index===2">🥉</span>
-                                    <span v-else>{{ index+1 }}.</span>
-                                </div>
+  <!-- Ranking TPS Card -->
+  <div class="card">
+      <div class="card-header">
+          <span class="material-icons">emoji_events</span>
+          <h2>Ranking TPS Terbaik</h2>
+      </div>
 
-                                <div class="sidebar-ranking-info">
-                                    <div class="sidebar-ranking-name">
-                                        {{ item.nama_tps }}
-                                    </div>
-                                    <div class="sidebar-ranking-desa">
-                                        {{ item.nama_dusun }}
-                                    </div>
-                                </div>
+      <div class="card-body">
+          <!-- LOADING -->
+          <div v-if="loading" class="loading-state">
+              <div
+                  v-for="n in 2"
+                  :key="n"
+                  class="sidebar-ranking-item skeleton"
+              >
+                  <div class="skeleton-line short"></div>
+                  <div class="skeleton-line tall"></div>
+                  <div class="skeleton-line xshort"></div>
+              </div>
+          </div>
+          <!-- EMPTY -->
+          <div v-else-if="rankingTPS.length === 0" class="empty-text">
+              <span class="material-icons">info</span>
+              <p>Tidak ada data tersedia</p>
+          </div>
+          <!-- DATA -->
+          <div v-else class="ranking-list">
+              <div
+                  v-for="(item,index) in rankingTPS"
+                  :key="item.id_tps"
+                  class="sidebar-ranking-item"
+              >
+                  <div class="sidebar-ranking-medal">
+                      <span v-if="index===0">🥇</span>
+                      <span v-else-if="index===1">🥈</span>
+                      <span v-else-if="index===2">🥉</span>
+                      <span v-else>{{ index+1 }}.</span>
+                  </div>
 
-                                <div class="sidebar-ranking-score">
-                                    {{ item.score }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                  <div class="sidebar-ranking-info">
+                      <div class="sidebar-ranking-name">
+                          {{ item.nama_tps }}
+                      </div>
+                      <div class="sidebar-ranking-desa">
+                          {{ item.nama_dusun }}
+                      </div>
+                  </div>
+
+                  <div class="sidebar-ranking-score">
+                      {{ item.score }}
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
 
 
-                <!-- Timbulan Per Kapita Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="material-icons">people</span>
-                        <h2>Timbulan Per Kapita</h2>
-                    </div>
+  <!-- Timbulan Per Kapita Card -->
+  <div class="card">
+      <div class="card-header">
+          <span class="material-icons">people</span>
+          <h2>Timbulan Per Kapita</h2>
+      </div>
 
-                    <div class="card-body">
-                        <!-- LOADING -->
-                        <div v-if="loading" class="loading-state">
-                            <div
-                                v-for="n in 2"
-                                :key="n"
-                                class="sidebar-timbulan-item skeleton"
-                            >
-                                <div class="skeleton-line short"></div>
-                                <div class="skeleton-line tall"></div>
-                                <div class="skeleton-line xshort"></div>
-                            </div>
-                        </div>
-                        <!-- EMPTY -->
-                        <div v-else-if="!hasTimbulanData" class="empty-text">
-                            <span class="material-icons">info</span>
-                            <p>Tidak ada data tersedia</p>
-                        </div>
-                        <!-- DATA -->
-                        <div v-else>
-                            <div
-                                v-for="(item, index) in filterTimbulanData"
-                                :key="item.nama_dusun"
-                                class="sidebar-timbulan-item"
-                                :style="{ animationDelay: `${index * 0.1}s` }"
-                            >
-                                <div class="sidebar-timbulan-desa">
-                                    {{ item.nama_dusun }}
-                                </div>
-                                <div class="sidebar-timbulan-value">
-                                    {{ item.timbulan_kg_per_kk_per_hari }}
-                                </div>
-                                <div class="sidebar-timbulan-unit">
-                                    kg/KK/hari
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <div class="card-body">
+          <!-- LOADING -->
+          <div v-if="loading" class="loading-state">
+              <div
+                  v-for="n in 2"
+                  :key="n"
+                  class="sidebar-timbulan-item skeleton"
+              >
+                  <div class="skeleton-line short"></div>
+                  <div class="skeleton-line tall"></div>
+                  <div class="skeleton-line xshort"></div>
+              </div>
+          </div>
+          <!-- EMPTY -->
+          <div v-else-if="!hasTimbulanData" class="empty-text">
+              <span class="material-icons">info</span>
+              <p>Tidak ada data tersedia</p>
+          </div>
+          <!-- DATA -->
+          <div v-else>
+              <div
+                  v-for="(item, index) in filterTimbulanData"
+                  :key="item.nama_dusun"
+                  class="sidebar-timbulan-item"
+                  :style="{ animationDelay: `${index * 0.1}s` }"
+              >
+                  <div class="sidebar-timbulan-desa">
+                      {{ item.nama_dusun }}
+                  </div>
+                  <div class="sidebar-timbulan-value">
+                      {{ item.timbulan_kg_per_kk_per_hari }}
+                  </div>
+                  <div class="sidebar-timbulan-unit">
+                      kg/KK/hari
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
 </template>
 
 <script setup>
@@ -253,21 +278,7 @@ import Chart from 'chart.js/auto'
 // Date and Schedule
 const currentDate = ref('')
 const todaySchedules = ref([])
-
 const jadwalTPS = ref([])
-const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged'])
-
-// Receive reportRef and selectedStatus from parent (home.vue)
-const props = defineProps({
-  reportRef: {
-    type: Object,
-    default: null
-  },
-  selectedStatus: {
-    type: Array,
-    default: () => ['normal', 'hampir_penuh', 'penuh']
-  },
-})
 
 const wastePoints = ref([])
 const loading = ref(false)
@@ -279,21 +290,31 @@ const totalTPSHampirPenuh = ref(0)
 const rankingTPS = ref([])
 const timbulanPerKapita = ref([])
 
-const volumeSampahChartRef = ref(null)
 let volumeSampahChart = null
+const volumeSampahChartRef = ref(null)
+const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged'])
+const jadwal = ref({
+  jam_buang_mulai: '',
+  jam_buang_selesai: '',
+  jam_ambil_mulai: '',
+  jam_ambil_selesai: ''
+})
 
-const statusInfo = {
-  belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
-  diangkut: { text: 'Sedang Berlangsung', icon: 'local_shipping' },
-  selesai: { text: 'Selesai', icon: 'check_circle' },
-}
+// Receive reportRef and selectedStatus from parent (home.vue)
+const props = defineProps({
+  reportRef: {
+    type: Object,
+    default: null
+  },
+  selectedStatus: {
+    type: Array,
+    default: () => ['normal', 'hampir_penuh', 'penuh']
+  }
+})
 
-const getStatusText = (status) => {
-  return statusInfo[status]?.text || 'Belum Dimulai'
-}
-
-const getStatusIcon = (status) => {
-  return statusInfo[status]?.icon || 'schedule'
+function formatJam(val) {
+  if (!val) return '--:--'
+  return String(val).slice(0, 5)
 }
 
 const filterTimbulanData = computed(() =>
@@ -396,88 +417,6 @@ function renderVolumeSampahChart(data) {
   })
 }
 
-// function renderVolumeSampahChart(data) {
-//   if (volumeSampahChart) volumeSampahChart.destroy()
-
-//   const formatDate = (dateStr) => {
-//     const date = new Date(dateStr)
-//     return date.toLocaleDateString('id-ID', {
-//       day: '2-digit',
-//       month: 'short'
-//     })
-//   }
-
-//     const labels = [...Array(7)].map((_, i) => {
-//     const d = new Date()
-//     d.setDate(d.getDate() - (6 - i))
-//     return d.toLocaleDateString('id-ID', {
-//         day: '2-digit',
-//         month: 'short'
-//     })
-//     })
-
-// //   const labels = [...new Set(data.map(item => formatDate(item.tanggal)))]
-
-//   const tpsList = [...new Set(data.map(item => item.nama_tps))]
-
-//   const datasets = tpsList.map((tps) => {
-//     return {
-//       label: tps,
-//       data: labels.map(label => {
-//         const found = data.find(d => 
-//           formatDate(d.tanggal) === label && d.nama_tps === tps
-//         )
-//         return found ? found.total_volume : 0
-//       }),
-//     //   backgroundColor: '#66BB6A'
-//     }
-//   })
-
-//   volumeSampahChart = new Chart(volumeSampahChartRef.value, {
-//     type: 'bar',
-//     data: {
-//       labels,
-//       datasets
-//     },
-//     options: {
-//      barPercentage: 0.5,
-//         categoryPercentage: 0.5,
-//         maxBarThickness: 40,
-//         responsive: true,
-//         maintainAspectRatio: false,
-//         borderRadius: 5,
-//         scales: {
-//             y: {
-//             beginAtZero: true,
-//             ticks: {
-//                 callback: (value) => value + ' kg'
-//             }
-//             }
-//         },
-//         plugins: {
-//             legend: {
-//             position: 'top',
-//             pointStyle: 'circle',
-//                 labels: {
-//                     font: {
-//                         size: 12,
-//                         weight: 'bold'
-//                     },
-//                 padding: 8,
-//                 usePointStyle: true,
-//                 pointStyle: 'circle'
-//                 }
-//             },
-//             tooltip: {
-//             callbacks: {
-//                 label: (context) => `${context.dataset.label}: ${context.raw} kg`
-//             }
-//             }
-//         }
-//     }
-//   })
-// }
-
 function handleStatusChange(status, event) {
   const newStatus = [...props.selectedStatus]
   
@@ -516,6 +455,17 @@ async function fetchTPSByStatus() {
   }
 }
 
+async function fetchjamOperasional() {
+  try {
+    const res = await api.get('api/jam-operasional')
+
+    jadwal.value = res.data[0] || {}
+
+  } catch (error) {
+    console.error('Gagal ambil jam operasional', error)
+  }
+}
+
 
 async function fetchDashboard() {
   try {
@@ -535,15 +485,15 @@ async function fetchDashboard() {
   }
 }
 
-function openReport(id_tps = null) {
-    // Open modal using reportRef from parent (home.vue)
-    if (props.reportRef && typeof props.reportRef.openModal === 'function') {
-        props.reportRef.openModal(id_tps)
-    }
+// function openReport(id_tps = null) {
+//     // Open modal using reportRef from parent (home.vue)
+//     if (props.reportRef && typeof props.reportRef.openModal === 'function') {
+//         props.reportRef.openModal(id_tps)
+//     }
     
-    // Always emit to notify parent component to close bottom sheet (mobile)
-    emit('reportOpened')
-}
+//     // Always emit to notify parent component to close bottom sheet (mobile)
+//     emit('reportOpened')
+// }
 
 // ===== Date and Schedule Functions =====
 function formatDate(date = new Date()) {
@@ -644,6 +594,7 @@ onMounted(async () => {
     //Set tanggal & schedule
     initializeDateTime()
 
+    fetchjamOperasional()
     //Inisialisasi map
     // initMap()
 
@@ -667,141 +618,6 @@ onMounted(async () => {
 watch(() => props.selectedStatus, () => {
   fetchTPSByStatus()
 }, { deep: true })
-
-// function initMap() {
-//     //kordinat desa bumbung
-//     map.value = L.map('map').setView([-8.384399, 116.542617], 14)
-
-//     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//     attribution: '© OpenStreetMap'
-//     }).addTo(map.value)
-
-//     markerCluster.value = L.markerClusterGroup()
-//     map.value.addLayer(markerCluster.value)
-//     // updateMarkers()
-//     watch(wastePoints, () => {
-//         if (map.value) {
-//             updateMarkers()
-//         }
-//     })
-// }
-
-// function getMarkerIcon(status_tps) {
-//     const colors = {
-//         normal: '#4CAF50',
-//         hampir_penuh: '#FFC107',
-//         penuh: '#F44336'
-//     };
-
-//     return L.divIcon({
-//         className: 'custom-marker',
-//         html: `
-//             <div style="
-//                 width: 30px;
-//                 height: 30px;
-//                 background: ${colors[status_tps]};
-//                 border: 3px solid white;
-//                 border-radius: 50%;
-//                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-//                 display: flex;
-//                 align-items: center;
-//                 justify-content: center;
-//             ">
-//                 <span class="material-icons" style="font-size: 16px; color: white;">delete</span>
-//             </div>
-//         `,
-//         iconSize: [30, 30],
-//         iconAnchor: [15, 15]
-//     });
-// }
-
-// onMounted(() => {
-//     window.openReport = openReport  // Moved to home.vue to ensure bottom sheet closes
-// })
-
-// function formatTgl(date) {
-//   if (!date) return '-'
-
-//   const d = new Date(date)
-//   const year = d.getFullYear()
-//   const month = String(d.getMonth() + 1).padStart(2, '0')
-//   const day = String(d.getDate()).padStart(2, '0')
-
-//   return `${year}-${month}-${day}`
-// }
-
-// pop up titik tps
-// function createPopupContent(point) {
-//     const statusClass = point.status_tps;
-//     const statusText = {
-//         normal: 'Normal',
-//         hampir_penuh: 'Hampir Penuh',
-//         penuh: 'Penuh'
-//     }[point.status_tps];
-
-//     return `
-//         <div class="popup-content">
-//             <div class="popup-header">
-//                 <span class="material-icons">delete</span>
-//                 <div class="popup-title">${point.nama_tps}</div>
-//             </div>
-//             <div class="popup-body">
-//                 <div class="popup-info">
-//                     <div class="popup-status ${statusClass}">
-//                         <span style="font-size: 10px;">●</span>
-//                         ${statusText}
-//                     </div>
-//                 </div>
-//                 <div class="popup-info">
-//                     <span class="material-icons">location_on</span>
-//                     <span>${point.alamat}</span>
-//                 </div>
-//                 <div class="popup-info">
-//                     <span class="material-icons">schedule</span>
-//                     <span>Setiap hari: ${point.hari_pengambilan || '-'}</span>
-//                 </div>
-//                 <div class="popup-info">
-//                     <span class="material-icons">update</span>
-//                     <span>Tgl terakhir diambil: ${formatTgl(point.tgl_terakhir_diambil)}</span>
-//                 </div>
-//             </div>
-//             <div class="popup-footer">
-//                 <button class="popup-btn popup-btn-primary" onclick="openReport(${point.id_tps})">
-//                     Laporkan
-//                 </button>
-//             </div>
-//         </div>
-//     `;
-// }
-
-// function updateMarkers() {
-//     markerCluster.value.clearLayers()
-
-//     const filtered = wastePoints.value.filter(p =>
-//     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
-//     selectedStatus.value.includes(p.status_tps)
-//     )
-
-//     filtered.forEach(point => {
-//     const marker = L.marker(
-//         [parseFloat(point.latitude), parseFloat(point.longitude)],
-//         { icon: getMarkerIcon(point.status_tps) }
-//     );
-
-//     // Use popup for both desktop and mobile
-//     marker.bindPopup(createPopupContent(point), {
-//         maxWidth: isMobile.value ? 280 : 300,
-//         className: 'custom-popup',
-//         autoPan: true,
-//         autoPanPadding: [10, 10]
-//     });
-
-//     markerCluster.value.addLayer(marker);
-//     markers.value.push({ marker, point });
-
-//     });
-
-// }
 
 </script>
 

@@ -1052,3 +1052,35 @@ body {
         padding: var(--spacing-md);
     }
 }
+
+.time-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.time-field {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.sub-label {
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+  margin-bottom: 4px;
+}
+
+.time-sep {
+  font-size: 16px;
+  color: var(--color-text-secondary, #888);
+  padding-bottom: 8px;
+}
+
+.error-text {
+  color: #A32D2D;
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+}

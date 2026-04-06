@@ -28,12 +28,18 @@ async function findAll() {
     return rows;
 }
 
-async function update(id) {
+async function update(id, data) {
+
+    const {
+        nama_dusun,
+        jumlah_kk
+    } = data;
 
     await db.query(
         `UPDATE dusun SET
         nama_dusun = ?,
-        jumlah_kk = ?`,
+        jumlah_kk = ? 
+        WHERE id_dusun = ?`,
         [nama_dusun, jumlah_kk, id]
     );
 }
