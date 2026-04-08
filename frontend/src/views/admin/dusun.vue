@@ -1,10 +1,10 @@
 <template>
   <section class="content-section active">
     <div class="section-header">
-      <h2>Kelola Kendaraan</h2>
+      <h2>Kelola Dusun</h2>
       <button class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
-        Tambah Kendaraan
+        Tambah Dusun
       </button>
     </div>
 
@@ -13,30 +13,22 @@
         <thead>
           <tr>
             <th>No</th>
-            <th>Nomor</th>
-            <th>Plat</th>
-            <th>Kapasitas</th>
-            <th>Status</th>
+            <th>Dusun</th>
+            <th>Jumlah KK</th>
             <th>Aksi</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr v-for="(k, i) in kendaraanList" :key="k.id_kendaraan">
+          <tr v-for="(k, i) in dusunList" :key="k.id_dusun">
             <td>{{ i + 1 }}</td>
-            <td>{{ k.nomor_kendaraan }}</td>
-            <td>{{ k.nomor_polisi }}</td>
-            <td>{{ k.kapasitas_angkut }}</td>
-            <td>
-              <span class="status-badge" :class="k.status_kendaraan">
-                {{ statusText(k.status_kendaraan) }}
-              </span>
-            </td>
+            <td>{{ k.nama_dusun }}</td>
+            <td>{{ k.jumlah_kk }}</td>
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(k)">
                 <span class="material-icons">edit</span>
               </button>
-              <button class="btn-action delete" @click="remove(k.id_kendaraan)">
+              <button class="btn-action delete" @click="remove(k.id_dusun)">
                 <span class="material-icons">delete</span>
               </button>
             </td>
@@ -49,28 +41,17 @@
     <div class="card-list mobile-only">
       <div 
         class="data-card" 
-        v-for="(k, i) in kendaraanList" 
-        :key="k.id_kendaraan"
+        v-for="(k, i) in dusunList" 
+        :key="k.id_dusun"
       >
         <div class="data-card-header">
           <div>
             <div class="data-card-title">
-              {{ k.nomor_kendaraan }}
+              {{ k.nama_dusun }}
             </div>
             <div class="data-card-subtitle">
-              {{ k.nomor_polisi }}
+              {{ k.jumlah_kk }}
             </div>
-          </div>
-
-          <span class="status-badge" :class="k.status_kendaraan">
-            {{ statusText(k.status_kendaraan) }}
-          </span>
-        </div>
-
-        <div class="data-card-body">
-          <div class="data-card-item">
-            <span class="data-card-label">Kapasitas</span>
-            <span class="data-card-value">{{ k.kapasitas_angkut }}</span>
           </div>
         </div>
 
@@ -80,7 +61,7 @@
             Edit
           </button>
 
-          <button class="btn-card-action delete" @click="remove(k.id_kendaraan)">
+          <button class="btn-card-action delete" @click="remove(k.id_dusun)">
             <span class="material-icons">delete</span>
             Hapus
           </button>
@@ -89,7 +70,7 @@
     </div>
 
     <!-- MODAL COMPONENT -->
-    <KendaraanModal
+    <dusunModal
       v-if="showModal"
       :model-value="selected"
       @close="showModal = false"
@@ -101,30 +82,28 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
-import KendaraanModal from '@/components/kendaraanModal.vue'
+import dusunModal from '@/components/dusunModal.vue'
 
-const kendaraanList = ref([])
+const dusunList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
 
-async function fetchKendaraan() {
+async function fetchDusun() {
   try {
-    const res = await api.get('/api/kendaraan')
-    kendaraanList.value = res.data
+    const res = await api.get('/api/dusun')
+    dusunList.value = res.data
   } catch (err) {
-    console.error('Gagal ambil kendaraan', err)
+    console.error('Gagal ambil data dusun', err)
   }
 }
 
-onMounted(fetchKendaraan)
+onMounted(fetchDusun)
 
 function openAdd() {
   selected.value = {
-    id_kendaraan: null,
-    nomor_kendaraan: '',
-    nomor_polisi: '',
-    kapasitas_angkut: '',
-    status_kendaraan: 'tersedia'
+    id_dusun: null,
+    nama_dusun: '',
+    jumlah_kk: ''
   }
   showModal.value = true
 }
@@ -136,34 +115,31 @@ function openEdit(k) {
 
 async function save(data) {
   try {
-    if (data.id_kendaraan) {
+    if (data.id_dusun) {
       // UPDATE
-      await api.put(`/api/kendaraan/${data.id_kendaraan}`, data)
+      await api.put(` /api/dusun/${data.id_dusun}`, data)
     } else {
       // CREATE
-      await api.post('/api/kendaraan', data)
+      await api.post('/api/dusun', data)
     }
-    await fetchKendaraan()
+    await fetchDusun()
     showModal.value = false
   } catch (err) {
-    console.error('Gagal simpan kendaraan', err)
+    console.error('Gagal simpan dusun', err)
   }
 }
 
 async function remove(id) {
-  if (!confirm('Yakin ingin menghapus kendaraan ini?')) return
+  if (!confirm('Yakin ingin menghapus dusun ini?')) return
 
   try {
-    await api.delete(`/api/kendaraan/${id}`)
-    await fetchKendaraan()
+    await api.delete(`/api/dusun/${id}`)
+    await fetchDusun()
   } catch (err) {
     console.error('Gagal hapus kendaraan', err)
   }
 }
 
-function statusText(s) {
-  return s === 'tersedia' ? 'Tersedia' : 'Perbaikan'
-}
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>

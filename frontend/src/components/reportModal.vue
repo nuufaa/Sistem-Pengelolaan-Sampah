@@ -1,6 +1,7 @@
 <template>
-  <div class="modal" :class="{ show: isOpen }" v-if="isOpen">
-    <div class="modal-overlay" @click="closeModal"></div>
+  <!-- <div class="modal" :class="{ show: isOpen }" v-if="isOpen"> -->
+  <div class="modal" :class="{ show: isOpen }">
+    <div class="modal-overlay" @click="close"></div>
 
     <div class="modal-content">
       <div class="modal-header">
@@ -8,7 +9,7 @@
           <span class="material-icons">edit_note</span>
           Laporan Kondisi Sampah
         </h2>
-        <button class="modal-close" @click="closeModal">
+        <button class="modal-close" @click="close">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -32,11 +33,12 @@
         <div class="form-group">
           <label>Kondisi <span class="required">*</span></label>
           <div class="radio-group-vertical">
-            <label class="radio-label" v-for="c in conditions" :key="c">
+            <label class="radio-label" v-for="c in kondisi_tps" :key="c">
               <input
                 type="radio"
                 :value="c"
                 v-model="form.kondisi_tps"
+                required
               />
               <span>{{ c }}</span>
             </label>
@@ -74,9 +76,9 @@
           <button type="button" class="btn-secondary" @click="close">
             Batal
           </button>
-          <button type="submit" class="btn-primary">
+          <button type="submit" class="btn-primary" :disabled="loading">
             <span class="material-icons">send</span>
-            Kirim Laporan
+            {{ loading ? 'Mengirim...' : 'Kirim Laporan' }}
           </button>
         </div>
       </form>
@@ -87,14 +89,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { apiFetch } from '../services/api'
-import '@/assets/styles/report.css'
+import { useToast } from '@/services/useToast'
 
+const { showToast } = useToast()
 const isOpen = ref(false)
 const selectedTPS = ref(null)
 const selectedFile = ref(null)
 const imagePreview = ref(null)
 const tpsList = ref([])
 const fileLabel = ref('Pilih foto')
+const loading = ref(false)
 
 const form = ref({
   id_tps: '',
@@ -103,17 +107,17 @@ const form = ref({
   nama_pelapor: ''
 })
 
-const conditions = [
-  "Hampir penuh",
-  "Penuh",
-  "Sampah berserakan"
+const kondisi_tps = [
+  "hampir_penuh",
+  "penuh",
+  "sampah_berserakan"
 ]
 
 async function fetchTps() {
   try {
     const res = await apiFetch("/api/tps")
     tpsList.value = res
-    console.log(res.data)
+
   } catch (err) {
     console.error("Gagal ambil TPS:", err)
   }
@@ -133,6 +137,7 @@ function previewImage(e) {
 }
 
 async function submit() {
+  loading.value = true
   try {
     const formData = new FormData()
 
@@ -150,14 +155,17 @@ async function submit() {
       body: formData,
       auth: false
     })
-    alert("Laporan berhasil dikirim")
+    // alert("Laporan berhasil dikirim")
+    showToast('Laporan berhasil dikirim! Terima kasih atas partisipasi Anda.');
 
     resetForm()
-    closeModal()
+    close ()
 
   } catch (err) {
     console.error("Gagal kirim laporan:", err)
     alert("Gagal mengirim laporan")
+  } finally{
+    loading.value = false
   }
 }
 
@@ -177,6 +185,7 @@ function resetForm() {
 function openModal(id_tps = null) {
   selectedTPS.value = id_tps
   isOpen.value = true
+  document.body.style.overflow = 'hidden'
 
   if (id_tps) {
     form.value.id_tps = id_tps
@@ -186,16 +195,20 @@ function openModal(id_tps = null) {
 
 }
 
-function closeModal() {
+const emit = defineEmits(['closed'])
+
+function close() {
   isOpen.value = false
+  document.body.style.overflow = ''
+  emit('closed')
 }
 
 defineExpose({
-  openModal,
-  closeModal
+  openModal
 })
 
 onMounted(fetchTps)
 
-// defineExpose({ open, close })
 </script>
+
+<style src="@/assets/styles/report.css" scoped></style>

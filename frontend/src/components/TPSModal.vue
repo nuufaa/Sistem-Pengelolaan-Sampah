@@ -80,7 +80,7 @@
           </div>
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label class="form-label">Upload Foto TPS</label>
           <input
             type="file"
@@ -96,7 +96,7 @@
               style="max-width: 200px; border-radius: 8px;"
             />
           </div>
-        </div>
+        </div> -->
 
         <div class="modal-footer d-flex gap-2 justify-content-end">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">

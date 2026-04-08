@@ -113,15 +113,30 @@ async function getVolumeSampah() {
             t.nama_tps,
             COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
             t.kapasitas,
-            DATE(dt.tgl_pengambilan) AS tanggal,
+            DATE(COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan)) AS tanggal,
             ROUND(COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100, 1) AS persentase
         FROM tps t
-        LEFT JOIN daftar_tugas dt ON t.id_tps = dt.id_tps AND dt.status_angkut = 'selesai'
-        GROUP BY DATE(dt.tgl_pengambilan), t.id_tps
-        ORDER BY total_volume DESC
-        `);
-    return rows;
-}
+        LEFT JOIN daftar_tugas dt 
+            ON t.id_tps = dt.id_tps 
+            AND dt.status_angkut = 'selesai'
+            AND dt.tgl_terakhir_diambil >= CURDATE() - INTERVAL 6 DAY
+            
+            GROUP BY tanggal, t.id_tps
+            ORDER BY tanggal ASC;
+            `);
+            return rows;
+        }
+        // WHERE COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan) IS NOT NULL
+// SELECT
+//     t.nama_tps,
+//     COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
+//     t.kapasitas,
+//     DATE(COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan)) AS tanggal,
+//     ROUND(COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100, 1) AS persentase
+// FROM tps t
+// LEFT JOIN daftar_tugas dt ON t.id_tps = dt.id_tps AND dt.status_angkut = 'selesai'
+// GROUP BY DATE(COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan)), t.id_tps
+// ORDER BY total_volume DESC
 
 async function getRankingTPS() {
 
@@ -145,7 +160,8 @@ async function getRankingTPS() {
       ON t.id_dusun = d.id_dusun
 
     GROUP BY t.id_tps
-
+    HAVING COALESCE(SUM(dt.volume_sampah),0) > 0
+    
     ORDER BY score ASC
     LIMIT 5
   `)
@@ -157,32 +173,35 @@ async function getTimbulanPerKapita() {
     
   const [rows] = await db.query(`
     SELECT
-      d.nama_dusun,
-      d.jumlah_kk,
+        d.nama_dusun,
+        d.jumlah_kk,
 
-      COALESCE(SUM(dt.volume_sampah),0) AS total_volume,
+        COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
 
-      ROUND(
-        COALESCE(SUM(dt.volume_sampah),0) 
-        / NULLIF(d.jumlah_kk,0) 
-        / 7,
-        2
-      ) AS timbulan_kg_per_kk_per_hari
+        CAST(ROUND(
+            COALESCE(SUM(dt.volume_sampah), 0)
+            / NULLIF(d.jumlah_kk, 0)
+            / 7,
+            2
+        ) AS DOUBLE) AS timbulan_kg_per_kk_per_hari
 
-    FROM dusun d
+        FROM dusun d
 
-    LEFT JOIN tps t 
-      ON d.id_dusun = t.id_dusun
+        LEFT JOIN tps t 
+        ON d.id_dusun = t.id_dusun
 
-    LEFT JOIN daftar_tugas dt
-      ON t.id_tps = dt.id_tps
-      AND dt.status_angkut='selesai'
-      AND dt.tgl_pengambilan >= CURDATE() - INTERVAL 7 DAY
+        LEFT JOIN (
+        SELECT id_tps, volume_sampah
+        FROM daftar_tugas
+        WHERE status_angkut = 'selesai'
+            AND tgl_terakhir_diambil >= CURDATE() - INTERVAL 7 DAY
+        ) dt
+        ON t.id_tps = dt.id_tps
 
-    GROUP BY d.id_dusun
+        GROUP BY d.id_dusun
 
-    ORDER BY timbulan_kg_per_kk_per_hari DESC
-  `)
+        ORDER BY timbulan_kg_per_kk_per_hari DESC;
+      `)
 
   return rows
 }

@@ -12,10 +12,11 @@ import LayoutAdmin from '@/views/layoutAdmin.vue'
 import DashboardAdmin from '../views/admin/dashboardAdmin.vue'
 import AdminTPS from '../views/admin/kelolaTPS.vue'
 import AdminKendaraan from '../views/admin/kendaraan.vue'
-// import AdminPeta from '../views/admin/peta.vue'
+import AdminDusun from '../views/admin/dusun.vue'
 import AdminJadwal from '../views/admin/jadwal.vue'
 import AdminPetugas from '../views/admin/petugas.vue'
 import AdminLaporan from '../views/admin/laporan.vue'
+import AdminJamOperasional from '../views/admin/jamOperasional.vue'
 
 
 const routes = [
@@ -69,11 +70,11 @@ const routes = [
       name: 'admin-kendaraan',
       component: AdminKendaraan
     },
-    // {
-    //   path: 'peta',
-    //   name: 'admin-peta',
-    //   component: AdminPeta
-    // },
+    {
+      path: 'dusun',
+      name: 'admin-dusun',
+      component: AdminDusun
+    },
     {
       path: 'jadwal',
       name: 'admin-jadwal',
@@ -88,6 +89,11 @@ const routes = [
       path: 'laporan',
       name: 'admin-laporan',
       component: AdminLaporan
+    },
+    {
+      path: 'jam-operasional',
+      name: 'admin-operasional',
+      component: AdminJamOperasional
     }
   ]
 }

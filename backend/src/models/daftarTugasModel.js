@@ -1,26 +1,26 @@
 const {db} = require("../config/db");
 
-async function create(data) {
-    const [rows] = await db.query(
-      `SELECT id_daftar_tugas FROM daftar_tugas
-      WHERE id_jadwal = ?
-      AND tgl_pengambilan = CURDATE()`,
-      [data.id_jadwal]
-    );
+  async function create(data) {
+      const [rows] = await db.query(
+        `SELECT id_daftar_tugas FROM daftar_tugas
+        WHERE id_jadwal = ?
+        AND tgl_pengambilan = CURDATE()`,
+        [data.id_jadwal]
+      );
 
-  if (rows.length === 0) {
-    await db.query(
-      `INSERT IGNORE INTO daftar_tugas
-      (id_jadwal, id_petugas, id_tps, tgl_pengambilan)
-      VALUES (?, ?, ?, CURDATE())`,
-      [
-        data.id_jadwal,
-        data.id_petugas,
-        data.id_tps
-      ]
-    );
+    if (rows.length === 0) {
+      await db.query(
+        `INSERT IGNORE INTO daftar_tugas
+        (id_jadwal, id_petugas, id_tps, tgl_pengambilan)
+        VALUES (?, ?, ?, CURDATE())`,
+        [
+          data.id_jadwal,
+          data.id_petugas,
+          data.id_tps
+        ]
+      );
+    }
   }
-}
 
 async function updateStatus(id, data) {
   const tglTerakhir =
@@ -114,11 +114,94 @@ async function getAll() {
   return rows;
 }
 
+async function updatePetugasByTpsToday(id_tps, id_petugas, id_jadwal) {
+  await db.query(
+    `UPDATE daftar_tugas
+     SET id_petugas = ?, id_jadwal = ?
+     WHERE id_tps = ?
+     AND tgl_pengambilan = CURDATE()`,
+    [id_petugas, id_jadwal, id_tps]
+  );
+}
+
+async function syncTugasByTps(id_tps) {
+  try {
+
+    // ambil jadwal terbaru untuk TPS ini
+    const [jadwalRows] = await db.query(
+      `SELECT j.id_jadwal, j.hari_pengambilan, j.id_petugas
+       FROM jadwal_pengambilan j
+       WHERE j.id_tps = ?`,
+      [id_tps]
+    );
+
+    if (jadwalRows.length === 0) {
+      // tidak ada jadwal, hapus semua tugas untuk TPS ini
+      await db.query(
+        `DELETE FROM daftar_tugas WHERE id_tps = ?`,
+        [id_tps]
+      );
+      return;
+    }
+
+    // Ambil petugas dari jadwal (semuanya seharusnya sama untuk 1 TPS)
+    const id_petugas = jadwalRows[0].id_petugas;
+
+    // 1. Update tugas yang sudah ada dan belum selesai
+    const [updateResult] = await db.query(
+      `UPDATE daftar_tugas
+       SET id_petugas = ?
+       WHERE id_tps = ?
+       AND status_angkut != 'selesai'`,
+      [id_petugas, id_tps]
+    );
+
+    // 2. Generate tugas untuk semua hari dalam jadwal (sampai 7 hari ke depan)
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+      const targetDate = new Date(today);
+      targetDate.setDate(targetDate.getDate() + i);
+      
+      // hitung hari dalam minggu (0 = Senin, 6 = Minggu)
+      const dayOfWeek = (targetDate.getDay() + 6) % 7;
+      
+      // cari jadwal untuk hari ini
+      const jadwalForDay = jadwalRows.find(j => j.hari_pengambilan == dayOfWeek);
+      
+      if (jadwalForDay) {
+        // check apakah tugas sudah ada untuk tanggal ini
+        const [existing] = await db.query(
+          `SELECT id_daftar_tugas FROM daftar_tugas
+           WHERE id_tps = ? AND tgl_pengambilan = DATE(?)`,
+          [id_tps, targetDate.toISOString().split('T')[0]]
+        );
+
+        if (existing.length === 0) {
+          // insert tugas baru
+          const dateStr = targetDate.toISOString().split('T')[0];
+          await db.query(
+            `INSERT INTO daftar_tugas 
+            (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
+            VALUES (?, ?, ?, ?, 'belum_diangkut')`,
+            [jadwalForDay.id_jadwal, id_petugas, id_tps, dateStr]
+          );
+        }
+      }
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   create,
   updateStatus,
   findById,
   getByPetugas,
   getAll,
-  addLogbook
+  addLogbook,
+  updatePetugasByTpsToday,
+  syncTugasByTps
 };

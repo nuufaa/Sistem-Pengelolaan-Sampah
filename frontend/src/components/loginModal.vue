@@ -1,14 +1,11 @@
 <template>
-  <!-- Overlay -->
   <div
     class="modal-login-overlay"
     :class="{ active: isOpen }"
-    @click="close"
-  ></div>
+    @click.self="close"
+  > </div>
 
-  <!-- Modal -->
   <div class="modal-login" :class="{ active: isOpen }">
-    <!-- Header -->
     <div class="modal-login-header">
       <div class="modal-login-logo">
         <span class="material-icons">domain</span>
@@ -24,7 +21,6 @@
       </button>
     </div>
 
-    <!-- Role Tabs -->
     <div class="modal-login-roles">
       <button
         class="login-role-tab"
@@ -45,7 +41,6 @@
       </button>
     </div>
 
-    <!-- Body -->
     <div class="modal-login-body">
       <p class="login-role-desc">
         {{ role === 'petugas'
@@ -55,7 +50,6 @@
       </p>
 
       <form @submit.prevent="submit">
-        <!-- Username -->
         <div class="login-field">
           <label>
             <span class="material-icons">person</span>
@@ -70,7 +64,6 @@
           <span class="login-error">{{ errorUser }}</span>
         </div>
 
-        <!-- Password -->
         <div class="login-field">
           <label>
             <span class="material-icons">lock</span>
@@ -94,17 +87,6 @@
           <span class="login-error">{{ errorPass }}</span>
         </div>
 
-        <!-- Hint -->
-        <div class="login-hint">
-          <span class="material-icons">tips_and_updates</span>
-          <span>
-            Demo:
-            <code>{{ role }}</code> /
-            <code>{{ role === 'admin' ? 'admin123' : '1234' }}</code>
-          </span>
-        </div>
-
-        <!-- Submit -->
         <button class="login-submit-btn" :disabled="loading">
           <span v-if="!loading">
             <span class="material-icons">login</span>
@@ -131,7 +113,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiFetch, decodeJwtPayload } from '../services/api'
-import '@/assets/styles/login.css'
+// import '@/assets/styles/login.css'
 
 const router = useRouter();
 
@@ -151,10 +133,12 @@ function open() {
   document.body.style.overflow = 'hidden'
 }
 
+const emit = defineEmits(['closed'])
+
 function close() {
   isOpen.value = false
   document.body.style.overflow = ''
-  reset()
+  emit('closed')
 }
 
 function switchRole(r) {
@@ -220,3 +204,5 @@ async function submit() {
 
 defineExpose({ open })
 </script>
+
+<style src="@/assets/styles/login.css" scoped></style>

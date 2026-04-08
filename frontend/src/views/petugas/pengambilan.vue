@@ -61,6 +61,57 @@
       </table>
     </div>
 
+        <!-- MOBILE CARD -->
+    <div class="card-list mobile-only">
+      <div class="pickup-card" v-for="(item) in filteredData" :key="item.id">
+        
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">{{ item.nama_tps }}</h3>
+            <p class="card-subtitle">{{ hariLabel(item.hari_pengambilan) }}</p>
+          </div>
+          <span class="status-badge" :class="item.status_angkut">
+            {{ statusText(item.status_angkut) }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="card-item">
+            <span>Tanggal Pengambilan</span>
+            <span>{{ formatDate(item.tgl_pengambilan) }}</span>
+          </div>
+
+          <div class="card-item">
+            <span>Terakhir Diambil</span>
+            <span>              
+              {{
+                item.status_angkut === 'selesai' && item.tgl_terakhir_diambil
+                  ? formatDate(item.tgl_terakhir_diambil)
+                  : '-'
+              }}
+            </span>
+          </div>
+
+          <div class="card-item">
+            <span>Kendaraan</span>
+            <span>{{ item.nomor_kendaraan || '-' }}</span>
+          </div>
+
+          <div class="card-item">
+            <span>Volume</span>
+            <span>{{ item.volume_sampah ?? '-' }}</span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button class="btn-update" @click="openModal(item)">
+            Update
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <UpdatePengambilanModal
       :show="showModal"
       :data="selectedItem"

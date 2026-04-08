@@ -2,7 +2,8 @@ const {db} = require("../config/db");
 const { toString } = require('../utils/hariJadwal');
 
 async function create(data) {
-  const { id_tps, id_petugas, hari_pengambilan, id_admin } = data;
+  const { id_tps, id_petugas, hari_pengambilan, id_admin, jam_buang_mulai, 
+       jam_buang_selesai, jam_pengambilan_mulai, jam_pengambilan_selesai } = data;
 
   // VALIDASI ARRAY
   if (!Array.isArray(hari_pengambilan) || hari_pengambilan.length === 0) {
@@ -22,9 +23,11 @@ async function create(data) {
   for (const hari of hariUnique) {
     await db.query(
       `INSERT INTO jadwal_pengambilan 
-       (id_tps, id_petugas, hari_pengambilan, id_admin)
+       (id_tps, id_petugas, hari_pengambilan, jam_buang_mulai, 
+       jam_buang_selesai, jam_pengambilan_mulai, jam_pengambilan_selesai, id_admin)
        VALUES (?, ?, ?, ?)`,
-      [id_tps, id_petugas, hari, id_admin]
+      [id_tps, id_petugas, hari, jam_buang_mulai, 
+       jam_buang_selesai, jam_pengambilan_mulai, jam_pengambilan_selesai, id_admin]
     );
   }
 
@@ -102,73 +105,46 @@ async function findByHari(hariIndex) {
   return rows;
 }
 
-// async function update(id, data) {
-//   const {
-//     id_petugas,
-//     id_tps,
-//     hari_pengambilan
-//   } = data;
-
-//   await db.query(
-//     `UPDATE jadwal_pengambilan
-//     SET 
-//       hari_pengambilan = ?,
-//       id_tps = COALESCE(?, id_tps),
-//       id_petugas = COALESCE(?, id_petugas),
-//       tgl_terakhir_diambil = COALESCE(?, tgl_terakhir_diambil)
-//     WHERE id_jadwal = ?`,
-//     [hari_pengambilan, id_tps, id_petugas, data.tgl_terakhir_diambil, id]
-//   );
-// }
-
-// jadwalModel.js
-// mulai transaction
-// async function update(db, id_tps, id_petugas, hari_pengambilan = []) {
-//   await db.beginTransaction();
-//   try {
-//     // HAPUS jadwal lama
-//     await db.query(
-//       `DELETE FROM jadwal_pengambilan WHERE id_tps = ? AND id_petugas = ?`,
-//       [id_tps, id_petugas]
-//     );
-//     console.log('DELETE jadwal', id_tps, id_petugas);
-
-//     // INSERT jadwal baru jika ada
-//     if (hari_pengambilan.length > 0) {
-//       const values = hari_pengambilan.map(hari => [id_tps, id_petugas, hari]);
-//       const placeholders = values.map(() => `(?, ?, ?)`).join(', ');
-
-//       await db.query(
-//         `INSERT INTO jadwal_pengambilan (id_tps, id_petugas, hari_pengambilan) VALUES ${placeholders}`,
-//         values.flat()
-//       );
-//     }
-
-//     await db.commit();
-//     return { success: true };
-//   } catch (err) {
-//     await db.rollback();
-//     throw err;
-//   }
-// }
-
 async function update(db, id_tps, id_petugas, hari_pengambilan = [], id_admin) {
   // reuse imported db from top of file
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    // hapus jadwal lama
-    await conn.query(
-      `DELETE FROM jadwal_pengambilan WHERE id_tps = ? AND id_petugas = ?`,
-      [id_tps, id_petugas]
-    );
 
     // bersihkan duplikat
     const hariUnique = [...new Set(hari_pengambilan)];
+    
+    // ambil jadwal lama untuk TPS ini
+    const [jadwalLama] = await conn.query(
+      `SELECT id_jadwal, hari_pengambilan FROM jadwal_pengambilan WHERE id_tps = ?`,
+      [id_tps]
+    );
 
-    // insert baru
-    if (hariUnique.length > 0) {
-      const values = hariUnique.map(hari => [id_tps, id_petugas, hari, id_admin]);
+    // tentukan hari yang perlu dihapus (yang ada di lama tapi tidak di baru)
+    const hariLama = jadwalLama.map(j => j.hari_pengambilan);
+    const hariHapus = hariLama.filter(h => !hariUnique.includes(h));
+
+    // 1. delete jadwal untuk hari yang sudah tidak dipilih
+    if (hariHapus.length > 0) {
+      const placeholders = hariHapus.map(() => '?').join(', ');
+      await conn.query(
+        `DELETE FROM jadwal_pengambilan WHERE id_tps = ? AND hari_pengambilan IN (${placeholders})`,
+        [id_tps, ...hariHapus]
+      );
+    }
+
+    // 2. update jadwal yang sudah ada dengan petugas/admin baru (PRESERVE id_jadwal!)
+    if (jadwalLama.length > hariHapus.length) {
+      await conn.query(
+        `UPDATE jadwal_pengambilan SET id_petugas = ?, id_admin = ? WHERE id_tps = ?`,
+        [id_petugas, id_admin, id_tps]
+      );
+    }
+
+    // 3. insert jadwal baru untuk hari yang belum ada
+    const hariBaru = hariUnique.filter(h => !hariLama.includes(h));
+    if (hariBaru.length > 0) {
+      const values = hariBaru.map(hari => [id_tps, id_petugas, hari, id_admin]);
       const placeholders = values.map(() => `(?, ?, ?, ?)`).join(', ');
 
       await conn.query(
@@ -184,6 +160,7 @@ async function update(db, id_tps, id_petugas, hari_pengambilan = [], id_admin) {
     throw err;
   }
 }
+
 
 async function updateTanggalTerakhir(id_jadwal) {
   await db.query(

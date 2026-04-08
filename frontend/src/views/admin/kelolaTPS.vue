@@ -8,7 +8,7 @@
       </button>
     </div>
 
-    <div class="table-container">
+    <div class="table-container desktop-only">
       <table class="data-table">
         <thead>
           <tr>
@@ -19,7 +19,7 @@
             <th>Lokasi</th>
             <th>Kapasitas TPS (Kg)</th>
             <th>Status TPS</th>
-            <th>Foto TPS</th>
+            <!-- <th>Foto TPS</th> -->
             <th>Aksi</th>
           </tr>
         </thead>
@@ -37,7 +37,7 @@
                 {{ statusText(tps.status_tps) }}
               </span>
             </td>
-            <td>{{ tps.foto_tps || '-' }}</td>
+            <!-- <td>{{ tps.foto_tps || '-' }}</td> -->
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(tps)">
                 <span class="material-icons">edit</span>
@@ -49,6 +49,53 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- MOBILE CARD -->
+    <div class="card-list mobile-only">
+      <div 
+        class="data-card" 
+        v-for="(tps, i) in tpsList" 
+        :key="tps.id_tps"
+      >
+        <div class="data-card-header">
+          <div>
+            <div class="data-card-title">
+              {{ tps.nama_tps }}
+            </div>
+            <div class="data-card-subtitle">
+              {{ tps.alamat }}
+            </div>
+          </div>
+
+          <span class="status-badge" :class="tps.status_tps">
+            {{ statusText(tps.status_tps) }}
+          </span>
+        </div>
+
+        <div class="data-card-body">
+          <div class="data-card-item">
+            <span class="data-card-label">Dusun</span>
+            <span class="data-card-value">{{ tps.nama_dusun }}</span>
+          </div>
+          <div class="data-card-item">
+            <span class="data-card-label">Kapasitas</span>
+            <span class="data-card-value">{{ tps.kapasitas }} kg</span>
+          </div>
+        </div>
+
+        <div class="data-card-footer">
+          <button class="btn-card-action edit" @click="openEdit(tps)">
+            <span class="material-icons">edit</span>
+            Edit
+          </button>
+
+          <button class="btn-card-action delete" @click="remove(tps.id_tps)">
+            <span class="material-icons">delete</span>
+            Hapus
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- MODAL - Conditionally Rendered -->
