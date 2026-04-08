@@ -33,7 +33,7 @@
         <div class="form-group">
           <label>Kondisi <span class="required">*</span></label>
           <div class="radio-group-vertical">
-            <label class="radio-label" v-for="c in conditions" :key="c">
+            <label class="radio-label" v-for="c in kondisi_tps" :key="c">
               <input
                 type="radio"
                 :value="c"
@@ -107,10 +107,10 @@ const form = ref({
   nama_pelapor: ''
 })
 
-const conditions = [
-  "Hampir penuh",
-  "Penuh",
-  "Sampah berserakan"
+const kondisi_tps = [
+  "hampir_penuh",
+  "penuh",
+  "sampah_berserakan"
 ]
 
 async function fetchTps() {
