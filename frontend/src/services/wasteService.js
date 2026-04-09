@@ -1,6 +1,5 @@
 import { apiFetch} from '../services/api'
 
-// --- di services/wasteService.js ---------------------------------
 export async function fetchTitikTps() {
   try {
     const data = await apiFetch('/api/tps/info')
@@ -11,5 +10,5 @@ export async function fetchTitikTps() {
   }
 }
 
-export const scheduleData = [ /* … */ ];
-export const tpsData      = [ /* digunakan hanya untuk contoh */ ];
+export const scheduleData = [ ];
+export const tpsData      = [ ];

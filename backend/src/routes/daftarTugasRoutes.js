@@ -9,6 +9,9 @@ const { auth } = require("../middlewares/authMiddleware");
 // list tasks - petugas must be authenticated
 router.get("/", auth, daftarTugasController.listTugas);
 
+// list completed/history tasks
+router.get("/history/completed", auth, daftarTugasController.listCompleted);
+
 // update status (could be petugas or admin)
 router.put("/:id/status", auth, daftarTugasController.updateStatus);
 router.put("/logbook", auth, daftarTugasController.updateLogbook);

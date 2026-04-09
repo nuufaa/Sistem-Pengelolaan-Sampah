@@ -60,7 +60,6 @@
                 @click="openBottomSheet"
                 @touchstart.prevent="openBottomSheet"
             >
-             <!-- <span class="trigger-text">Jadwal Pengambilan</span> -->
             </button>
         </div>
     </main>
@@ -89,51 +88,88 @@
         @touchstart.prevent="closeBottomSheet"
     ></div>
 
-    <!-- Report modal provided by ReportModal component -->
-
     <!-- Modal TPS Schedule -->
     <div class="modal" id="modalSchedule" v-if="isModalScheduleOpen" :class="{ show: isModalScheduleOpen }" @touchmove.stop>
-        <div class="modal-overlay" id="modalScheduleOverlay" @click="isModalScheduleOpen = false" @touchmove.stop></div>
-        <div class="modal-content modal-schedule" @touchmove.stop>
-            <div class="modal-header">
-                <h2>
-                    <span class="material-icons">calendar_month</span>
-                    <span id="scheduleModalTitle">Jadwal Lengkap TPS {{ selectedDesa?.desa }}</span>
-                </h2>
-                <button class="modal-close" @click="isModalScheduleOpen = false">
-                    <span class="material-icons">close</span>
-                </button>
-            </div>
-            <div class="modal-body" id="tpsScheduleContent">
-                <!-- Dynamic TPS schedule list -->
-                <div v-for="tps in modalTPSList" :key="tps.id_tps" class="tps-schedule-item">
-                    <div class="tps-header">
-                        <span class="material-icons">delete</span>
-                        <div class="tps-info">
-                            <h3>{{ tps.nama_tps }}</h3>
-                            <div class="tps-interval">
-                                <span class="material-icons">update</span>
-                                <span>Jadwal pengambilan setiap hari {{ tps.hari_pengambilan || '-' }}</span>
-                            </div>
-                        </div>
-                    </div>
+    <div class="modal-overlay" id="modalScheduleOverlay" @click="isModalScheduleOpen = false" @touchmove.stop></div>
+    <div class="modal-content modal-schedule" @touchmove.stop>
 
-                    <div class="tps-body">
-                        <div class="tps-status-row">
-                            <span class="tps-status-label">Status Pengambilan:</span>
-                            <div class="tps-status-badge" :class="tps.status_angkut">
-                                <span class="material-icons" :class="tps.status_angkut">
-                                    {{ getStatusIcon(tps.status_angkut) }}
-                                </span>
-                                <span>
-                                    {{ getStatusText(tps.status_angkut) }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+        <div class="modal-header">
+        <h2>
+            <span class="material-icons">calendar_month</span>
+            <span>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</span>
+        </h2>
+        <button class="modal-close" @click="isModalScheduleOpen = false">
+            <span class="material-icons">close</span>
+        </button>
+        </div>
+
+        <div class="modal-body" id="tpsScheduleContent">
+
+        <!-- Toolbar: search + sort -->
+        <div class="schedule-toolbar">
+            <input
+            v-model="scheduleSearch"
+            type="text"
+            placeholder="Cari nama TPS..."
+            class="schedule-search"
+            />
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="schedule-filter-tabs">
+            <button
+            v-for="tab in scheduleTabs"
+            :key="tab.key"
+            class="schedule-tab"
+            :class="[tab.key, { active: scheduleFilter === tab.key }]"
+            @click="scheduleFilter = tab.key"
+            >
+            <span v-if="tab.key !== 'all'" class="tab-dot" :style="{ background: tab.warna }" />
+            {{ tab.label }}
+            <span class="tab-count">
+                ({{ tab.key === 'all' ? modalTPSList.length : scheduleCountByStatus[tab.key] ?? 0 }})
+            </span>
+            </button>
+        </div>
+
+        <!-- Grid 2 kolom -->
+        <div class="tps-grid" v-if="scheduleFiltered.length > 0">
+            <div
+            v-for="tps in scheduleFiltered"
+            :key="tps.id_tps"
+            class="tps-mini-card"
+            :class="tps.status_angkut"
+            >
+            <div class="tps-mini-left">
+                <div class="tps-mini-icon">
+                <span class="material-icons">delete</span>
+                </div>
+                <div class="tps-mini-info">
+                <!-- <div class="tps-mini-no">#{{ tps.id_tps }}</div> -->
+                <div class="tps-mini-name">{{ tps.nama_tps }}</div>
+                <div class="tps-mini-hari">Setiap {{ tps.hari_pengambilan || '-' }}</div>
                 </div>
             </div>
+            <div class="tps-status-badge" :class="tps.status_angkut">
+                <span class="material-icons">{{ getStatusIcon(tps.status_angkut) }}</span>
+                <span>{{ getStatusText(tps.status_angkut) }}</span>
+            </div>
+            </div>
         </div>
+
+        <!-- Empty state -->
+        <div class="schedule-empty" v-else>
+            <span class="material-icons">search_off</span>
+            <p>Tidak ada TPS yang cocok</p>
+        </div>
+
+        <!-- Footer count -->
+        <p class="schedule-footer-count" v-if="scheduleFiltered.length > 0">
+            Menampilkan {{ scheduleFiltered.length }} dari {{ scheduleFiltered.length }} TPS
+        </p>
+
+        </div>
+    </div>
     </div>
 
     <!-- Toast Notification -->
@@ -239,7 +275,7 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { ref, onMounted, watch, nextTick} from 'vue'
+import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
@@ -272,6 +308,61 @@ const error = ref(null)
 const modalTPSList = ref([])
 const isBottomSheetOpen = ref(false)
 
+// variabel untuk jadwal lengkap tps
+const scheduleSearch  = ref('')
+const scheduleSort    = ref('id')
+const scheduleFilter  = ref('all')
+
+const scheduleTabs = [
+  { key: 'all',            label: 'Semua',           warna: '' },
+  { key: 'selesai',        label: 'Selesai',          warna: '#639922' },
+  { key: 'belum_diangkut', label: 'Belum dimulai',    warna: '#888780' },
+]
+
+const scheduleCountByStatus = computed(() =>
+  modalTPSList.value.reduce((acc, t) => {
+    acc[t.status_angkut] = (acc[t.status_angkut] ?? 0) + 1
+    return acc
+  }, {})
+)
+
+const scheduleFiltered = computed(() => {
+  if (!Array.isArray(modalTPSList.value)) return []
+
+  // 1. Ambil TPS unik
+  const uniqueMap = new Map()
+
+  modalTPSList.value.forEach(t => {
+    if (!uniqueMap.has(t.id_tps)) {
+      uniqueMap.set(t.id_tps, t)
+    }
+  })
+
+  let data = Array.from(uniqueMap.values())
+
+  // 2. Filter status
+  if (scheduleFilter.value !== 'all') {
+    data = data.filter(t => t.status_angkut === scheduleFilter.value)
+  }
+
+  // 3. Search
+  const q = scheduleSearch.value.toLowerCase()
+  if (q) {
+    data = data.filter(t =>
+      t.nama_tps?.toLowerCase().includes(q)
+    )
+  }
+
+  // 4. Sort
+  if (scheduleSort.value === 'nama') {
+    data.sort((a, b) => a.nama_tps.localeCompare(b.nama_tps))
+  } else if (scheduleSort.value === 'status') {
+    data.sort((a, b) => a.status_angkut.localeCompare(b.status_angkut))
+  }
+
+  return data
+})
+
 const { 
   isToastVisible, 
   toastMessage, 
@@ -281,8 +372,7 @@ const {
 
 const statusInfo = {
   belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
-  diangkut: { text: 'Sedang Berlangsung', icon: 'local_shipping' },
-  selesai: { text: 'Selesai', icon: 'check_circle' },
+  selesai: { text: 'Selesai', icon: 'check_circle' }
 }
 
 const getStatusText = (status) => {
@@ -327,6 +417,11 @@ function openScheduleModal(desa) {
     modalTPSList.value = jadwalTPS.value.filter(
         tps => tps.nama_dusun === desa.desaCode
     )
+
+    // reset filter & search setiap modal dibuka
+    scheduleSearch.value  = ''
+    scheduleSort.value    = 'id'
+    scheduleFilter.value  = 'all'
 }
 
 // ===== Date and Schedule Functions =====
@@ -392,8 +487,18 @@ onMounted(async () => {
 
     //Ambil data dulu
     const result = await fetchTitikTps()
-    wastePoints.value = Array.isArray(result) ? result : []
-    jadwalTPS.value = result
+    // wastePoints.value = Array.isArray(result) ? result : []
+    // jadwalTPS.value = result
+    // jadwal tetap pakai semua data (untuk modal)
+    jadwalTPS.value = Array.isArray(result) ? result : []
+
+    // wastePoints deduplikasi — satu id_tps hanya satu marker
+    const seen = new Set()
+    wastePoints.value = jadwalTPS.value.filter(item => {
+        if (seen.has(item.id_tps)) return false
+            seen.add(item.id_tps)
+        return true
+    })
 
     //Set tanggal & schedule
     initializeDateTime()

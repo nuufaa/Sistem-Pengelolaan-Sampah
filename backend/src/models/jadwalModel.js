@@ -2,8 +2,7 @@ const {db} = require("../config/db");
 const { toString } = require('../utils/hariJadwal');
 
 async function create(data) {
-  const { id_tps, id_petugas, hari_pengambilan, id_admin, jam_buang_mulai, 
-       jam_buang_selesai, jam_pengambilan_mulai, jam_pengambilan_selesai } = data;
+  const { id_tps, id_petugas, hari_pengambilan, id_admin } = data;
 
   // VALIDASI ARRAY
   if (!Array.isArray(hari_pengambilan) || hari_pengambilan.length === 0) {
@@ -23,11 +22,9 @@ async function create(data) {
   for (const hari of hariUnique) {
     await db.query(
       `INSERT INTO jadwal_pengambilan 
-       (id_tps, id_petugas, hari_pengambilan, jam_buang_mulai, 
-       jam_buang_selesai, jam_pengambilan_mulai, jam_pengambilan_selesai, id_admin)
+       (id_tps, id_petugas, hari_pengambilan, id_admin)
        VALUES (?, ?, ?, ?)`,
-      [id_tps, id_petugas, hari, jam_buang_mulai, 
-       jam_buang_selesai, jam_pengambilan_mulai, jam_pengambilan_selesai, id_admin]
+      [id_tps, id_petugas, hari, id_admin]
     );
   }
 

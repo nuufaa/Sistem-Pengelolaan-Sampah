@@ -141,9 +141,6 @@
                   <div class="stat-label">Penuh</div>
               </div>
           </div>
-          <!-- <div class="last-update">
-              Terakhir Diperbarui: <span id="lastUpdate"></span>
-          </div> -->
       </div>
   </div>
 
@@ -214,7 +211,6 @@
           </div>
       </div>
   </div>
-
 
   <!-- Timbulan Per Kapita Card -->
   <div class="card">
@@ -466,7 +462,6 @@ async function fetchjamOperasional() {
   }
 }
 
-
 async function fetchDashboard() {
   try {
     const res = await api.get('/api/dashboard')
@@ -484,16 +479,6 @@ async function fetchDashboard() {
     console.error("Gagal ambil dashboard:", error)
   }
 }
-
-// function openReport(id_tps = null) {
-//     // Open modal using reportRef from parent (home.vue)
-//     if (props.reportRef && typeof props.reportRef.openModal === 'function') {
-//         props.reportRef.openModal(id_tps)
-//     }
-    
-//     // Always emit to notify parent component to close bottom sheet (mobile)
-//     emit('reportOpened')
-// }
 
 // ===== Date and Schedule Functions =====
 function formatDate(date = new Date()) {
@@ -551,9 +536,13 @@ function getTodaySchedules() {
 function getTpsCountByDesa(desaCode) {
   if (!Array.isArray(jadwalTPS.value)) return 0
 
-  return jadwalTPS.value.filter(
-    tps => tps.nama_dusun === desaCode
-  ).length
+  const uniqueTps = new Set(
+    jadwalTPS.value
+      .filter(tps => tps.nama_dusun === desaCode)
+      .map(tps => tps.id_tps) // ganti sesuai field unik TPS
+  )
+
+  return uniqueTps.size
 }
 
 const dusunList = computed(() => {

@@ -3,31 +3,70 @@ const {db} = require("../config/db");
 const jadwalModel = require("../models/jadwalModel");
 const daftarTugasModel = require("../models/daftarTugasModel");
 
+// Generate tugas untuk hari ini PLUS 14 hari ke depan (2 minggu)
+// Smart: hanya simpan jadwal belum selesai, jadi tidak menumpuk
 async function generateTugasHarian() {
+  try {
+    const today = new Date();
+    const hariUntuk = 7; // Generate untuk 2 minggu ke depan
 
-  const [result] = await db.query(
-    "SELECT WEEKDAY(CURDATE()) as hariIndex"
-  );
+    // Loop untuk setiap hari
+    for (let hitung = 0; hitung <= hariUntuk; hitung++) {
+      const targetDate = new Date(today);
+      targetDate.setDate(targetDate.getDate() + hitung);
 
-  const hariIndex = result[0].hariIndex;
+      // Hitung hari dalam seminggu (0=Senin, 6=Minggu)
+      const hariIndex = (targetDate.getDay() + 6) % 7;
 
-  const jadwalList = await jadwalModel.findByHari(hariIndex);
+      // Ambil semua jadwal untuk hari ini
+      const jadwalList = await jadwalModel.findByHari(hariIndex);
 
-  for (const jadwal of jadwalList) {
+      // Untuk setiap jadwal yang cocok dengan hari ini
+      for (const jadwal of jadwalList) {
+        // Check apakah sudah ada record untuk tanggal + jadwal ini
+        const dateStr = targetDate.toISOString().split('T')[0];
+        const [existing] = await db.query(
+          `SELECT id_daftar_tugas FROM daftar_tugas
+           WHERE id_jadwal = ? AND tgl_pengambilan = ?`,
+          [jadwal.id_jadwal, dateStr]
+        );
 
-    await daftarTugasModel.create({
-      id_jadwal: jadwal.id_jadwal,
-      id_petugas: jadwal.id_petugas,
-      id_tps: jadwal.id_tps
-    });
+        // Jika belum ada, buat baru
+        if (existing.length === 0) {
+          await db.query(
+            `INSERT INTO daftar_tugas 
+            (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
+            VALUES (?, ?, ?, ?, 'belum_diangkut')`,
+            [jadwal.id_jadwal, jadwal.id_petugas, jadwal.id_tps, dateStr]
+          );
+        }
+      }
+    }
 
+    // CLEANUP: Hapus records yang sudah selesai lebih dari 60 hari lalu (untuk hemat storage)
+    const cleanupDate = new Date(today);
+    cleanupDate.setDate(cleanupDate.getDate() - 60);
+    const cleanupDateStr = cleanupDate.toISOString().split('T')[0];
+    
+    await db.query(
+      `DELETE FROM daftar_tugas 
+       WHERE status_angkut = 'selesai' 
+       AND tgl_pengambilan < ?`,
+      [cleanupDateStr]
+    );
+
+    console.log(`[${new Date().toISOString()}] Generate tugas ${hariUntuk}-hari selesai`);
+  } catch (error) {
+    console.error("Error generate tugas:", error);
   }
-
-  console.log("Generate tugas selesai");
 }
 
 function startScheduler() {
+  // Jalankan setiap hari tengah malam: 0 jam 0 menit
   cron.schedule("0 0 * * *", generateTugasHarian);
+
+  // BONUS: Jalankan juga saat aplikasi start (untuk catch-up)
+  generateTugasHarian();
 }
 
 module.exports = {

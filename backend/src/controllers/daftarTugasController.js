@@ -1,5 +1,5 @@
 const daftarTugasService = require("../services/daftarTugasService");
-const logbook = require("../models/daftarTugasModel");
+const daftarTugasModel = require("../models/daftarTugasModel");
 
 async function updateStatus(req, res) {
   try {
@@ -29,7 +29,7 @@ async function updateLogbook(req, res) {
         message: "TPS harus dipilih"
       })
     }
-    await logbook.addLogbook(
+    await daftarTugasModel.addLogbook(
       req.body
     )
 
@@ -48,9 +48,7 @@ async function updateLogbook(req, res) {
 async function listTugas(req, res) {
   try {
     const userId = req.user ? req.user.id : null;
-    // console.log('Fetching tasks for userId:', userId);
     const data = await daftarTugasService.listTugas(userId);
-    // console.log('Tasks data:', data);
     res.json(data);
   } catch (error) {
     console.error('Error in listTugas:', error);
@@ -58,8 +56,30 @@ async function listTugas(req, res) {
   }
 }
 
+// GET /api/daftar-tugas/history - Riwayat yang selesai
+async function listCompleted(req, res) {
+  try {
+    const userId = req.user ? req.user.id : null;
+    let data;
+    
+    if (userId) {
+      // Petugas melihat riwayat mereka sendiri
+      data = await daftarTugasModel.getCompletedByPetugas(userId);
+    } else {
+      // Admin melihat semua riwayat
+      data = await daftarTugasModel.getAllCompleted();
+    }
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error in listCompleted:', error);
+    res.status(500).json({ message: "Gagal mengambil riwayat pengambilan" });
+  }
+}
+
 module.exports = {
   updateStatus,
   listTugas,
-  updateLogbook
+  updateLogbook,
+  listCompleted
 };

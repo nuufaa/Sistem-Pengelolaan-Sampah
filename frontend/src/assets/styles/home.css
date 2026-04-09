@@ -984,11 +984,6 @@ input, select, textarea {
     color: var(--text-secondary);
 }
 
-.tps-status-badge.diangkut {
-    background: var(--status-warning-bg);
-    color: var(--secondary-dark);
-}
-
 .tps-status-badge.selesai {
     background: var(--status-normal-bg);
     color: var(--status-normal);
@@ -2722,3 +2717,87 @@ input, select, textarea {
         white-space: nowrap;
     }
 }
+
+/* css untuk jadwal lengkap tps */
+.schedule-toolbar {
+  display: flex;
+  gap: 8px;
+  /* margin-bottom: 12px; */
+}
+
+.schedule-search {
+    flex: 1;
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.schedule-filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  /* margin-bottom: 10px; */
+}
+
+.schedule-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  color: #888;
+  transition: all .15s;
+}
+
+.tab-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.tab-count { opacity: .6; }
+.schedule-tab.active.all            { background: #f5f5f5; color: #222; border-color: transparent; font-weight: 500; }
+.schedule-tab.active.selesai        { background: #EAF3DE; color: #27500A; border-color: transparent; font-weight: 500; }
+.schedule-tab.active.diangkut       { background: #E6F1FB; color: #0C447C; border-color: transparent; font-weight: 500; }
+.schedule-tab.active.belum_diangkut { background: #F1EFE8; color: #5F5E5A; border-color: transparent; font-weight: 500; }
+
+/* .tps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+} */
+
+.tps-mini-card {
+  background: #fff;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.tps-mini-card.selesai        { border-left: 3px solid #639922; }
+.tps-mini-card.diangkut       { border-left: 3px solid #185FA5; }
+.tps-mini-card.belum_diangkut { border-left: 3px solid #888780; }
+
+.tps-mini-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tps-mini-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.tps-mini-icon .material-icons { font-size: 16px; color: #1a7a3a; }
+.tps-mini-info  { min-width: 0; }
+.tps-mini-no    { font-size: 10px; color: #aaa; margin-bottom: 1px; }
+.tps-mini-name  { font-size: 13px; font-weight: 500; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+.tps-mini-hari  { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+
+.schedule-empty { text-align: center; padding: 40px 0; color: #888; }
+.schedule-empty .material-icons { font-size: 36px; opacity: .4; display: block; margin-bottom: 8px; }
+.schedule-empty p { font-size: 13px; }
+.schedule-footer-count { font-size: 11px; color: #888; margin-top: 10px; text-align: right; }

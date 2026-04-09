@@ -28,24 +28,7 @@
               </option>
             </select>
           </div>
-
-          <!-- <div class="form-group">
-            <label>Tanggal Pengambilan</label>
-            <input type="date" v-model="form.tgl_pengambilan" class="form-control" required />
-          </div> -->
         </div>
-
-        <!-- <div class="form-row">
-          <div class="form-group">
-            <label>Waktu Mulai</label>
-            <input type="time" v-model="form.waktuMulai" class="form-control" required />
-          </div>
-
-          <div class="form-group">
-            <label>Waktu Selesai</label>
-            <input type="time" v-model="form.waktuSelesai" class="form-control" required />
-          </div>
-        </div> -->
 
         <div class="form-group">
           <label>TPS yang Dikunjungi</label>
@@ -65,22 +48,11 @@
           </div>
         </div>
 
-        <!-- <div class="form-group">
-          <label>Catatan (Opsional)</label>
-          <textarea
-            v-model="form.catatan"
-            class="form-control"
-            rows="3"
-          ></textarea>
-        </div> -->
-
         <div class="form-footer">
           <button type="button" class="btn-secondary" @click="resetForm">
             Reset
           </button>
-          <!-- <button type="submit" class="btn-primary" >
-            Simpan Logbook
-          </button> -->
+
           <button type="submit" class="btn-primary" :disabled="loading">
               {{ loading ? "Menyimpan..." : "Simpan Logbook" }}
         </button>
@@ -110,15 +82,9 @@
             </div>
             <div class="logbook-info-item">
               <span class="label">Jumlah TPS</span>
-              <!-- <span class="value">{{ todayLogbook.tpsVisited.length }} TPS</span> -->
-               <span class="value">{{ todayLogbook?.tpsVisited?.length || 0 }} TPS</span>
+              <span class="value">{{ todayLogbook?.tpsVisited?.length || 0 }} TPS</span>
             </div>
-            <!-- <div class="logbook-info-item">
-              <span class="label">Waktu</span>
-              <span class="value">
-                {{ todayLogbook.waktuMulai }} - {{ todayLogbook.waktuSelesai }}
-              </span>
-            </div> -->
+
             <div class="logbook-info-item">
               <span class="label">TPS</span>
               <span class="value">
@@ -126,7 +92,6 @@
               </span>
             </div>
           </template>
-          <!-- </div> -->
 
           <div v-else class="no-logbook">
             Belum ada aktivitas hari ini
@@ -158,10 +123,6 @@
                 <span class="label">Jumlah TPS</span>
                 <span class="value">{{ log.tpsVisited.length }} TPS</span>
               </div>
-              <!-- <div class="logbook-item-row">
-                <span class="label">Waktu</span>
-                <span class="value">{{ log.waktuMulai }} - {{ log.waktuSelesai }}</span>
-              </div> -->
               <div class="logbook-item-row">
                 <span class="label">TPS</span>
                 <span class="value">{{ log.tpsVisited.join(', ') }}</span>
