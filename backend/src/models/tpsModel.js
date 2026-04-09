@@ -40,7 +40,7 @@ async function findAll() {
 
 async function findAllJadwal() {
     const [rows] = await db.query(
-        `SELECT 
+        `SELECT DISTINCT
             t.id_tps,
             t.nama_tps,
             t.alamat,
@@ -49,8 +49,13 @@ async function findAllJadwal() {
             t.status_tps,
             jadwal.hari_pengambilan,
             jadwal.tgl_terakhir_diambil,
-            dt.id_tps,
-            dt.status_angkut
+            (
+                SELECT status_angkut 
+                FROM daftar_tugas 
+                WHERE id_tps = t.id_tps 
+                ORDER BY tgl_pengambilan DESC 
+                LIMIT 1
+            ) as status_angkut
 
         FROM tps t
 
@@ -62,8 +67,6 @@ async function findAllJadwal() {
             FROM jadwal_pengambilan
             GROUP BY id_tps
         ) jadwal ON t.id_tps = jadwal.id_tps
-        LEFT JOIN daftar_tugas dt 
-            ON t.id_tps = dt.id_tps
 
         ORDER BY t.id_tps DESC
     `);

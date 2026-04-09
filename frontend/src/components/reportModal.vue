@@ -1,5 +1,4 @@
 <template>
-  <!-- <div class="modal" :class="{ show: isOpen }" v-if="isOpen"> -->
   <div class="modal" :class="{ show: isOpen }">
     <div class="modal-overlay" @click="close"></div>
 

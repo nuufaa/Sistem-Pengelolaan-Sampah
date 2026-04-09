@@ -63,12 +63,14 @@ async function getDashboardPetugas(req, res) {
     const pending = await dashboardModel.getPendingTugas(id_petugas);
     const done = await dashboardModel.getDoneTugas(id_petugas);
     const progress = await dashboardModel.getProgressTugas(id_petugas);
+    const volumeSampahHarian = await dashboardModel.getVolumeSampah(id_petugas);
 
     res.json({
       total,
       pending,
       done,
-      progress
+      progress,
+      volumeSampahHarian
     });
 
   } catch (error) {

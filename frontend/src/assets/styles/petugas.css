@@ -477,6 +477,43 @@
     border-color: var(--primary);
 }
 
+/* Tab Buttons */
+.tab-button {
+    padding: 10px 16px;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+}
+
+.tab-button.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+}
+
+.tab-button:hover:not(.active) {
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .table-container {
     background: white;
     border-radius: 12px;

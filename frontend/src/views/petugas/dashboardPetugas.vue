@@ -59,7 +59,6 @@
         <div v-for="task in todayTasks" :key="task.id_daftar_tugas" class="task-item">
           <div class="task-info">
             <h4>{{ task.nama_tps }}</h4>
-            <!-- <p>Jumlah tugas hari ini: {{ todayTasks.length }}</p> -->
             <p>
               Terakhir diambil: {{ task.tgl_terakhir_diambil ? new Date(task.tgl_terakhir_diambil).toLocaleDateString('id-ID') : 'Belum diambil' }}
               • Jadwal: {{ new Date(task.tgl_pengambilan).toLocaleDateString('id-ID') }}
@@ -80,13 +79,32 @@
       @close="showModal = false"
       @save="handleSave"
     />
+
+    <!-- CHART PLACEHOLDER -->
+    <div class="dashboard-charts">
+      <div class="chart-card">
+        <h3>Status TPS Terkini</h3>
+        <canvas ref="statusChartRef" class="pie-chart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Laporan 7 Hari Terakhir</h3>
+          <select v-model="filterChart">
+            <option value="mingguan">Mingguan</option>
+            <option value="bulanan">Bulanan</option>
+        </select>
+        <canvas ref="volumeSampahChartRef" class="line-chart"></canvas>
+      </div>
+    </div>
+
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/services/api'
 import UpdatePengambilanModal from '@/components/updateStatusModal.vue'
+import Chart from 'chart.js/auto'
 
 const today = new Date().toLocaleDateString('id-ID', {
   weekday: 'long',
@@ -99,6 +117,7 @@ const total = ref(0)
 const pending = ref(0)
 const done = ref(0)
 const progress = ref(0)
+const volumeSampahHarian = ref([])
 
 const tpsData = ref([])
 const pengambilanData = ref([])
@@ -106,6 +125,10 @@ const kendaraanList = ref([])
 
 const showModal = ref(false)
 const selectedItem = ref(null)
+
+let volumeSampahChart = null
+const volumeSampahChartRef = ref(null)
+const filterChart = ref('mingguan') // default filter
 
 async function fetchPengambilan() {
   try {
@@ -115,6 +138,123 @@ async function fetchPengambilan() {
   } catch (error) {
     console.error("Gagal ambil daftar tugas:", error)
   }
+}
+
+function renderVolumeSampahChart(data, filter = 'mingguan') {
+  // destroy chart lama
+  if (volumeSampahChart) {
+    volumeSampahChart.destroy()
+  }
+
+  // format tanggal ke "10 Mar"
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short'
+    })
+  }
+
+  let labels = []
+
+  if (filter === 'mingguan') {
+    labels = [...Array(7)].map((_, i) => {
+      const d = new Date()
+      d.setDate(d.getDate() - (6 - i))
+      return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short'
+      })
+    })
+  }
+
+  else if (filter === 'bulanan') {
+    const now = new Date()
+    const daysInMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0
+    ).getDate()
+
+    labels = [...Array(daysInMonth)].map((_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth(), i + 1)
+      return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short'
+      })
+    })
+  }
+
+  const tpsList = [...new Set(data.map(item => item.nama_tps))]
+
+  const dataMap = {}
+
+  data.forEach(d => {
+    const key = `${formatDate(d.tanggal)}-${d.nama_tps}`
+
+    if (!dataMap[key]) {
+      dataMap[key] = 0
+    }
+
+    dataMap[key] += d.total_volume
+  })
+
+  const datasets = tpsList.map((tps) => {
+    return {
+      label: tps,
+      data: labels.map(label => {
+        return dataMap[`${label}-${tps}`] || 0
+      })
+    }
+  })
+
+  volumeSampahChart = new Chart(volumeSampahChartRef.value, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+
+      barPercentage: 0.4,
+      categoryPercentage: 0.7,
+      barThickness: 5,
+      maxBarThickness: 20,
+      borderRadius: 5,
+
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => value + ' kg'
+          }
+        }
+      },
+
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              size: 12,
+              weight: 'bold'
+            },
+            padding: 8,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              return `${context.dataset.label}: ${context.raw} kg`
+            }
+          }
+        }
+      }
+    }
+  })
 }
 
 async function fetchKendaraan() {
@@ -129,10 +269,23 @@ async function fetchDashboard() {
     pending.value = res.data.pending
     done.value = res.data.done
     progress.value = res.data.progress
+    volumeSampahHarian.value = res.data.volumeSampahHarian
+
+    // renderVolumeSampahChart(volumeSampahHarian)
+
   } catch (error) {
     console.error("Gagal ambil dashboard:", error)
   }
 }
+
+watch([filterChart, volumeSampahHarian], () => {
+  if (volumeSampahHarian.value.length) {
+    renderVolumeSampahChart(
+      volumeSampahHarian.value,
+      filterChart.value
+    )
+  }
+})
 
 const todayTasks = computed(() => {
   const todayDate = new Date()

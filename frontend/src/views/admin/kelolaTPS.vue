@@ -19,7 +19,6 @@
             <th>Lokasi</th>
             <th>Kapasitas TPS (Kg)</th>
             <th>Status TPS</th>
-            <!-- <th>Foto TPS</th> -->
             <th>Aksi</th>
           </tr>
         </thead>
@@ -37,7 +36,6 @@
                 {{ statusText(tps.status_tps) }}
               </span>
             </td>
-            <!-- <td>{{ tps.foto_tps || '-' }}</td> -->
             <td class="action-buttons">
               <button class="btn-action edit" @click="openEdit(tps)">
                 <span class="material-icons">edit</span>
@@ -55,7 +53,7 @@
     <div class="card-list mobile-only">
       <div 
         class="data-card" 
-        v-for="(tps, i) in tpsList" 
+        v-for="(tps) in tpsList" 
         :key="tps.id_tps"
       >
         <div class="data-card-header">
@@ -122,7 +120,7 @@ const tpsList = ref([])
 async function fetchTPS() {
   try {
     const data = await apiFetch("/api/tps")
-    console.log(data)
+
     tpsList.value = data
   } catch (err) {
     console.error("Gagal ambil TPS:", err.message)
@@ -218,6 +216,7 @@ function statusText(status) {
     penuh: 'Penuh'
   }[status] || status
 }
+
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
