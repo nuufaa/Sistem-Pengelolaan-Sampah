@@ -711,7 +711,7 @@ input, select, textarea {
     color: var(--secondary-dark);
 }
 
-.popup-status.danger {
+.popup-status.penuh {
     background: var(--status-danger-bg);
     color: var(--status-danger);
 }
@@ -762,12 +762,14 @@ input, select, textarea {
     animation: fadeIn 0.3s ease;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
 }
 
 .modal.show {
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: auto;
 }
 
 @keyframes fadeIn {
@@ -788,11 +790,26 @@ input, select, textarea {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
-    display: flex;              /* tambah */
-    align-items: center;        /* tambah */
-    justify-content: center;    /* tambah */
-    z-index: 1;               /* tambah */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: auto;
 }
+/* .modal-overlay {
+    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;              tambah
+    align-items: center;        tambah
+    justify-content: center;    tambah
+    z-index: 1;               tambah
+} */
 
 .modal-content {
     position: relative;
@@ -807,11 +824,16 @@ input, select, textarea {
     z-index: 2;
     overscroll-behavior: contain;
     touch-action: auto;
+    /* baru */
+    pointer-events: auto; 
 }
 
-.modal, .modal-overlay, .modal-body {
+.modal.show,
+.modal.show .modal-overlay,
+.modal.show .modal-body {
     touch-action: none;
     overscroll-behavior: none;
+    pointer-events: auto;
 }
 
 .modal-schedule {

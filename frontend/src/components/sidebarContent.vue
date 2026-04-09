@@ -170,7 +170,11 @@
       </div>
       <div class="card-body">
           <!-- <div id="volumeSampahSidebar"></div> -->
-          <canvas ref="volumeSampahChartRef" class="bar-chart"></canvas>
+          <!-- <canvas ref="volumeSampahChartRef" class="bar-chart"></canvas> -->
+        <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openVolumeSampahStatModal')">
+        <span class="material-icons">visibility</span>
+        <span>Lihat Statistik Volume Sampah</span>
+    </button>
       </div>
   </div>
 
@@ -321,7 +325,7 @@ const timbulanPerKapita = ref([])
 
 let volumeSampahChart = null
 const volumeSampahChartRef = ref(null)
-const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal'])
+const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal', 'openVolumeSampahStatModal'])
 const jadwal = ref({
   jam_buang_mulai: '',
   jam_buang_selesai: '',
@@ -354,97 +358,97 @@ const hasTimbulanData = computed(() =>
   filterTimbulanData.value.length > 0
 )
 
-function renderVolumeSampahChart(data) {
-  // destroy chart lama
-  if (volumeSampahChart) volumeSampahChart.destroy()
+// function renderVolumeSampahChart(data) {
+//   // destroy chart lama
+//   if (volumeSampahChart) volumeSampahChart.destroy()
 
-  // format tanggal ke "10 Mar"
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short'
-    })
-  }
+//   // format tanggal ke "10 Mar"
+//   const formatDate = (dateStr) => {
+//     const d = new Date(dateStr)
+//     return d.toLocaleDateString('id-ID', {
+//       day: '2-digit',
+//       month: 'short'
+//     })
+//   }
 
-  // generate 7 hari terakhir
-  const labels = [...Array(7)].map((_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() - (6 - i))
-    return d.toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short'
-    })
-  })
+//   // generate 7 hari terakhir
+//   const labels = [...Array(7)].map((_, i) => {
+//     const d = new Date()
+//     d.setDate(d.getDate() - (6 - i))
+//     return d.toLocaleDateString('id-ID', {
+//       day: '2-digit',
+//       month: 'short'
+//     })
+//   })
 
-  // ambil daftar TPS unik
-  const tpsList = [...new Set(data.map(item => item.nama_tps))]
+//   // ambil daftar TPS unik
+//   const tpsList = [...new Set(data.map(item => item.nama_tps))]
 
-  // optimasi: ubah data jadi lookup (biar gak pakai find berulang)
-  const dataMap = {}
-  data.forEach(d => {
-    const key = `${formatDate(d.tanggal)}-${d.nama_tps}`
-    dataMap[key] = d.total_volume
-  })
+//   // optimasi: ubah data jadi lookup (biar gak pakai find berulang)
+//   const dataMap = {}
+//   data.forEach(d => {
+//     const key = `${formatDate(d.tanggal)}-${d.nama_tps}`
+//     dataMap[key] = d.total_volume
+//   })
 
-  // buat dataset
-  const datasets = tpsList.map((tps) => {
-    return {
-      label: tps,
-      data: labels.map(label => {
-        return dataMap[`${label}-${tps}`] || 0
-      })
-    }
-  })
+//   // buat dataset
+//   const datasets = tpsList.map((tps) => {
+//     return {
+//       label: tps,
+//       data: labels.map(label => {
+//         return dataMap[`${label}-${tps}`] || 0
+//       })
+//     }
+//   })
 
-  //render chart
-  volumeSampahChart = new Chart(volumeSampahChartRef.value, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      barPercentage: 0.4,
-      categoryPercentage: 0.7,
-      barThickness: 5,
-      maxBarThickness: 20,
-      borderRadius: 5,
+//   //render chart
+//   volumeSampahChart = new Chart(volumeSampahChartRef.value, {
+//     type: 'bar',
+//     data: {
+//       labels,
+//       datasets
+//     },
+//     options: {
+//       responsive: true,
+//       maintainAspectRatio: false,
+//       barPercentage: 0.4,
+//       categoryPercentage: 0.7,
+//       barThickness: 5,
+//       maxBarThickness: 20,
+//       borderRadius: 5,
 
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: (value) => value + ' kg'
-          }
-        }
-      },
+//       scales: {
+//         y: {
+//           beginAtZero: true,
+//           ticks: {
+//             callback: (value) => value + ' kg'
+//           }
+//         }
+//       },
 
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            font: {
-              size: 12,
-              weight: 'bold'
-            },
-            padding: 8,
-            usePointStyle: true
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              return `${context.dataset.label}: ${context.raw} kg`
-            }
-          }
-        }
-      }
-    }
-  })
-}
+//       plugins: {
+//         legend: {
+//           position: 'top',
+//           labels: {
+//             font: {
+//               size: 12,
+//               weight: 'bold'
+//             },
+//             padding: 8,
+//             usePointStyle: true
+//           }
+//         },
+//         tooltip: {
+//           callbacks: {
+//             label: (context) => {
+//               return `${context.dataset.label}: ${context.raw} kg`
+//             }
+//           }
+//         }
+//       }
+//     }
+//   })
+// }
 
 function handleStatusChange(status, event) {
   const newStatus = [...props.selectedStatus]
@@ -506,7 +510,7 @@ async function fetchDashboard() {
     timbulanPerKapita.value = res.data.timbulanPerKapita
 
     await nextTick()
-    renderVolumeSampahChart(res.data.volumeSampahHarian)
+    // renderVolumeSampahChart(res.data.volumeSampahHarian)
 
   } catch (error) {
     console.error("Gagal ambil dashboard:", error)

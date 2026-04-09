@@ -40,22 +40,18 @@ async function findAll() {
 
 async function findAllJadwal() {
     const [rows] = await db.query(
-        `SELECT DISTINCT
+        `SELECT
             t.id_tps,
             t.nama_tps,
             t.alamat,
             t.latitude,
             t.longitude,
             t.status_tps,
+            t.kapasitas,
+            COALESCE(SUM(dt.volume_sampah), 0) AS volume_sampah,
             jadwal.hari_pengambilan,
             jadwal.tgl_terakhir_diambil,
-            (
-                SELECT status_angkut 
-                FROM daftar_tugas 
-                WHERE id_tps = t.id_tps 
-                ORDER BY tgl_pengambilan DESC 
-                LIMIT 1
-            ) as status_angkut
+            ROUND(COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100, 1) AS persentase_sampah
 
         FROM tps t
 
@@ -67,6 +63,12 @@ async function findAllJadwal() {
             FROM jadwal_pengambilan
             GROUP BY id_tps
         ) jadwal ON t.id_tps = jadwal.id_tps
+
+        LEFT JOIN daftar_tugas dt ON t.id_tps = dt.id_tps 
+            AND dt.status_angkut = 'selesai'
+            AND dt.tgl_pengambilan >= COALESCE(jadwal.tgl_terakhir_diambil, DATE_SUB(CURDATE(), INTERVAL 365 DAY))
+
+        GROUP BY t.id_tps, t.nama_tps, t.alamat, t.latitude, t.longitude, t.status_tps, t.kapasitas, jadwal.hari_pengambilan, jadwal.tgl_terakhir_diambil
 
         ORDER BY t.id_tps DESC
     `);

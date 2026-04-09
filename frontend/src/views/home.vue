@@ -39,6 +39,7 @@
                     :selectedStatus="selectedStatus"
                     @openScheduleModal="openScheduleModal"
                     @openLaporanModal="openLaporanModal"
+                    @openVolumeSampahStatModal="openVolumeSampahStatModal"
                     @statusChanged="updateMarkers"
                     @update:selectedStatus="selectedStatus = $event"
                 />
@@ -239,6 +240,14 @@
     </div>
     </div>
 
+    <!-- Modal Volume Sampah Statistics -->
+    <volumeSampahStat 
+        ref="volumeSampahStatRef"
+        :isModalOpen="isModalVolumeSampahOpen"
+        :volumeSampahData="volumeSampahHarian"
+        @close="isModalVolumeSampahOpen = false"
+    />
+
     <!-- Toast Notification -->
     <div class="toast"  
         :class="{ show: isToastVisible }" 
@@ -343,11 +352,11 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
-import { ref, onMounted, watch, nextTick,  computed} from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
 import sidebarContent from '@/components/sidebarContent.vue'
+import volumeSampahStat from '@/components/volumeSampahStat.vue'
 import { useToast } from '@/services/useToast'
 import api from '@/services/api'
 
@@ -369,14 +378,17 @@ const isModalScheduleOpen = ref(false)
 const map = ref(null)
 const markerCluster = ref(null)
 let markers = ref([]);
+const wastePoints = ref([])
 
 const selectedVillage = ref('all')
 const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
 
 const loginRef = ref(null)
 const reportRef = ref(null)
+const volumeSampahStatRef = ref(null)
 
-const wastePoints = ref([])
+const isModalVolumeSampahOpen = ref(false)
+const volumeSampahHarian = ref([])
 const loading = ref(false)
 const error = ref(null)
 const modalTPSList = ref([])
@@ -401,9 +413,10 @@ const scheduleCountByStatus = computed(() =>
 )
 
 const scheduleFiltered = computed(() => {
-  if (!Array.isArray(modalTPSList.value)) return []
 
-  // 1. Ambil TPS unik
+    if (!Array.isArray(modalTPSList.value)) return []
+    
+    // 1. Ambil TPS unik
   const uniqueMap = new Map()
 
   modalTPSList.value.forEach(t => {
@@ -426,15 +439,17 @@ const scheduleFiltered = computed(() => {
       t.nama_tps?.toLowerCase().includes(q)
     )
   }
-
+  
   // 4. Sort
   if (scheduleSort.value === 'nama') {
     data.sort((a, b) => a.nama_tps.localeCompare(b.nama_tps))
-  } else if (scheduleSort.value === 'status') {
+} else if (scheduleSort.value === 'status') {
     data.sort((a, b) => a.status_angkut.localeCompare(b.status_angkut))
   }
-
+  
   return data
+})
+
 async function fetchLaporan() {
   try {
     const res = await api.get('/api/lapor')
@@ -444,9 +459,23 @@ async function fetchLaporan() {
   }
 }
 
+async function fetchVolumeSampahData() {
+  try {
+    const res = await api.get('/api/dashboard')
+    volumeSampahHarian.value = res.data.volumeSampahHarian || []
+  } catch (err) {
+    console.error('Gagal ambil data volume sampah', err)
+  }
+}
+
 function openLaporanModal() {
   isModalLaporanOpen.value = true
   fetchLaporan()
+}
+
+function openVolumeSampahStatModal() {
+  isModalVolumeSampahOpen.value = true
+  fetchVolumeSampahData()
 }
 
 function openDetail(laporan) {
@@ -519,10 +548,7 @@ const {
 
 const statusInfo = {
   belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
-  selesai: { text: 'Selesai', icon: 'check_circle' }
-    belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
-    diangkut: { text: 'Sedang Berlangsung', icon: 'local_shipping' },
-    selesai: { text: 'Selesai', icon: 'check_circle' },
+  selesai: { text: 'Selesai', icon: 'check_circle' },
 }
 
 const getStatusText = (status) => {
@@ -534,21 +560,15 @@ const getStatusIcon = (status) => {
 }
 
 const openBottomSheet = () => {
-  console.log('openBottomSheet clicked (before):', isBottomSheetOpen.value)
   isBottomSheetOpen.value = true
-  console.log('openBottomSheet set to:', isBottomSheetOpen.value)
 }
 
 const closeBottomSheet = () => {
-  console.log('closeBottomSheet clicked (before):', isBottomSheetOpen.value)
   isBottomSheetOpen.value = false
-  console.log('closeBottomSheet set to:', isBottomSheetOpen.value)
 }
 
 const toggleBottomSheet = () => {
-  console.log('toggleBottomSheet (before):', isBottomSheetOpen.value)
   isBottomSheetOpen.value = !isBottomSheetOpen.value
-  console.log('toggleBottomSheet (after):', isBottomSheetOpen.value)
 }
 
 function openReport(id_tps = null) {
@@ -688,7 +708,8 @@ function initMap() {
     })
 }
 
-function getMarkerIcon(status_tps) {
+function getMarkerIcon(status_tps, status_tps_realtime) {
+    const status = status_tps_realtime || status_tps;
     const colors = {
         normal: '#4CAF50',
         hampir_penuh: '#FFC107',
@@ -701,7 +722,7 @@ function getMarkerIcon(status_tps) {
             <div style="
                 width: 30px;
                 height: 30px;
-                background: ${colors[status_tps]};
+                background: ${colors[status]};
                 border: 3px solid white;
                 border-radius: 50%;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -730,15 +751,14 @@ function formatTgl(date) {
 
 // pop up titik tps
 function createPopupContent(point) {
-    const statusClass = point.status_tps;
+    const statusClass = point.status_tps_realtime || point.status_tps;
     const statusText = {
         normal: 'Normal',
         hampir_penuh: 'Hampir Penuh',
         penuh: 'Penuh'
-    }[point.status_tps];
-    const persen = point.kapasitas
-        ? Math.round((point.volume_sampah / point.kapasitas) * 100)
-        : 0
+    }[statusClass];
+    const persen = point.persentase_sampah || 
+        (point.kapasitas ? Math.round((point.volume_sampah / point.kapasitas) * 100) : 0)
 
     return `
         <div class="popup-content">
@@ -780,13 +800,13 @@ function updateMarkers() {
 
     const filtered = wastePoints.value.filter(p =>
     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
-    selectedStatus.value.includes(p.status_tps)
+    selectedStatus.value.includes(p.status_tps_realtime || p.status_tps)
     )
 
     filtered.forEach(point => {
     const marker = L.marker(
         [parseFloat(point.latitude), parseFloat(point.longitude)],
-        { icon: getMarkerIcon(point.status_tps) }
+        { icon: getMarkerIcon(point.status_tps, point.status_tps_realtime) }
     );
 
     // Use popup for both desktop and mobile
