@@ -38,6 +38,7 @@
                 <sidebarContent   
                     :selectedStatus="selectedStatus"
                     @openScheduleModal="openScheduleModal"
+                    @openLaporanModal="openLaporanModal"
                     @statusChanged="updateMarkers"
                     @update:selectedStatus="selectedStatus = $event"
                 />
@@ -172,6 +173,72 @@
     </div>
     </div>
 
+    <!-- MODAL RIWAYAT LAPORAN -->
+    <div class="modal" 
+        v-if="isModalLaporanOpen" 
+        :class="{ show: isModalLaporanOpen }"
+    >
+    <div class="modal-overlay" @click="isModalLaporanOpen = false"></div>
+
+    <div class="modal-content modal-schedule">
+        <!-- HEADER -->
+        <div class="modal-header">
+        <h2>
+            <span class="material-icons">report</span>
+            Riwayat Laporan Masyarakat
+        </h2>
+        <button class="modal-close" @click="isModalLaporanOpen = false">
+            <span class="material-icons">close</span>
+        </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="modal-body schedule-body">
+
+        <!-- EMPTY -->
+        <div v-if="laporanList.length === 0" class="empty-state">
+            Tidak ada laporan
+        </div>
+
+        <!-- GRID -->
+        <div class="schedule-grid">
+    <div v-for="laporan in sortedLaporan"
+        :key="laporan.id_laporan"
+        class="laporan-card"
+    >
+    <!-- HEADER -->
+    <div class="laporan-header">
+        <div class="laporan-date">
+        {{ formatDateTime(laporan.tgl_laporan) }}
+        </div>
+
+        <div class="laporan-badge" :class="laporan.kondisi_tps">
+        {{ kondisiText(laporan.kondisi_tps) }}
+        </div>
+    </div>
+
+    <!-- TITLE -->
+    <div class="laporan-title">
+        {{ laporan.nama_tps }}
+    </div>
+
+    <!-- DESKRIPSI -->
+    <div class="laporan-desc">
+        {{ laporan.deskripsi || 'Tidak ada keterangan' }}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="laporan-footer">
+        <span class="material-icons">person</span>
+        <span>{{ laporan.nama_pelapor }}</span>
+    </div>
+    </div>
+        </div>
+
+        </div>
+    </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast"  
         :class="{ show: isToastVisible }" 
@@ -276,14 +343,21 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
+import { ref, onMounted, watch, nextTick,  computed} from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
 import sidebarContent from '@/components/sidebarContent.vue'
 import { useToast } from '@/services/useToast'
+import api from '@/services/api'
 
 // Mobile detection
 let isMobile = ref(window.innerWidth <= 768);
+
+const isModalLaporanOpen = ref(false)
+const laporanList = ref([])
+const showDetailModal = ref(false)
+const selectedLaporan = ref(null)
 
 // Date and Schedule
 const currentDate = ref('')
@@ -361,26 +435,102 @@ const scheduleFiltered = computed(() => {
   }
 
   return data
+async function fetchLaporan() {
+  try {
+    const res = await api.get('/api/lapor')
+    laporanList.value = res.data
+  } catch (err) {
+    console.error('Gagal ambil laporan', err)
+  }
+}
+
+function openLaporanModal() {
+  isModalLaporanOpen.value = true
+  fetchLaporan()
+}
+
+function openDetail(laporan) {
+  selectedLaporan.value = laporan
+  showDetailModal.value = true
+}
+
+function kondisiText(kondisi) {
+  return {
+    hampir_penuh: 'Hampir Penuh',
+    penuh: 'Penuh',
+    sampah_berserakan: 'Sampah Berserakan'
+  }[kondisi] || kondisi
+}
+
+function formatDateTime(date) {
+  const d = new Date(date)
+
+  return d.toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const kondisiPriority = {
+  sampah_berserakan: 1,
+  penuh: 2,
+  hampir_penuh: 3
+}
+
+// const sortedLaporan = computed(() => {
+//   return [...laporanList.value].sort((a, b) => {
+//     return kondisiPriority[a.kondisi_tps] - kondisiPriority[b.kondisi_tps]
+//   })
+// })
+
+const sortedLaporan = computed(() => {
+  return laporanList.value
+    // FILTER: buang yang TPS-nya sudah selesai
+    .filter(laporan => {
+      const tps = jadwalTPS.value.find(
+        t => Number(t.id_tps) === Number(laporan.id_tps)
+      )
+
+      // kalau TPS belum selesai → tampilkan
+      return tps?.status_angkut !== 'selesai'
+    })
+
+    // SORT: berdasarkan urgensi
+    .sort((a, b) => {
+      const pA = kondisiPriority[a.kondisi_tps] || 99
+      const pB = kondisiPriority[b.kondisi_tps] || 99
+
+      if (pA !== pB) return pA - pB
+
+      // optional: kalau sama → terbaru dulu
+      return new Date(b.tgl_laporan) - new Date(a.tgl_laporan)
+    })
 })
 
 const { 
-  isToastVisible, 
-  toastMessage, 
-  toastIcon, 
-  toastColor 
+    isToastVisible, 
+    toastMessage, 
+    toastIcon, 
+    toastColor 
 } = useToast()
 
 const statusInfo = {
   belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
   selesai: { text: 'Selesai', icon: 'check_circle' }
+    belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
+    diangkut: { text: 'Sedang Berlangsung', icon: 'local_shipping' },
+    selesai: { text: 'Selesai', icon: 'check_circle' },
 }
 
 const getStatusText = (status) => {
-  return statusInfo[status]?.text || 'Belum Dimulai'
+    return statusInfo[status]?.text || 'Belum Dimulai'
 }
 
 const getStatusIcon = (status) => {
-  return statusInfo[status]?.icon || 'schedule'
+    return statusInfo[status]?.icon || 'schedule'
 }
 
 const openBottomSheet = () => {
@@ -586,6 +736,9 @@ function createPopupContent(point) {
         hampir_penuh: 'Hampir Penuh',
         penuh: 'Penuh'
     }[point.status_tps];
+    const persen = point.kapasitas
+        ? Math.round((point.volume_sampah / point.kapasitas) * 100)
+        : 0
 
     return `
         <div class="popup-content">
@@ -597,7 +750,7 @@ function createPopupContent(point) {
                 <div class="popup-info">
                     <div class="popup-status ${statusClass}">
                         <span style="font-size: 10px;">●</span>
-                        ${statusText}
+                        ${statusText} (${persen}%)
                     </div>
                 </div>
                 <div class="popup-info">

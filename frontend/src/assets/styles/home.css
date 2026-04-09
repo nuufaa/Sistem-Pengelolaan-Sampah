@@ -818,6 +818,85 @@ input, select, textarea {
     max-width: 700px;
 }
 
+.laporan-btn {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.laporan-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: 0.2s;
+  margin-top: 10px;
+}
+
+.laporan-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.laporan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.laporan-date {
+  font-size: 12px;
+  color: #888;
+}
+
+/* BADGE */
+.laporan-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* warna status */
+.laporan-badge.penuh {
+  background: #f44336;
+  color: white;
+}
+
+.laporan-badge.hampir_penuh {
+  background: #ffc107;
+  color: black;
+}
+
+.laporan-badge.sampah_berserakan {
+  background: #2196f3;
+  color: white;
+}
+
+/* TITLE */
+.laporan-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* DESKRIPSI */
+.laporan-desc {
+  font-size: 13px;
+  color: #555;
+}
+
+/* FOOTER */
+.laporan-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
 @keyframes slideUp {
     from {
         transform: translateY(50px);

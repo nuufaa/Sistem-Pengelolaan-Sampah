@@ -15,11 +15,11 @@
             <div class="desa-card">
               <div class="desa-header">
                 <span class="material-icons">event</span>
-                <h3>JAM OPERASIONAL</h3>
+                <h3>Jam Operasional</h3>
               </div>  
               <div class="desa-tps-info">
                 <span>
-                  Jam buang warga
+                  Jam buang warga:
                 </span>
                 <span>
                   {{ formatJam(jadwal.jam_buang_mulai) }}–{{ formatJam(jadwal.jam_buang_selesai) }}
@@ -28,7 +28,7 @@
 
             <div class="desa-tps-info">
               <span>
-                Pengambilan 
+                Pengambilan: 
               </span>
               <span>
                 {{ formatJam(jadwal.jam_ambil_mulai) }}–{{ formatJam(jadwal.jam_ambil_selesai) }}
@@ -56,6 +56,24 @@
           </div>
       </div>
   </div>
+
+  <!-- CARD RIWAYAT LAPORAN -->
+  <div class="desa-card laporan-card">
+    <div class="desa-header">
+      <span class="material-icons">report</span>
+      <h3>Riwayat Laporan</h3>
+    </div>
+
+    <div class="desa-tps-info">
+      <span class="material-icons">description</span>
+      <span>{{ totalLaporan }} Laporan Masuk</span>
+    </div>
+
+    <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openLaporanModal')">
+      <span class="material-icons">visibility</span>
+      <span>Lihat Riwayat Laporan</span>
+    </button>
+  </div>  
 
   <!-- Filter Card -->
   <div class="card filter-card">
@@ -106,15 +124,15 @@
               <h3>Informasi Peta:</h3>
               <div class="legend-item">
                   <span class="legend-dot normal"></span>
-                  <span>Normal - Aman</span>
+                  <span>Normal (&lt; 50%)</span>
               </div>
               <div class="legend-item">
                   <span class="legend-dot warning"></span>
-                  <span>Hampir Penuh - Perhatian</span>
+                  <span>Hampir Penuh (50% - 79%)</span>
               </div>
               <div class="legend-item">
                   <span class="legend-dot danger"></span>
-                  <span>Penuh - Perlu Segera</span>
+                  <span>Penuh (≥ 80%)</span>
               </div>
           </div>
       </div>
@@ -271,6 +289,21 @@ import { fetchTitikTps } from '@/services/wasteService.js'
 import api from '@/services/api'
 import Chart from 'chart.js/auto'
 
+const totalLaporan = ref(0)
+
+async function fetchTotalLaporan() {
+  try {
+    const res = await api.get('/api/lapor')
+    totalLaporan.value = res.data.length
+  } catch (err) {
+    console.error('Gagal ambil total laporan', err)
+  }
+}
+
+onMounted(() => {
+  fetchTotalLaporan()
+})
+
 // Date and Schedule
 const currentDate = ref('')
 const todaySchedules = ref([])
@@ -288,7 +321,7 @@ const timbulanPerKapita = ref([])
 
 let volumeSampahChart = null
 const volumeSampahChartRef = ref(null)
-const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged'])
+const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal'])
 const jadwal = ref({
   jam_buang_mulai: '',
   jam_buang_selesai: '',
