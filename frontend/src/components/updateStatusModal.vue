@@ -128,7 +128,7 @@ watch(() => props.data, (val) => {
     if (!val) return
 
     form.id_kendaraan = val.id_kendaraan || ''
-    form.volume = val.volume_sampah || ''
+    form.volume_sampah = val.volume_sampah || ''
     form.status_angkut = val.status_angkut || ''
   },
   { immediate: true }

@@ -80,24 +80,6 @@
           </div>
         </div>
 
-        <!-- <div class="form-group">
-          <label class="form-label">Upload Foto TPS</label>
-          <input
-            type="file"
-            class="form-control"
-            accept="image/*"
-            @change="handleFileUpload"
-          />
-  
-          <div v-if="previewImage" class="mt-2">
-            <img
-              :src="previewImage"
-              alt="Preview Foto TPS"
-              style="max-width: 200px; border-radius: 8px;"
-            />
-          </div>
-        </div> -->
-
         <div class="modal-footer d-flex gap-2 justify-content-end">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">
             Batal
@@ -129,20 +111,11 @@ const props = defineProps({
   tps: Object,
   dusunList: Array
 })
-const emit = defineEmits(['save', 'close'])
 
+const emit = defineEmits(['save', 'close'])
 const showMap = ref(false)
 const previewImage = ref(null)
 const mapMode = ref("default")
-
-// function handleFileUpload(event) {
-//   const file = event.target.files[0]
-//   if (!file) return
-
-//   form.value.foto_tps = file
-
-//   previewImage.value = URL.createObjectURL(file)
-// }
 
 const form = ref({
   id_tps: null,

@@ -33,9 +33,9 @@
               <span>
                 {{ formatJam(jadwal.jam_ambil_mulai) }}–{{ formatJam(jadwal.jam_ambil_selesai) }}
               </span>
-            </div>
-            <div class="desa-tps-info">
-              <p>Harap buang sampah sebelum jam {{ formatJam(jadwal.jam_buang_mulai) }} agar tidak tertinggal oleh truk.</p>
+              <small>
+                Harap buang sampah sebelum jam {{ formatJam(jadwal.jam_buang_mulai) }}
+              </small>
             </div>
           </div>
 
@@ -83,203 +83,199 @@
       </div>
       <div class="card-body">
           <div class="filter-group">
-          <label class="filter-label">Status Titik Sampah:</label>
+            <label class="filter-label">Status Titik Sampah:</label>
+            <label class="checkbox-label status-normal">
+                <input 
+                type="checkbox"
+                value="normal"
+                :checked="props.selectedStatus.includes('normal')"
+                @change="handleStatusChange('normal', $event)"
+                >
+                <span class="status-icon">●</span>
+                <span>Normal <span class="count">({{ totalTPS - totalTPSHampirPenuh - totalTPSPenuh }})</span></span>
+            </label>
 
-          <label class="checkbox-label status-normal">
-              <input 
-              type="checkbox"
-              value="normal"
-              :checked="props.selectedStatus.includes('normal')"
-              @change="handleStatusChange('normal', $event)"
-              >
-              <span class="status-icon">●</span>
-              <span>Normal <span class="count">({{ totalTPS - totalTPSHampirPenuh - totalTPSPenuh }})</span></span>
-          </label>
+            <label class="checkbox-label status-warning">
+                <input 
+                type="checkbox"
+                value="hampir_penuh"
+                :checked="props.selectedStatus.includes('hampir_penuh')"
+                @change="handleStatusChange('hampir_penuh', $event)"
+                >
+                <span class="status-icon">●</span>
+                <span>Hampir Penuh <span class="count">({{ totalTPSHampirPenuh }})</span></span>
+            </label>
 
-          <label class="checkbox-label status-warning">
-              <input 
-              type="checkbox"
-              value="hampir_penuh"
-              :checked="props.selectedStatus.includes('hampir_penuh')"
-              @change="handleStatusChange('hampir_penuh', $event)"
-              >
-              <span class="status-icon">●</span>
-              <span>Hampir Penuh <span class="count">({{ totalTPSHampirPenuh }})</span></span>
-          </label>
-
-          <label class="checkbox-label status-danger">
-              <input 
-              type="checkbox"
-              value="penuh"
-              :checked="props.selectedStatus.includes('penuh')"
-              @change="handleStatusChange('penuh', $event)"
-              >
-              <span class="status-icon">●</span>
-              <span>Penuh <span class="count">({{ totalTPSPenuh }})</span></span>
-          </label>
-
+            <label class="checkbox-label status-danger">
+                <input 
+                type="checkbox"
+                value="penuh"
+                :checked="props.selectedStatus.includes('penuh')"
+                @change="handleStatusChange('penuh', $event)"
+                >
+                <span class="status-icon">●</span>
+                <span>Penuh <span class="count">({{ totalTPSPenuh }})</span></span>
+            </label>
           </div>
 
           <div class="legend">
               <h3>Informasi Peta:</h3>
               <div class="legend-item">
-                  <span class="legend-dot normal"></span>
-                  <span>Normal (&lt; 50%)</span>
+                <span class="legend-dot normal"></span>
+                <span>Normal (&lt; 50%)</span>
               </div>
               <div class="legend-item">
-                  <span class="legend-dot warning"></span>
-                  <span>Hampir Penuh (50% - 79%)</span>
+                <span class="legend-dot warning"></span>
+                <span>Hampir Penuh (50% - 79%)</span>
               </div>
               <div class="legend-item">
-                  <span class="legend-dot danger"></span>
-                  <span>Penuh (≥ 80%)</span>
+                <span class="legend-dot danger"></span>
+                <span>Penuh (≥ 80%)</span>
               </div>
-          </div>
-      </div>
-  </div>
+            </div>
+        </div>
+    </div>
 
   <!-- Statistics Card -->
   <div class="card stats-card">
-      <div class="card-header">
-          <span class="material-icons">bar_chart</span>
-          <h2>Statistik Hari Ini</h2>
+    <div class="card-header">
+        <span class="material-icons">bar_chart</span>
+        <h2>Statistik Hari Ini</h2>
+    </div>
+    <div class="card-body">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-number">{{ totalTPS }}</div>
+          <div class="stat-label">Total Titik</div>
+        </div>
+        <div class="stat-item warning">
+          <div class="stat-number">{{ totalTPSHampirPenuh }}</div>
+          <div class="stat-label">Perlu Perhatian</div>
+        </div>
+        <div class="stat-item danger">
+          <div class="stat-number">{{ totalTPSPenuh }}</div>
+          <div class="stat-label">Penuh</div>
+        </div>
       </div>
-      <div class="card-body">
-          <div class="stats-grid">
-              <div class="stat-item">
-                  <div class="stat-number" id="statTotal">{{ totalTPS }}</div>
-                  <div class="stat-label">Total Titik</div>
-              </div>
-              <div class="stat-item warning">
-                  <div class="stat-number" id="statWarning">{{ totalTPSHampirPenuh }}</div>
-                  <div class="stat-label">Perlu Perhatian</div>
-              </div>
-              <div class="stat-item danger">
-                  <div class="stat-number" id="statDanger">{{ totalTPSPenuh }}</div>
-                  <div class="stat-label">Penuh</div>
-              </div>
-          </div>
-      </div>
+    </div>
   </div>
 
   <!-- Volume Sampah Card -->
   <div class="card">
-      <div class="card-header">
-          <span class="material-icons">assessment</span>
-          <h2>Volume Sampah TPS</h2>
-      </div>
-      <div class="card-body">
-          <!-- <div id="volumeSampahSidebar"></div> -->
-          <!-- <canvas ref="volumeSampahChartRef" class="bar-chart"></canvas> -->
-        <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openVolumeSampahStatModal')">
+    <div class="card-header">
+      <span class="material-icons">assessment</span>
+      <h2>Volume Sampah TPS</h2>
+    </div>
+    <div class="card-body">
+      <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openVolumeSampahStatModal')">
         <span class="material-icons">visibility</span>
         <span>Lihat Statistik Volume Sampah</span>
-    </button>
-      </div>
+      </button>
+    </div>
   </div>
 
   <!-- Ranking TPS Card -->
   <div class="card">
-      <div class="card-header">
-          <span class="material-icons">emoji_events</span>
-          <h2>Ranking TPS Terbaik</h2>
-      </div>
+    <div class="card-header">
+      <span class="material-icons">emoji_events</span>
+      <h2>Ranking TPS Terbaik</h2>
+    </div>
 
-      <div class="card-body">
-          <!-- LOADING -->
-          <div v-if="loading" class="loading-state">
-              <div
-                  v-for="n in 2"
-                  :key="n"
-                  class="sidebar-ranking-item skeleton"
-              >
-                  <div class="skeleton-line short"></div>
-                  <div class="skeleton-line tall"></div>
-                  <div class="skeleton-line xshort"></div>
+    <div class="card-body">
+      <!-- LOADING -->
+      <div v-if="loading" class="loading-state">
+        <div
+            v-for="n in 2"
+            :key="n"
+            class="sidebar-ranking-item skeleton"
+        >
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line tall"></div>
+          <div class="skeleton-line xshort"></div>
+        </div>
+      </div>
+      <!-- EMPTY -->
+      <div v-else-if="rankingTPS.length === 0" class="empty-text">
+        <span class="material-icons">info</span>
+        <p>Tidak ada data tersedia</p>
+      </div>
+      <!-- DATA -->
+      <div v-else class="ranking-list">
+        <div
+            v-for="(item, index) in rankingTPS"
+            :key="item.id_tps"
+            class="sidebar-ranking-item"
+        >
+          <div class="sidebar-ranking-medal">
+            <span v-if="index===0">🥇</span>
+            <span v-else-if="index===1">🥈</span>
+            <span v-else-if="index===2">🥉</span>
+            <span v-else>{{ index+1 }}.</span>
+          </div>
+
+          <div class="sidebar-ranking-info">
+              <div class="sidebar-ranking-name">
+                  {{ item.nama_tps }}
+              </div>
+              <div class="sidebar-ranking-desa">
+                  {{ item.nama_dusun }}
               </div>
           </div>
-          <!-- EMPTY -->
-          <div v-else-if="rankingTPS.length === 0" class="empty-text">
-              <span class="material-icons">info</span>
-              <p>Tidak ada data tersedia</p>
-          </div>
-          <!-- DATA -->
-          <div v-else class="ranking-list">
-              <div
-                  v-for="(item,index) in rankingTPS"
-                  :key="item.id_tps"
-                  class="sidebar-ranking-item"
-              >
-                  <div class="sidebar-ranking-medal">
-                      <span v-if="index===0">🥇</span>
-                      <span v-else-if="index===1">🥈</span>
-                      <span v-else-if="index===2">🥉</span>
-                      <span v-else>{{ index+1 }}.</span>
-                  </div>
 
-                  <div class="sidebar-ranking-info">
-                      <div class="sidebar-ranking-name">
-                          {{ item.nama_tps }}
-                      </div>
-                      <div class="sidebar-ranking-desa">
-                          {{ item.nama_dusun }}
-                      </div>
-                  </div>
-
-                  <div class="sidebar-ranking-score">
-                      {{ item.score }}
-                  </div>
-              </div>
+          <div class="sidebar-ranking-score">
+              {{ item.score }}
           </div>
+        </div>
       </div>
+    </div>
   </div>
 
   <!-- Timbulan Per Kapita Card -->
   <div class="card">
-      <div class="card-header">
-          <span class="material-icons">people</span>
-          <h2>Timbulan Per Kapita</h2>
-      </div>
+    <div class="card-header">
+      <span class="material-icons">people</span>
+      <h2>Timbulan Per Kapita</h2>
+    </div>
 
-      <div class="card-body">
-          <!-- LOADING -->
-          <div v-if="loading" class="loading-state">
-              <div
-                  v-for="n in 2"
-                  :key="n"
-                  class="sidebar-timbulan-item skeleton"
-              >
-                  <div class="skeleton-line short"></div>
-                  <div class="skeleton-line tall"></div>
-                  <div class="skeleton-line xshort"></div>
-              </div>
-          </div>
-          <!-- EMPTY -->
-          <div v-else-if="!hasTimbulanData" class="empty-text">
-              <span class="material-icons">info</span>
-              <p>Tidak ada data tersedia</p>
-          </div>
-          <!-- DATA -->
-          <div v-else>
-              <div
-                  v-for="(item, index) in filterTimbulanData"
-                  :key="item.nama_dusun"
-                  class="sidebar-timbulan-item"
-                  :style="{ animationDelay: `${index * 0.1}s` }"
-              >
-                  <div class="sidebar-timbulan-desa">
-                      {{ item.nama_dusun }}
-                  </div>
-                  <div class="sidebar-timbulan-value">
-                      {{ item.timbulan_kg_per_kk_per_hari }}
-                  </div>
-                  <div class="sidebar-timbulan-unit">
-                      kg/KK/hari
-                  </div>
-              </div>
-          </div>
+    <div class="card-body">
+      <!-- LOADING -->
+      <div v-if="loading" class="loading-state">
+        <div
+          v-for="n in 2"
+          :key="n"
+          class="sidebar-timbulan-item skeleton"
+        >
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line tall"></div>
+          <div class="skeleton-line xshort"></div>
+        </div>
+    </div>
+    <!-- EMPTY -->
+    <div v-else-if="!hasTimbulanData" class="empty-text">
+        <span class="material-icons">info</span>
+        <p>Tidak ada data tersedia</p>
+    </div>
+    <!-- DATA -->
+    <div v-else>
+      <div
+        v-for="(item, index) in filterTimbulanData"
+        :key="item.nama_dusun"
+        class="sidebar-timbulan-item"
+        :style="{ animationDelay: `${index * 0.1}s` }"
+      >
+        <div class="sidebar-timbulan-desa">
+            {{ item.nama_dusun }}
+        </div>
+        <div class="sidebar-timbulan-value">
+            {{ item.timbulan_kg_per_kk_per_hari }}
+        </div>
+        <div class="sidebar-timbulan-unit">
+            kg/KK/hari
+        </div>
       </div>
+    </div>
   </div>
+</div>
 </template>
 
 <script setup>
@@ -291,22 +287,6 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { ref, onMounted, watch, nextTick, computed} from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import api from '@/services/api'
-import Chart from 'chart.js/auto'
-
-const totalLaporan = ref(0)
-
-async function fetchTotalLaporan() {
-  try {
-    const res = await api.get('/api/lapor')
-    totalLaporan.value = res.data.length
-  } catch (err) {
-    console.error('Gagal ambil total laporan', err)
-  }
-}
-
-onMounted(() => {
-  fetchTotalLaporan()
-})
 
 // Date and Schedule
 const currentDate = ref('')
@@ -323,8 +303,7 @@ const totalTPSHampirPenuh = ref(0)
 const rankingTPS = ref([])
 const timbulanPerKapita = ref([])
 
-let volumeSampahChart = null
-const volumeSampahChartRef = ref(null)
+const totalLaporan = ref(0)
 const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal', 'openVolumeSampahStatModal'])
 const jadwal = ref({
   jam_buang_mulai: '',
@@ -350,105 +329,14 @@ function formatJam(val) {
   return String(val).slice(0, 5)
 }
 
+
 const filterTimbulanData = computed(() =>
-  timbulanPerKapita.value.filter(item => parseFloat(item.timbulan_kg_per_kk_per_hari) > 0)
+timbulanPerKapita.value.filter(item => parseFloat(item.timbulan_kg_per_kk_per_hari) > 0)
 )
 
 const hasTimbulanData = computed(() =>
   filterTimbulanData.value.length > 0
 )
-
-// function renderVolumeSampahChart(data) {
-//   // destroy chart lama
-//   if (volumeSampahChart) volumeSampahChart.destroy()
-
-//   // format tanggal ke "10 Mar"
-//   const formatDate = (dateStr) => {
-//     const d = new Date(dateStr)
-//     return d.toLocaleDateString('id-ID', {
-//       day: '2-digit',
-//       month: 'short'
-//     })
-//   }
-
-//   // generate 7 hari terakhir
-//   const labels = [...Array(7)].map((_, i) => {
-//     const d = new Date()
-//     d.setDate(d.getDate() - (6 - i))
-//     return d.toLocaleDateString('id-ID', {
-//       day: '2-digit',
-//       month: 'short'
-//     })
-//   })
-
-//   // ambil daftar TPS unik
-//   const tpsList = [...new Set(data.map(item => item.nama_tps))]
-
-//   // optimasi: ubah data jadi lookup (biar gak pakai find berulang)
-//   const dataMap = {}
-//   data.forEach(d => {
-//     const key = `${formatDate(d.tanggal)}-${d.nama_tps}`
-//     dataMap[key] = d.total_volume
-//   })
-
-//   // buat dataset
-//   const datasets = tpsList.map((tps) => {
-//     return {
-//       label: tps,
-//       data: labels.map(label => {
-//         return dataMap[`${label}-${tps}`] || 0
-//       })
-//     }
-//   })
-
-//   //render chart
-//   volumeSampahChart = new Chart(volumeSampahChartRef.value, {
-//     type: 'bar',
-//     data: {
-//       labels,
-//       datasets
-//     },
-//     options: {
-//       responsive: true,
-//       maintainAspectRatio: false,
-//       barPercentage: 0.4,
-//       categoryPercentage: 0.7,
-//       barThickness: 5,
-//       maxBarThickness: 20,
-//       borderRadius: 5,
-
-//       scales: {
-//         y: {
-//           beginAtZero: true,
-//           ticks: {
-//             callback: (value) => value + ' kg'
-//           }
-//         }
-//       },
-
-//       plugins: {
-//         legend: {
-//           position: 'top',
-//           labels: {
-//             font: {
-//               size: 12,
-//               weight: 'bold'
-//             },
-//             padding: 8,
-//             usePointStyle: true
-//           }
-//         },
-//         tooltip: {
-//           callbacks: {
-//             label: (context) => {
-//               return `${context.dataset.label}: ${context.raw} kg`
-//             }
-//           }
-//         }
-//       }
-//     }
-//   })
-// }
 
 function handleStatusChange(status, event) {
   const newStatus = [...props.selectedStatus]
@@ -469,6 +357,19 @@ function handleStatusChange(status, event) {
   // Emit update untuk parent
   emit('update:selectedStatus', newStatus)
 }
+
+async function fetchTotalLaporan() {
+  try {
+    const res = await api.get('/api/lapor')
+    totalLaporan.value = res.data.length
+  } catch (err) {
+    console.error('Gagal ambil total laporan', err)
+  }
+}
+
+onMounted(() => {
+  fetchTotalLaporan()
+})
 
 async function fetchTPSByStatus() {
   try {
@@ -621,14 +522,6 @@ onMounted(async () => {
     initializeDateTime()
 
     fetchjamOperasional()
-    //Inisialisasi map
-    // initMap()
-
-    //Render marker setelah map siap
-    // nextTick(() => {
-    //   updateMarkers()
-    // })
-
   } catch (err) {
     console.error('Gagal ambil data TPS:', err.message)
     wastePoints.value = []
@@ -638,7 +531,6 @@ onMounted(async () => {
   }
 
   fetchDashboard()
-
 })
 
 watch(() => props.selectedStatus, () => {

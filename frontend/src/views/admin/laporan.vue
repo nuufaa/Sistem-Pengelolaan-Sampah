@@ -21,7 +21,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="(laporan, i) in laporanList" :key="laporan.id_laporan">
+          <tr v-for="(laporan, i) in paginatedLaporan" :key="laporan.id_laporan">
             <td>{{ i + 1 }}</td>
             <td>{{ laporan.nama_tps }}</td>
             <td>{{ kondisiText(laporan.kondisi_tps) }}</td>
@@ -41,7 +41,7 @@
     <!-- MOBILE CARD -->
     <div class="card-list mobile-only">
       <div
-        v-for="laporan in laporanList"
+        v-for="laporan in paginatedLaporan"
         :key="laporan.id_laporan"
         class="data-card"
       >
@@ -83,6 +83,37 @@
       </div>
     </div>
 
+    <!-- PAGINATION -->
+    <div class="pagination-container" v-if="totalPages > 1">
+      <button 
+        class="pagination-btn" 
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        <span class="material-icons">chevron_left</span>
+        Sebelumnya
+      </button>
+
+      <div class="pagination-info">
+        <span>Halaman {{ currentPage }} dari {{ totalPages }}</span>
+        <select v-model.number="itemsPerPage" class="items-per-page">
+          <option :value="5">5 per halaman</option>
+          <option :value="10">10 per halaman</option>
+          <option :value="20">20 per halaman</option>
+          <option :value="50">50 per halaman</option>
+        </select>
+      </div>
+
+      <button 
+        class="pagination-btn" 
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+      >
+        Selanjutnya
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+
     <!-- MODAL COMPONENT -->
     <LaporanDetailModal
       v-if="showModal"
@@ -94,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted} from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api.js'
 import LaporanDetailModal from '@/components/laporanModalAdmin.vue'
 
@@ -105,6 +136,20 @@ const selected = ref(null)
 const tpsDetail = computed(() =>
   selected.value ?(selected.value.id_tps) : null
 )
+
+const currentPage = ref(1)
+const itemsPerPage = ref(5)
+
+// COMPUTED: Pagination Logic
+const totalPages = computed(() => {
+  return Math.ceil(laporanList.value.length / itemsPerPage.value)
+})
+
+const paginatedLaporan = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return laporanList.value.slice(start, end)
+})
 
 async function fetchLaporan() {
   try {
@@ -141,6 +186,18 @@ function formatDate(date) {
   const minutes = String(d.getMinutes()).padStart(2, '0')
 
   return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
 }
 
 </script>

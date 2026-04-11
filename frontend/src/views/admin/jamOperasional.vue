@@ -1,10 +1,10 @@
 <template>
   <section class="content-section active">
     <div class="section-header">
-      <h2>Kelola Dusun</h2>
+      <h2>Jam Operasional</h2>
       <button class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
-        Tambah Dusun
+        Tambah Jam
       </button>
     </div>
 

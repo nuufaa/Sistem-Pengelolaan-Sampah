@@ -62,6 +62,48 @@
           </select>
         </div>
 
+        <!-- STATUS SECTION -->
+        <div class="form-group">
+          <label>Status Jadwal</label>
+          <div class="status-grid">
+            <label class="status-radio">
+              <input
+                type="radio"
+                value="belum_mulai"
+                v-model="localForm.status"
+                required
+              />
+              <span class="status-label belum-mulai">
+                <span class="material-icons">schedule</span>
+                Belum Mulai
+              </span>
+            </label>
+
+            <label class="status-radio">
+              <input
+                type="radio"
+                value="selesai"
+                v-model="localForm.status"
+                required
+              />
+              <span class="status-label selesai">
+                <span class="material-icons">check_circle</span>
+                Selesai
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- TANGGAL PENGAMBILAN (hanya muncul jika status selesai) -->
+        <div v-if="localForm.status === 'selesai'" class="form-group">
+          <label>Tanggal Pengambilan Terakhir</label>
+          <input
+            type="date"
+            v-model="localForm.tgl_terakhir_diambil"
+            required
+          />
+        </div>
+
         <div class="modal-footer">
           <button
             type="button"
@@ -105,7 +147,8 @@ const localForm = reactive({
   id_tps: '',
   id_petugas: '',
   hari_pengambilan: [],
-  tgl_terakhir_diambil: null
+  tgl_terakhir_diambil: null,
+  status: 'belum_mulai' // Default status
 })
 
 watch(
@@ -116,10 +159,11 @@ watch(
         id_jadwal: val.id_jadwal,
         id_tps: Number(val.id_tps), 
         id_petugas: Number(val.id_petugas),
-        hari_pengambilan:  Array.isArray(val.hari_pengambilan)
-      ? val.hari_pengambilan.map(Number)
-      : [],
-        tgl_terakhir_diambil: val.tgl_terakhir_diambil
+        hari_pengambilan: Array.isArray(val.hari_pengambilan)
+          ? val.hari_pengambilan.map(Number)
+          : [],
+        tgl_terakhir_diambil: val.tgl_terakhir_diambil,
+        status: val.status || 'belum_mulai'
       })
     }
   },
@@ -132,3 +176,78 @@ function submit() {
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
+
+<style scoped>
+/* Status Grid Layout */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.status-radio {
+  position: relative;
+  cursor: pointer;
+}
+
+.status-radio input[type="radio"] {
+  display: none;
+}
+
+.status-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.status-label .material-icons {
+  font-size: 1.5rem;
+}
+
+/* Belum Mulai Status */
+.status-label.belum-mulai {
+  color: #ff9800;
+}
+
+.status-radio input[value="belum_mulai"]:checked + .status-label.belum-mulai {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.status-label.belum-mulai:hover {
+  border-color: #ff9800;
+  background-color: #fff8f0;
+}
+
+/* Selesai Status */
+.status-label.selesai {
+  color: #4caf50;
+}
+
+.status-radio input[value="selesai"]:checked + .status-label.selesai {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.status-label.selesai:hover {
+  border-color: #4caf50;
+  background-color: #f1f8f6;
+}
+
+/* Responsive untuk mobile */
+@media (max-width: 768px) {
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

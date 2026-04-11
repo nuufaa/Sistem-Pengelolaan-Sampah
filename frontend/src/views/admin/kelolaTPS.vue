@@ -24,8 +24,8 @@
         </thead>
 
         <tbody>
-          <tr v-for="(tps, i) in tpsList" :key="tps.id_tps">
-            <td>{{ i + 1 }}</td>
+          <tr v-for="(tps, i) in paginatedTPS" :key="tps.id_tps">
+            <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ tps.nama_tps }}</td>
             <td>{{ tps.alamat }}</td>
             <td>{{ tps.nama_dusun }}</td>
@@ -53,7 +53,7 @@
     <div class="card-list mobile-only">
       <div 
         class="data-card" 
-        v-for="(tps) in tpsList" 
+        v-for="(tps) in paginatedTPS" 
         :key="tps.id_tps"
       >
         <div class="data-card-header">
@@ -96,6 +96,37 @@
       </div>
     </div>
 
+    <!-- PAGINATION -->
+    <div class="pagination-container" v-if="totalPages > 1">
+      <button 
+        class="pagination-btn" 
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        <span class="material-icons">chevron_left</span>
+        Sebelumnya
+      </button>
+
+      <div class="pagination-info">
+        <span>Halaman {{ currentPage }} dari {{ totalPages }}</span>
+        <select v-model.number="itemsPerPage" class="items-per-page">
+          <option :value="5">5 per halaman</option>
+          <option :value="10">10 per halaman</option>
+          <option :value="20">20 per halaman</option>
+          <option :value="50">50 per halaman</option>
+        </select>
+      </div>
+
+      <button 
+        class="pagination-btn" 
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+      >
+        Selanjutnya
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+
     <!-- MODAL - Conditionally Rendered -->
     <TPSModal
       v-if="showModal"
@@ -108,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { apiFetch } from '../../services/api'
 import TPSModal from '@/components/TPSModal.vue'
 
@@ -117,11 +148,26 @@ const selectedTPS = ref(null)
 const dusunList = ref([])
 const tpsList = ref([])
 
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+
+// COMPUTED: Pagination Logic
+const totalPages = computed(() => {
+  return Math.ceil(tpsList.value.length / itemsPerPage.value)
+})
+
+const paginatedTPS = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return tpsList.value.slice(start, end)
+})
+
 async function fetchTPS() {
   try {
     const data = await apiFetch("/api/tps")
-
     tpsList.value = data
+    // Reset ke halaman 1 saat fetch ulang
+    currentPage.value = 1
   } catch (err) {
     console.error("Gagal ambil TPS:", err.message)
   }
@@ -129,8 +175,7 @@ async function fetchTPS() {
 
 async function fetchDusun() {
   try {
-
-  dusunList.value = await apiFetch("/api/dusun")
+    dusunList.value = await apiFetch("/api/dusun")
   } catch (err) {
     console.error("Gagal ambil dusun:", err.message)
   }
@@ -202,8 +247,7 @@ async function remove(id) {
       auth: true
     })
     alert(data.message)
-
-    fetchTPS();
+    fetchTPS()
   } catch (err) {
     alert(err?.message || 'Gagal hapus lapangan')
   }
@@ -215,6 +259,18 @@ function statusText(status) {
     hampir_penuh: 'Hampir Penuh',
     penuh: 'Penuh'
   }[status] || status
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
 }
 
 </script>

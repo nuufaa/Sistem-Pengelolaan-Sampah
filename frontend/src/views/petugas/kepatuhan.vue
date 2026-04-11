@@ -109,22 +109,10 @@ const kepatuhanList = computed(() => {
       ? selisihHari(item.tgl_pengambilan, item.tgl_terakhir_diambil)
       : null
 
-    // const diffDays = selisihHari(
-    //   item.tgl_pengambilan,
-    //   item.tgl_terakhir_diambil
-    // )
-
-    // const last = new Date(item.tgl_terakhir_diambil)
-
     return {
       id: item.id,
       nama_tps: item.nama_tps,
       hari_pengambilan: hariMap[item.hari_pengambilan],
-      // tgl_terakhir_diambil: lastDate.toLocaleDateString('id-ID', {
-      //   day: 'numeric',
-      //   month: 'long',
-      //   year: 'numeric'
-      // }),
       tgl_terakhir_diambil: lastDate
         ? lastDate.toLocaleDateString('id-ID', {
             day: 'numeric',
@@ -136,12 +124,6 @@ const kepatuhanList = computed(() => {
       // onTime: diffDays <= 0,
       onTime: diffDays === null ? false : diffDays <= 0,
 
-      // statusText:
-      //   diffDays <= 0
-      //     ? "Tepat Waktu"
-      //     : diffDays === 1
-      //       ? "Terlambat 1 Hari"
-      //       : `Terlambat ${diffDays} Hari`
        statusText:
         diffDays === null
           ? "Belum Diambil"

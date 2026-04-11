@@ -140,14 +140,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed} from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import api from '@/services/api'
 
 const kendaraanList = ref([])
 const tpsList = ref([])
-// const logbookData = ref([])
 const daftarTugas = ref([])
-
 const loading = ref(false)
 
 const form = reactive({
@@ -161,8 +159,8 @@ const todayLogbook = computed(() => {
 
   const today = new Date().toLocaleDateString('id-CA')
   const todayData = daftarTugas.value.filter(item => {
-    const itemDate = new Date(item.tgl_pengambilan)
-      .toLocaleDateString('id-CA')
+  const itemDate = new Date(item.tgl_pengambilan)
+    .toLocaleDateString('id-CA')
 
     return itemDate === today
   })

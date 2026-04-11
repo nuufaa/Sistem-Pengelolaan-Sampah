@@ -96,13 +96,13 @@
     <div class="modal-content modal-schedule" @touchmove.stop>
 
         <div class="modal-header">
-        <h2>
-            <span class="material-icons">calendar_month</span>
-            <span>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</span>
-        </h2>
-        <button class="modal-close" @click="isModalScheduleOpen = false">
-            <span class="material-icons">close</span>
-        </button>
+            <h2>
+                <span class="material-icons">calendar_month</span>
+                <span>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</span>
+            </h2>
+            <button class="modal-close" @click="isModalScheduleOpen = false">
+                <span class="material-icons">close</span>
+            </button>
         </div>
 
         <div class="modal-body" id="tpsScheduleContent">
@@ -144,12 +144,11 @@
             >
             <div class="tps-mini-left">
                 <div class="tps-mini-icon">
-                <span class="material-icons">delete</span>
+                    <span class="material-icons">delete</span>
                 </div>
                 <div class="tps-mini-info">
-                <!-- <div class="tps-mini-no">#{{ tps.id_tps }}</div> -->
-                <div class="tps-mini-name">{{ tps.nama_tps }}</div>
-                <div class="tps-mini-hari">Setiap {{ tps.hari_pengambilan || '-' }}</div>
+                    <div class="tps-mini-name">{{ tps.nama_tps }}</div>
+                    <div class="tps-mini-hari">Setiap {{ tps.hari_pengambilan || '-' }}</div>
                 </div>
             </div>
             <div class="tps-status-badge" :class="tps.status_angkut">
@@ -309,21 +308,16 @@
                         Password
                     </label>
                     <div class="login-pw-wrap">
-                        <input type="password" id="popupPassword" placeholder="Masukkan password..." />
-                        <button type="button" id="popupTogglePw">
-                            <span class="material-icons" id="popupToggleIcon">visibility</span>
+                        <input type="password" placeholder="Masukkan password..." />
+                        <button type="button">
+                            <span class="material-icons">visibility</span>
                         </button>
                     </div>
-                    <span class="login-error" id="popupPasswordError"></span>
+                    <span class="login-error"></span>
                 </div>
 
-                <div class="login-hint">
-                    <span class="material-icons">tips_and_updates</span>
-                    <span id="loginHintText">Demo: <code>petugas</code> / <code>1234</code></span>
-                </div>
-
-                <button type="submit" class="login-submit-btn" id="loginSubmitBtn">
-                    <span id="loginSubmitText">
+                <button type="submit" class="login-submit-btn">
+                    <span>
                         <span class="material-icons">login</span>
                         Masuk
                     </span>
@@ -333,9 +327,7 @@
                     </span>
                 </button>
             </form>
-
             <div class="login-divider"><span>atau</span></div>
-
             <p class="login-public-note">
                 Anda sudah berada di halaman publik.
                 <br>Masyarakat tidak perlu login untuk melihat informasi.
@@ -365,8 +357,6 @@ let isMobile = ref(window.innerWidth <= 768);
 
 const isModalLaporanOpen = ref(false)
 const laporanList = ref([])
-const showDetailModal = ref(false)
-const selectedLaporan = ref(null)
 
 // Date and Schedule
 const currentDate = ref('')
@@ -413,26 +403,31 @@ const scheduleCountByStatus = computed(() =>
 )
 
 const scheduleFiltered = computed(() => {
-
-    if (!Array.isArray(modalTPSList.value)) return []
-    
-    // 1. Ambil TPS unik
+  if (!Array.isArray(modalTPSList.value)) return []
+  
+  // Deduplikasi
   const uniqueMap = new Map()
-
   modalTPSList.value.forEach(t => {
     if (!uniqueMap.has(t.id_tps)) {
       uniqueMap.set(t.id_tps, t)
     }
   })
-
+ 
   let data = Array.from(uniqueMap.values())
-
-  // 2. Filter status
+ 
+  // Filter status - DENGAN VALIDASI KEY
   if (scheduleFilter.value !== 'all') {
+    const validKeys = ['belum_diangkut', 'selesai']
+    
+    // Debug jika key tidak valid
+    if (!validKeys.includes(scheduleFilter.value)) {
+      console.warn(`Invalid filter key: ${scheduleFilter.value}`)
+    }
+    
     data = data.filter(t => t.status_angkut === scheduleFilter.value)
   }
-
-  // 3. Search
+ 
+  // Search
   const q = scheduleSearch.value.toLowerCase()
   if (q) {
     data = data.filter(t =>
@@ -440,10 +435,10 @@ const scheduleFiltered = computed(() => {
     )
   }
   
-  // 4. Sort
+  // Sort
   if (scheduleSort.value === 'nama') {
     data.sort((a, b) => a.nama_tps.localeCompare(b.nama_tps))
-} else if (scheduleSort.value === 'status') {
+  } else if (scheduleSort.value === 'status') {
     data.sort((a, b) => a.status_angkut.localeCompare(b.status_angkut))
   }
   
@@ -478,11 +473,6 @@ function openVolumeSampahStatModal() {
   fetchVolumeSampahData()
 }
 
-function openDetail(laporan) {
-  selectedLaporan.value = laporan
-  showDetailModal.value = true
-}
-
 function kondisiText(kondisi) {
   return {
     hampir_penuh: 'Hampir Penuh',
@@ -508,12 +498,6 @@ const kondisiPriority = {
   penuh: 2,
   hampir_penuh: 3
 }
-
-// const sortedLaporan = computed(() => {
-//   return [...laporanList.value].sort((a, b) => {
-//     return kondisiPriority[a.kondisi_tps] - kondisiPriority[b.kondisi_tps]
-//   })
-// })
 
 const sortedLaporan = computed(() => {
   return laporanList.value
@@ -581,17 +565,34 @@ function openReport(id_tps = null) {
 }
 
 function openScheduleModal(desa) { 
+
     selectedDesa.value = desa
     isModalScheduleOpen.value = true
-
-    modalTPSList.value = jadwalTPS.value.filter(
-        tps => tps.nama_dusun === desa.desaCode
-    )
+    // modalTPSList.value = jadwalTPS.value.filter(
+    //     tps => tps.nama_dusun === desa.desaCode
+    // )
+    // Filter + debug
+    modalTPSList.value = jadwalTPS.value
+        .filter(tps => tps.nama_dusun === desa.desaCode)
+        .map(tps => ({
+        ...tps,
+        // Pastikan status_angkut valid
+        status_angkut: ['belum_diangkut', 'selesai'].includes(tps.status_angkut)
+            ? tps.status_angkut
+            : 'belum_diangkut'
+        }))
 
     // reset filter & search setiap modal dibuka
     scheduleSearch.value  = ''
     scheduleSort.value    = 'id'
     scheduleFilter.value  = 'all'
+
+    // Log untuk debugging
+    console.log('Modal TPS list:', modalTPSList.value.map(t => ({
+        id: t.id_tps,
+        nama: t.nama_tps,
+        status: t.status_angkut
+    })))
 }
 
 // ===== Date and Schedule Functions =====
@@ -657,9 +658,6 @@ onMounted(async () => {
 
     //Ambil data dulu
     const result = await fetchTitikTps()
-    // wastePoints.value = Array.isArray(result) ? result : []
-    // jadwalTPS.value = result
-    // jadwal tetap pakai semua data (untuk modal)
     jadwalTPS.value = Array.isArray(result) ? result : []
 
     // wastePoints deduplikasi — satu id_tps hanya satu marker
@@ -700,7 +698,6 @@ function initMap() {
 
     markerCluster.value = L.markerClusterGroup()
     map.value.addLayer(markerCluster.value)
-    // updateMarkers()
     watch(wastePoints, () => {
         if (map.value) {
             updateMarkers()
@@ -757,6 +754,8 @@ function createPopupContent(point) {
         hampir_penuh: 'Hampir Penuh',
         penuh: 'Penuh'
     }[statusClass];
+
+    //hitung persentase sampah utk kondisi tps
     const persen = point.persentase_sampah || 
         (point.kapasitas ? Math.round((point.volume_sampah / point.kapasitas) * 100) : 0)
 

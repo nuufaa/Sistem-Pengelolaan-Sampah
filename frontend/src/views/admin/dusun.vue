@@ -20,7 +20,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="(k, i) in dusunList" :key="k.id_dusun">
+          <tr v-for="(k, i) in paginatedDusun" :key="k.id_dusun">
             <td>{{ i + 1 }}</td>
             <td>{{ k.nama_dusun }}</td>
             <td>{{ k.jumlah_kk }}</td>
@@ -41,7 +41,7 @@
     <div class="card-list mobile-only">
       <div 
         class="data-card" 
-        v-for="(k, i) in dusunList" 
+        v-for="(k) in paginatedDusun" 
         :key="k.id_dusun"
       >
         <div class="data-card-header">
@@ -69,6 +69,37 @@
       </div>
     </div>
 
+    <!-- PAGINATION -->
+    <div class="pagination-container" v-if="totalPages > 1">
+      <button 
+        class="pagination-btn" 
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        <span class="material-icons">chevron_left</span>
+        Sebelumnya
+      </button>
+
+      <div class="pagination-info">
+        <span>Halaman {{ currentPage }} dari {{ totalPages }}</span>
+        <select v-model.number="itemsPerPage" class="items-per-page">
+          <option :value="5">5 per halaman</option>
+          <option :value="10">10 per halaman</option>
+          <option :value="20">20 per halaman</option>
+          <option :value="50">50 per halaman</option>
+        </select>
+      </div>
+
+      <button 
+        class="pagination-btn" 
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+      >
+        Selanjutnya
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+
     <!-- MODAL COMPONENT -->
     <dusunModal
       v-if="showModal"
@@ -80,13 +111,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import api from '@/services/api'
 import dusunModal from '@/components/dusunModal.vue'
 
 const dusunList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+
+// COMPUTED: Pagination Logic
+const totalPages = computed(() => {
+  return Math.ceil(dusunList.value.length / itemsPerPage.value)
+})
+
+const paginatedDusun = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return dusunList.value.slice(start, end)
+})
 
 async function fetchDusun() {
   try {
@@ -116,10 +160,10 @@ function openEdit(k) {
 async function save(data) {
   try {
     if (data.id_dusun) {
-      // UPDATE
+
       await api.put(` /api/dusun/${data.id_dusun}`, data)
     } else {
-      // CREATE
+
       await api.post('/api/dusun', data)
     }
     await fetchDusun()
@@ -137,6 +181,18 @@ async function remove(id) {
     await fetchDusun()
   } catch (err) {
     console.error('Gagal hapus kendaraan', err)
+  }
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
   }
 }
 
