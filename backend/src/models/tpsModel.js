@@ -48,10 +48,11 @@ async function findAllJadwal() {
             t.longitude,
             t.status_tps,
             t.kapasitas,
-            COALESCE(SUM(dt.volume_sampah), 0) AS volume_sampah,
+            COALESCE(dt_today.volume_sampah, 0) AS volume_sampah,
             jadwal.hari_pengambilan,
             jadwal.tgl_terakhir_diambil,
-            ROUND(COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100, 1) AS persentase_sampah
+            ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) AS persentase_sampah,
+            COALESCE(dt_today.status_angkut, 'belum_diangkut') AS status_angkut
 
         FROM tps t
 
@@ -64,11 +65,12 @@ async function findAllJadwal() {
             GROUP BY id_tps
         ) jadwal ON t.id_tps = jadwal.id_tps
 
-        LEFT JOIN daftar_tugas dt ON t.id_tps = dt.id_tps 
-            AND dt.status_angkut = 'selesai'
-            AND dt.tgl_pengambilan >= COALESCE(jadwal.tgl_terakhir_diambil, DATE_SUB(CURDATE(), INTERVAL 365 DAY))
-
-        GROUP BY t.id_tps, t.nama_tps, t.alamat, t.latitude, t.longitude, t.status_tps, t.kapasitas, jadwal.hari_pengambilan, jadwal.tgl_terakhir_diambil
+        LEFT JOIN (
+            SELECT id_tps, MAX(volume_sampah) as volume_sampah, MAX(status_angkut) as status_angkut
+            FROM daftar_tugas
+            WHERE tgl_pengambilan = CURDATE()
+            GROUP BY id_tps
+        ) dt_today ON t.id_tps = dt_today.id_tps
 
         ORDER BY t.id_tps DESC
     `);

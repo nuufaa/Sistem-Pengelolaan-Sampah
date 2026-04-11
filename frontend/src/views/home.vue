@@ -135,7 +135,7 @@
         </div>
 
         <!-- Grid 2 kolom -->
-        <div class="tps-grid" v-if="scheduleFiltered.length > 0">
+        <div v-if="scheduleFiltered.length > 0">
             <div
             v-for="tps in scheduleFiltered"
             :key="tps.id_tps"
@@ -435,13 +435,17 @@ const scheduleFiltered = computed(() => {
     )
   }
   
-  // Sort
-  if (scheduleSort.value === 'nama') {
-    data.sort((a, b) => a.nama_tps.localeCompare(b.nama_tps))
-  } else if (scheduleSort.value === 'status') {
-    data.sort((a, b) => a.status_angkut.localeCompare(b.status_angkut))
-  }
-  
+  // Sort status
+  data.sort((a, b) => {
+    const pA = statusPriority[a.status_angkut] || 99
+    const pB = statusPriority[b.status_angkut] || 99
+
+    if (pA !== pB) return pA - pB
+
+    // optional: kalau sama → urut nama
+    return a.nama_tps.localeCompare(b.nama_tps)
+  })
+
   return data
 })
 
@@ -497,6 +501,11 @@ const kondisiPriority = {
   sampah_berserakan: 1,
   penuh: 2,
   hampir_penuh: 3
+}
+
+const statusPriority = {
+  selesai: 1,
+  belum_diangkut: 2
 }
 
 const sortedLaporan = computed(() => {
@@ -565,13 +574,10 @@ function openReport(id_tps = null) {
 }
 
 function openScheduleModal(desa) { 
-
     selectedDesa.value = desa
     isModalScheduleOpen.value = true
-    // modalTPSList.value = jadwalTPS.value.filter(
-    //     tps => tps.nama_dusun === desa.desaCode
-    // )
-    // Filter + debug
+    
+    // Filter + debug dengan validasi status_angkut
     modalTPSList.value = jadwalTPS.value
         .filter(tps => tps.nama_dusun === desa.desaCode)
         .map(tps => ({
@@ -593,6 +599,7 @@ function openScheduleModal(desa) {
         nama: t.nama_tps,
         status: t.status_angkut
     })))
+    
 }
 
 // ===== Date and Schedule Functions =====

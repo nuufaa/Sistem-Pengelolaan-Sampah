@@ -111,6 +111,17 @@
               <span class="material-icons">report</span>
               Riwayat Laporan
             </router-link>
+
+            <router-link
+              to="/admin/"
+              class="nav-item"
+              exact-active-class="active"
+              @click="sidebarOpen = false"
+            >
+              <span class="material-icons">report</span>
+              Riwayat Laporan
+            </router-link>
+
           </nav>
         </div>
       </aside>

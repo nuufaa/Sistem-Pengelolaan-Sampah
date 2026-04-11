@@ -2893,9 +2893,22 @@ input, select, textarea {
   flex-shrink: 0;
 }
 .tps-mini-icon .material-icons { font-size: 16px; color: #1a7a3a; }
-.tps-mini-info  { min-width: 0; }
+
+.tps-mini-info  { 
+    min-width: 0; 
+    flex: 1;
+}
+
 .tps-mini-no    { font-size: 10px; color: #aaa; margin-bottom: 1px; }
-.tps-mini-name  { font-size: 13px; font-weight: 500; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+
+.tps-mini-name  { 
+    font-size: 13px; 
+    font-weight: 500; 
+    color: #222; 
+    white-space: nowrap; 
+    max-width: 100px; 
+}
+
 .tps-mini-hari  { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
 
 .schedule-empty { text-align: center; padding: 40px 0; color: #888; }
