@@ -234,6 +234,8 @@ body {
     flex: 1;
     margin-left: var(--sidebar-width);
     padding: var(--spacing-xl);
+    overflow-y: auto;  /* Tambahkan ini untuk scroll di desktop */
+    max-height: calc(100vh - var(--header-height));  /* Pastikan tinggi terbatas */    
 }
 
 .content-section {
