@@ -78,6 +78,8 @@
             <sidebarContent
                 :selectedStatus="selectedStatus"
                 @openScheduleModal="openScheduleModal"
+                @openLaporanModal="openLaporanModal"
+                @openVolumeSampahStatModal="openVolumeSampahStatModal"
                 @statusChanged="updateMarkers"
                 @update:selectedStatus="selectedStatus = $event"
             />
@@ -85,7 +87,7 @@
     </div>
     <div 
         v-if="isBottomSheetOpen"
-        class="bottom-sheet-backdrop"
+        class="bottom-sheet-backdrop show"
         @click="closeBottomSheet"
         @touchstart.prevent="closeBottomSheet"
     ></div>
@@ -375,7 +377,6 @@ const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
 
 const loginRef = ref(null)
 const reportRef = ref(null)
-const volumeSampahStatRef = ref(null)
 
 const isModalVolumeSampahOpen = ref(false)
 const volumeSampahHarian = ref([])
