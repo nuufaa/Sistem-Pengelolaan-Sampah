@@ -33,9 +33,6 @@
               <span>
                 {{ formatJam(jadwal.jam_ambil_mulai) }}–{{ formatJam(jadwal.jam_ambil_selesai) }}
               </span>
-              <small>
-                Harap buang sampah sebelum jam {{ formatJam(jadwal.jam_buang_mulai) }}
-              </small>
             </div>
           </div>
 
