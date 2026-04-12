@@ -112,15 +112,15 @@
               Riwayat Laporan
             </router-link>
 
-            <router-link
-              to="/admin/"
+            <!-- <router-link
+              to="/admin/riwayat-pengambilan"
               class="nav-item"
               exact-active-class="active"
               @click="sidebarOpen = false"
             >
               <span class="material-icons">report</span>
-              Riwayat Laporan
-            </router-link>
+              Riwayat Pengambilan
+            </router-link> -->
 
           </nav>
         </div>

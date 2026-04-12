@@ -153,19 +153,54 @@ const form = reactive({
   tpsVisited: []
 })
 
+// FIX: Helper function untuk get hari ini dalam format YYYY-MM-DD
+function getTodayDateString() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  const todayStr = `${year}-${month}-${day}`
+  
+  console.log('[DEBUG] getTodayDateString():', todayStr, 'Raw Date:', today)
+  
+  return todayStr
+}
+
 const todayLogbook = computed(() => {
+  if (!daftarTugas.value.length) {
+    console.log('[DEBUG] todayLogbook: no data')
+    return null
+  }
 
-  if (!daftarTugas.value.length) return null
-
-  const today = new Date().toLocaleDateString('id-CA')
+  const todayString = getTodayDateString()
+  console.log('[DEBUG] todayLogbook filtering for:', todayString)
+  
+  // FIX: Parse ISO string as Date, then get LOCAL date components
+  // Don't split on T because date part is always UTC
   const todayData = daftarTugas.value.filter(item => {
-  const itemDate = new Date(item.tgl_pengambilan)
-    .toLocaleDateString('id-CA')
-
-    return itemDate === today
+    if (!item.tgl_pengambilan) return false
+    
+    let itemDateStr
+    if (item.tgl_pengambilan.includes('T')) {
+      // Parse ISO string: 2026-04-11T16:00:00.000Z
+      const date = new Date(item.tgl_pengambilan)
+      const localYear = date.getFullYear()
+      const localMonth = String(date.getMonth() + 1).padStart(2, '0')
+      const localDay = String(date.getDate()).padStart(2, '0')
+      itemDateStr = `${localYear}-${localMonth}-${localDay}`
+    } else {
+      itemDateStr = item.tgl_pengambilan
+    }
+    
+    const isMatch = itemDateStr === todayString
+    console.log(`[DEBUG]   item date: ${itemDateStr} (local), todayString: ${todayString}, match: ${isMatch}`)
+    return isMatch
   })
 
+  console.log('[DEBUG] todayLogbook found:', todayData.length, 'items')
+
   if (!todayData.length) return null
+  
   return {
     nomor_kendaraan: todayData[0].nomor_kendaraan,
     nama: todayData[0].nama,
@@ -179,12 +214,27 @@ const historyLogbook = computed(() => {
   const grouped = {}
 
   daftarTugas.value.forEach(item => {
-    const key = item.tgl_pengambilan + "-" + item.id_kendaraan
+    // ONLY include items that have tgl_terakhir_diambil (completed tasks)
+    if (!item.tgl_terakhir_diambil) return
+
+    // FIX: Parse ISO string as Date object, then get LOCAL date components
+    let tglStr
+    if (item.tgl_terakhir_diambil && item.tgl_terakhir_diambil.includes('T')) {
+      const date = new Date(item.tgl_terakhir_diambil)
+      const localYear = date.getFullYear()
+      const localMonth = String(date.getMonth() + 1).padStart(2, '0')
+      const localDay = String(date.getDate()).padStart(2, '0')
+      tglStr = `${localYear}-${localMonth}-${localDay}`
+    } else {
+      tglStr = item.tgl_terakhir_diambil
+    }
+
+    const key = tglStr + "-" + item.id_kendaraan
 
     if (!grouped[key]) {
       grouped[key] = {
         id: key,
-        tanggal: item.tgl_pengambilan,
+        tanggal: tglStr,  // Simpan dalam format YYYY-MM-DD (local date dari tgl_terakhir_diambil)
         kendaraan: item.nomor_kendaraan,
         tpsVisited: [],
         nama: item.nama
@@ -194,9 +244,10 @@ const historyLogbook = computed(() => {
     grouped[key].tpsVisited.push(item.nama_tps)
   })
 
-  return Object.values(grouped).sort((a,b) =>
-    new Date(b.tanggal) - new Date(a.tanggal)
-  )
+  // FIX: Sort menggunakan string comparison (lebih akurat untuk YYYY-MM-DD)
+  return Object.values(grouped).sort((a, b) => {
+    return b.tanggal.localeCompare(a.tanggal)
+  })
 })
 
 
@@ -211,31 +262,60 @@ async function fetchTPS() {
 }
 
 async function fetchDaftarTugas() {
-  const res = await api.get('/api/daftar-tugas')
-  daftarTugas.value = res.data
+  try {
+    const res = await api.get('/api/daftar-tugas')
+    
+    console.log('[DEBUG] fetchDaftarTugas Response:', res.data.length, 'items')
+    res.data.forEach((item, idx) => {
+      console.log(`  [${idx}] tgl: ${item.tgl_pengambilan}, kendaraan: ${item.nomor_kendaraan}, status: ${item.status_angkut}`)
+    })
+    
+    daftarTugas.value = res.data
+  } catch (error) {
+    console.error('[ERROR] fetchDaftarTugas:', error)
+  }
 }
 
 async function submitLogbook() {
+  
+  if (!form.id_kendaraan) {
+    alert("Pilih kendaraan terlebih dahulu")
+    return
+  }
   
   if (!form.tpsVisited.length) {
     alert("Pilih minimal satu TPS")
     return
   }
+  
   loading.value = true
   
   try {
+    console.log('[DEBUG] submitLogbook: sending request')
+    console.log('[DEBUG]   id_kendaraan:', form.id_kendaraan)
+    console.log('[DEBUG]   tpsVisited:', form.tpsVisited)
+    
     await api.put('/api/daftar-tugas/logbook', {
       id_kendaraan: form.id_kendaraan,
       tpsVisited: form.tpsVisited
     })
 
+    console.log('[DEBUG] submitLogbook: request success')
     alert("Logbook berhasil disimpan")
-    resetForm();
+    resetForm()
+    
+    // FIX: Tunggu lebih lama untuk ensure database fully updated
+    console.log('[DEBUG] submitLogbook: waiting 1 second before refresh...')
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    console.log('[DEBUG] submitLogbook: fetching data...')
     await fetchDaftarTugas()
+    console.log('[DEBUG] submitLogbook: complete')
 
   } catch (error) {
-    console.error("Gagal simpan logbook", error)
-  }finally {
+    console.error("[ERROR] submitLogbook:", error)
+    alert(error.response?.data?.message || "Gagal menyimpan logbook")
+  } finally {
     loading.value = false
   }
 }
@@ -248,12 +328,29 @@ function resetForm() {
 function formatDate(date) {
   if (!date) return '-'
 
-  const d = new Date(date)
+  // FIX: Handle both ISO format and plain YYYY-MM-DD strings
+  let dateStr = date
+  
+  // Jika ada T (ISO format), extract date part. But it's UTC date, not local
+  if (date.includes('T')) {
+    // For ISO strings, we need to parse to local date
+    const d = new Date(date)
+    const localYear = d.getFullYear()
+    const localMonth = String(d.getMonth() + 1).padStart(2, '0')
+    const localDay = String(d.getDate()).padStart(2, '0')
+    dateStr = `${localYear}-${localMonth}-${localDay}`
+  }
+  
+  // Now dateStr is in YYYY-MM-DD format (local date)
+  // Convert to Date object for formatting
+  const [year, month, day] = dateStr.split('-')
+  const d = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)))
 
   return d.toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'UTC' // Explicit timezone untuk format yang consistent
   })
 }
 

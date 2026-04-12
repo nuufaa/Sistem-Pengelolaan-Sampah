@@ -15,11 +15,39 @@ const { startScheduler } = require("./services/daftarTugasOtomatisService");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const jamOperasionalRoutes = require("./routes/jamOperasionalRoutes");
 
-// app.use(cors());
+const allowedOrigins = [
+  process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : 'http://localhost:5173'
+];
+
+if (process.env.NODE_ENV === 'production') {
+  // Force HTTPS
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      res.redirect(`https://${req.header('host')}${req.url}`);
+    } else {
+      next();
+    }
+  });
+
+  // Security headers
+  app.use((req, res, next) => {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
+}
+
 app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 
 app.use('/api/auth', authRoutes)
@@ -34,7 +62,9 @@ app.use("/api/petugas", petugasRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/jam-operasional", jamOperasionalRoutes);
 
-startScheduler();
+if (process.env.NODE_ENV !== 'test') {
+  startScheduler();
+}
 
 app.get("/test", (req, res) => {
     res.json({ satus: 'oke'})

@@ -17,6 +17,7 @@ import AdminJadwal from '../views/admin/jadwal.vue'
 import AdminPetugas from '../views/admin/petugas.vue'
 import AdminLaporan from '../views/admin/laporan.vue'
 import AdminJamOperasional from '../views/admin/jamOperasional.vue'
+// import AdminRiwayatPengambilan from '../views/admin/riwayatPengambilan.vue'
 
 
 const routes = [
@@ -95,6 +96,11 @@ const routes = [
       name: 'admin-operasional',
       component: AdminJamOperasional
     }
+    // {
+    //   path: 'riwayat-pengambilan',
+    //   name: 'admin-riwayatPengambilan',
+    //   component: AdminRiwayatPengambilan
+    // }
   ]
 }
 ]

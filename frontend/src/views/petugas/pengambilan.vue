@@ -281,12 +281,19 @@ function statusText(status) {
 function formatDate(date) {
   if (!date) return '-'
 
-  const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
+  // FIX: Handle both ISO format and plain YYYY-MM-DD strings
+  let dateStr = date
+  
+  // Jika ada T (ISO format), parse to local date
+  if (date.includes('T')) {
+    const d = new Date(date)
+    const localYear = d.getFullYear()
+    const localMonth = String(d.getMonth() + 1).padStart(2, '0')
+    const localDay = String(d.getDate()).padStart(2, '0')
+    dateStr = `${localYear}-${localMonth}-${localDay}`
+  }
+  
+  return dateStr
 }
 
 </script>
