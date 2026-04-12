@@ -15,6 +15,6 @@ router.put("/:id", auth, isAdmin(["admin"]), upload.single("foto_tps"), tpsContr
 router.delete("/:id", auth, isAdmin(["admin"]), tpsController.deleteTps);
 
 // router.get("/map", auth, tpsController.getTpsMap);
-router.get("/statistics", tpsController.getTpsStatistics);
+// router.get("/statistics", tpsController.getTpsStatistics);
 
 module.exports = router;

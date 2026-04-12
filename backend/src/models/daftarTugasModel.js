@@ -69,11 +69,12 @@ async function addLogbook(data) {
     const { id_kendaraan, tpsVisited } = data
 
     // IMPORTANT: Update HANYA untuk hari ini, jangan pengaruhi jadwal masa depan
+    // FIX: Gunakan DATE(NOW()) untuk konsistensi timezone
     await db.query(
       `UPDATE daftar_tugas
        SET id_kendaraan = ?
        WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
-       AND tgl_pengambilan = CURDATE()`,
+       AND DATE(tgl_pengambilan) = DATE(NOW())`,
       [id_kendaraan, ...tpsVisited]
     );
 }
@@ -85,12 +86,15 @@ async function getByPetugas(id_petugas) {
   try {
     // QUERY 1: Main query - ambil daftar_tugas dengan detail minimal
     // Strategy: Hanya JOIN tabel yang critical (tps, kendaraan, petugas)
+    // FIX: Only show the EARLIEST incomplete task for each jadwal
+    // Jangan tampilkan jadwal baru jika yang lama belum selesai
     const [rows] = await db.query(
       `SELECT dt.id_daftar_tugas AS id,
               dt.id_jadwal,
               dt.id_tps,
               dt.id_petugas,
               dt.tgl_pengambilan,
+              dt.tgl_terakhir_diambil,
               dt.id_kendaraan,
               dt.status_angkut,
               dt.volume_sampah,

@@ -71,9 +71,18 @@ async function getAllTpsJadwal(req, res) {
 
 async function getStatusTPS(req, res) {
   try {
-    let { status } = req.query;
+    // let { status } = req.query;
+    // let statusList = [];
+
+    const ALLOWED_STATUS = ['normal', 'hampir_penuh', 'penuh'];
 
     let statusList = [];
+    if (status) {
+      statusList = status
+        .split(',')
+        .filter(s => ALLOWED_STATUS.includes(s.trim()));
+    }
+
 
     if (status) {
       statusList = status.split(',');

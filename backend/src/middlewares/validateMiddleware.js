@@ -15,3 +15,38 @@ function validate(requiredFields) {
 }
 
 module.exports = validate;
+
+// sanitasi
+// const { body, validationResult } = require('express-validator');
+
+// const validatePetugas = [
+//   body('nama')
+//     .trim()
+//     .notEmpty().withMessage('Nama tidak boleh kosong')
+//     .isLength({ max: 100 }).withMessage('Nama max 100 karakter')
+//     .escape(), // Escape HTML
+    
+//   body('no_telp')
+//     .trim()
+//     .matches(/^[0-9\+\-\s]+$/).withMessage('No telp tidak valid')
+//     .isLength({ min: 10, max: 15 }),
+    
+//   body('email')
+//     .isEmail().withMessage('Email tidak valid')
+//     .normalizeEmail(),
+    
+//   body('password')
+//     .isLength({ min: 8 }).withMessage('Password min 8 karakter')
+//     .matches(/[A-Z]/).withMessage('Password harus mengandung huruf besar')
+//     .matches(/[0-9]/).withMessage('Password harus mengandung angka'),
+    
+//   (req, res, next) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
+//     next();
+//   }
+// ];
+
+// module.exports = { validatePetugas };
