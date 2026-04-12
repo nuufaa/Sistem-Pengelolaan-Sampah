@@ -25,6 +25,14 @@
           </select>
         </div>
 
+        <!-- Info Hari yang Sudah Digunakan -->
+        <div v-if="usedDaysLabel" class="form-group info-box">
+          <p class="info-text">
+            <span class="material-icons">info</span>
+            Hari yang sudah digunakan: <strong>{{ usedDaysLabel }}</strong>
+          </p>
+        </div>
+
         <div class="form-group">
           <label>Hari Pengambilan</label>
           <small>Pilih hari pengambilan sampah</small>
@@ -34,12 +42,17 @@
               v-for="(hari, index) in daftarHari"
               :key="index"
               class="hari-pill"
-              :class="{ active: localForm.hari_pengambilan.includes(index) }"
+              :class="{ 
+                active: localForm.hari_pengambilan.includes(index),
+                disabled: isHariDisabled(index)
+              }"
+              :title="isHariDisabled(index) ? 'Hari ini sudah digunakan' : ''"
             > 
               <input
                 type="checkbox"
                 :value="index"
                 v-model="localForm.hari_pengambilan"
+                :disabled="isHariDisabled(index)"
               />
               {{ hari }}
             </label>
@@ -62,7 +75,15 @@
           </select>
         </div>
 
-        <!-- STATUS SECTION -->
+        <!-- ERROR MESSAGE -->
+        <div v-if="errorMessage" class="form-group error-box">
+          <p class="error-text">
+            <span class="material-icons">error</span>
+            {{ errorMessage }}
+          </p>
+        </div>
+
+        <!-- STATUS SECTION
         <div class="form-group">
           <label>Status Jadwal</label>
           <div class="status-grid">
@@ -92,17 +113,17 @@
               </span>
             </label>
           </div>
-        </div>
+        </div> -->
 
         <!-- TANGGAL PENGAMBILAN (hanya muncul jika status selesai) -->
-        <div v-if="localForm.status === 'selesai'" class="form-group">
+        <!-- <div v-if="localForm.status === 'selesai'" class="form-group">
           <label>Tanggal Pengambilan Terakhir</label>
           <input
             type="date"
             v-model="localForm.tgl_terakhir_diambil"
             required
           />
-        </div>
+        </div> -->
 
         <div class="modal-footer">
           <button
@@ -122,12 +143,16 @@
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, watch, computed, ref } from 'vue'
 
 const props = defineProps({
   modelValue: Object,
   tpsList: Array,
-  petugasList: Array
+  petugasList: Array,
+  usedDays: {
+    type: Array,
+    default: () => []
+  }
 })
 
 const emit = defineEmits(['save', 'close'])
@@ -142,6 +167,8 @@ const daftarHari = [
   'Minggu'
 ]
 
+const errorMessage = ref('')
+
 const localForm = reactive({
   id_jadwal: null,
   id_tps: '',
@@ -150,6 +177,17 @@ const localForm = reactive({
   tgl_terakhir_diambil: null,
   status: 'belum_mulai' // Default status
 })
+
+// COMPUTED: Label untuk hari yang sudah digunakan
+const usedDaysLabel = computed(() => {
+  if (!props.usedDays || props.usedDays.length === 0) return ''
+  return props.usedDays.map(day => daftarHari[day]).join(', ')
+})
+
+// METHOD: Check apakah hari sudah digunakan (disabled)
+function isHariDisabled(hariIndex) {
+  return props.usedDays && props.usedDays.includes(hariIndex)
+}
 
 watch(
   () => props.modelValue,
@@ -165,19 +203,30 @@ watch(
         tgl_terakhir_diambil: val.tgl_terakhir_diambil,
         status: val.status || 'belum_mulai'
       })
+      errorMessage.value = ''
     }
   },
   { immediate: true }
 )
 
 function submit() {
+  // VALIDASI: Cek apakah ada hari yang dipilih yang sudah disabled
+  const invalidDays = localForm.hari_pengambilan.filter(day => isHariDisabled(day))
+  
+  if (invalidDays.length > 0) {
+    const conflictingDays = invalidDays.map(day => daftarHari[day]).join(', ')
+    errorMessage.value = `Tidak dapat memilih hari yang sudah digunakan: ${conflictingDays}`
+    return
+  }
+
+  errorMessage.value = ''
   emit('save', { ...localForm })
 }
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
 
-<style scoped>
+<!-- <style scoped>
 /* Status Grid Layout */
 .status-grid {
   display: grid;
@@ -250,4 +299,4 @@ function submit() {
     grid-template-columns: 1fr;
   }
 }
-</style>
+</style> -->

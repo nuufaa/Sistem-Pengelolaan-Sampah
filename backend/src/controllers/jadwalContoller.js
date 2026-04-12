@@ -126,9 +126,34 @@ async function deleteJadwal(req, res) {
   }
 }
 
+async function getUsedDaysByTPS(req, res) {
+  try {
+    const { id_tps } = req.params;
+    
+    if (!id_tps) {
+      return res.status(400).json({ error: "id_tps wajib diisi" });
+    }
+
+    const usedDays = await JadwalModel.getUsedHariByTPS(id_tps);
+
+    return res.json({
+      id_tps: id_tps,
+      usedDays: usedDays
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Gagal mengambil hari yang digunakan",
+      error: error.message
+    });
+  }
+}
+
 module.exports = {
   createJadwal,
   getAllJadwal,
   updateJadwal,
-  deleteJadwal
+  deleteJadwal,
+  getUsedDaysByTPS
 };

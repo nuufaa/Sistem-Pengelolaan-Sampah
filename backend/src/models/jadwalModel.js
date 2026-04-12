@@ -1,6 +1,15 @@
 const {db} = require("../config/db");
 const { toString } = require('../utils/hariJadwal');
 
+async function getUsedHariByTPS(id_tps) {
+  const [rows] = await db.query(
+    `SELECT DISTINCT hari_pengambilan FROM jadwal_pengambilan WHERE id_tps = ?
+     ORDER BY hari_pengambilan`,
+    [id_tps]
+  );
+  return rows.map(r => r.hari_pengambilan);
+}
+
 async function create(data) {
   const { id_tps, id_petugas, hari_pengambilan, id_admin } = data;
 
@@ -16,6 +25,16 @@ async function create(data) {
     if (!Number.isInteger(hari) || hari < 0 || hari > 6) {
       throw new Error("Hari tidak valid");
     }
+  }
+
+  // CHECK untuk duplikasi hari pada TPS yang sama
+  const existingHari = await getUsedHariByTPS(id_tps);
+  const duplicateHari = hariUnique.filter(hari => existingHari.includes(hari));
+  
+  if (duplicateHari.length > 0) {
+    const daftarHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+    const conflictingDays = duplicateHari.map(h => daftarHari[h]).join(', ');
+    throw new Error(`TPS ini sudah memiliki jadwal pada hari: ${conflictingDays}`);
   }
 
   // INSERT MULTIPLE ROW
@@ -121,6 +140,21 @@ async function update(db, id_tps, id_petugas, hari_pengambilan = [], id_admin) {
     const hariLama = jadwalLama.map(j => j.hari_pengambilan);
     const hariHapus = hariLama.filter(h => !hariUnique.includes(h));
 
+    // CHECK untuk duplikasi hari pada TPS yang sama
+    // Hanya check hari yang BARU (tidak ada di hariLama)
+    const hariBaru = hariUnique.filter(h => !hariLama.includes(h));
+    if (hariBaru.length > 0) {
+      // Cek apakah ada hari baru yang sudah ada di schedule lain untuk TPS ini
+      // (ini seharusnya tidak terjadi karena update hanya untuk satu TPS,
+      // tapi sebagai safety check)
+      const duplicateHari = hariBaru.filter(h => hariLama.includes(h));
+      if (duplicateHari.length > 0) {
+        const daftarHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+        const conflictingDays = duplicateHari.map(h => daftarHari[h]).join(', ');
+        throw new Error(`TPS ini sudah memiliki jadwal pada hari: ${conflictingDays}`);
+      }
+    }
+
     // 1. delete jadwal untuk hari yang sudah tidak dipilih
     if (hariHapus.length > 0) {
       const placeholders = hariHapus.map(() => '?').join(', ');
@@ -139,7 +173,6 @@ async function update(db, id_tps, id_petugas, hari_pengambilan = [], id_admin) {
     }
 
     // 3. insert jadwal baru untuk hari yang belum ada
-    const hariBaru = hariUnique.filter(h => !hariLama.includes(h));
     if (hariBaru.length > 0) {
       const values = hariBaru.map(hari => [id_tps, id_petugas, hari, id_admin]);
       const placeholders = values.map(() => `(?, ?, ?, ?)`).join(', ');
@@ -180,6 +213,7 @@ module.exports = {
   findAll,
   findById,
   findByHari,
+  getUsedHariByTPS,
   update,
   updateTanggalTerakhir,
   remove
