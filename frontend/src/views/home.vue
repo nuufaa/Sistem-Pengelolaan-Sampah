@@ -39,6 +39,7 @@
                     :selectedStatus="selectedStatus"
                     @openScheduleModal="openScheduleModal"
                     @openLaporanModal="openLaporanModal"
+                    @openVolumeSampahStatModal="openVolumeSampahStatModal"
                     @statusChanged="updateMarkers"
                     @update:selectedStatus="selectedStatus = $event"
                 />
@@ -77,6 +78,8 @@
             <sidebarContent
                 :selectedStatus="selectedStatus"
                 @openScheduleModal="openScheduleModal"
+                @openLaporanModal="openLaporanModal"
+                @openVolumeSampahStatModal="openVolumeSampahStatModal"
                 @statusChanged="updateMarkers"
                 @update:selectedStatus="selectedStatus = $event"
             />
@@ -84,7 +87,7 @@
     </div>
     <div 
         v-if="isBottomSheetOpen"
-        class="bottom-sheet-backdrop"
+        class="bottom-sheet-backdrop show"
         @click="closeBottomSheet"
         @touchstart.prevent="closeBottomSheet"
     ></div>
@@ -95,13 +98,13 @@
     <div class="modal-content modal-schedule" @touchmove.stop>
 
         <div class="modal-header">
-        <h2>
-            <span class="material-icons">calendar_month</span>
-            <span>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</span>
-        </h2>
-        <button class="modal-close" @click="isModalScheduleOpen = false">
-            <span class="material-icons">close</span>
-        </button>
+            <h2>
+                <span class="material-icons">calendar_month</span>
+                <span>Jadwal Lengkap TPS {{ selectedDesa?.desa }}</span>
+            </h2>
+            <button class="modal-close" @click="isModalScheduleOpen = false">
+                <span class="material-icons">close</span>
+            </button>
         </div>
 
         <div class="modal-body" id="tpsScheduleContent">
@@ -134,7 +137,7 @@
         </div>
 
         <!-- Grid 2 kolom -->
-        <div class="tps-grid" v-if="scheduleFiltered.length > 0">
+        <div v-if="scheduleFiltered.length > 0">
             <div
             v-for="tps in scheduleFiltered"
             :key="tps.id_tps"
@@ -143,12 +146,11 @@
             >
             <div class="tps-mini-left">
                 <div class="tps-mini-icon">
-                <span class="material-icons">delete</span>
+                    <span class="material-icons">delete</span>
                 </div>
                 <div class="tps-mini-info">
-                <!-- <div class="tps-mini-no">#{{ tps.id_tps }}</div> -->
-                <div class="tps-mini-name">{{ tps.nama_tps }}</div>
-                <div class="tps-mini-hari">Setiap {{ tps.hari_pengambilan || '-' }}</div>
+                    <div class="tps-mini-name">{{ tps.nama_tps }}</div>
+                    <div class="tps-mini-hari">Setiap {{ tps.hari_pengambilan || '-' }}</div>
                 </div>
             </div>
             <div class="tps-status-badge" :class="tps.status_angkut">
@@ -239,6 +241,14 @@
     </div>
     </div>
 
+    <!-- Modal Volume Sampah Statistics -->
+    <volumeSampahStat 
+        ref="volumeSampahStatRef"
+        :isModalOpen="isModalVolumeSampahOpen"
+        :volumeSampahData="volumeSampahHarian"
+        @close="isModalVolumeSampahOpen = false"
+    />
+
     <!-- Toast Notification -->
     <div class="toast"  
         :class="{ show: isToastVisible }" 
@@ -300,21 +310,16 @@
                         Password
                     </label>
                     <div class="login-pw-wrap">
-                        <input type="password" id="popupPassword" placeholder="Masukkan password..." />
-                        <button type="button" id="popupTogglePw">
-                            <span class="material-icons" id="popupToggleIcon">visibility</span>
+                        <input type="password" placeholder="Masukkan password..." />
+                        <button type="button">
+                            <span class="material-icons">visibility</span>
                         </button>
                     </div>
-                    <span class="login-error" id="popupPasswordError"></span>
+                    <span class="login-error"></span>
                 </div>
 
-                <div class="login-hint">
-                    <span class="material-icons">tips_and_updates</span>
-                    <span id="loginHintText">Demo: <code>petugas</code> / <code>1234</code></span>
-                </div>
-
-                <button type="submit" class="login-submit-btn" id="loginSubmitBtn">
-                    <span id="loginSubmitText">
+                <button type="submit" class="login-submit-btn">
+                    <span>
                         <span class="material-icons">login</span>
                         Masuk
                     </span>
@@ -324,9 +329,7 @@
                     </span>
                 </button>
             </form>
-
             <div class="login-divider"><span>atau</span></div>
-
             <p class="login-public-note">
                 Anda sudah berada di halaman publik.
                 <br>Masyarakat tidak perlu login untuk melihat informasi.
@@ -343,11 +346,11 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
-import { ref, onMounted, watch, nextTick,  computed} from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
 import sidebarContent from '@/components/sidebarContent.vue'
+import volumeSampahStat from '@/components/volumeSampahStat.vue'
 import { useToast } from '@/services/useToast'
 import api from '@/services/api'
 
@@ -356,8 +359,6 @@ let isMobile = ref(window.innerWidth <= 768);
 
 const isModalLaporanOpen = ref(false)
 const laporanList = ref([])
-const showDetailModal = ref(false)
-const selectedLaporan = ref(null)
 
 // Date and Schedule
 const currentDate = ref('')
@@ -369,6 +370,7 @@ const isModalScheduleOpen = ref(false)
 const map = ref(null)
 const markerCluster = ref(null)
 let markers = ref([]);
+const wastePoints = ref([])
 
 const selectedVillage = ref('all')
 const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
@@ -376,7 +378,8 @@ const selectedStatus = ref(['normal', 'hampir_penuh', 'penuh'])
 const loginRef = ref(null)
 const reportRef = ref(null)
 
-const wastePoints = ref([])
+const isModalVolumeSampahOpen = ref(false)
+const volumeSampahHarian = ref([])
 const loading = ref(false)
 const error = ref(null)
 const modalTPSList = ref([])
@@ -402,39 +405,51 @@ const scheduleCountByStatus = computed(() =>
 
 const scheduleFiltered = computed(() => {
   if (!Array.isArray(modalTPSList.value)) return []
-
-  // 1. Ambil TPS unik
+  
+  // Deduplikasi
   const uniqueMap = new Map()
-
   modalTPSList.value.forEach(t => {
     if (!uniqueMap.has(t.id_tps)) {
       uniqueMap.set(t.id_tps, t)
     }
   })
-
+ 
   let data = Array.from(uniqueMap.values())
-
-  // 2. Filter status
+ 
+  // Filter status - DENGAN VALIDASI KEY
   if (scheduleFilter.value !== 'all') {
+    const validKeys = ['belum_diangkut', 'selesai']
+    
+    // Debug jika key tidak valid
+    if (!validKeys.includes(scheduleFilter.value)) {
+      console.warn(`Invalid filter key: ${scheduleFilter.value}`)
+    }
+    
     data = data.filter(t => t.status_angkut === scheduleFilter.value)
   }
-
-  // 3. Search
+ 
+  // Search
   const q = scheduleSearch.value.toLowerCase()
   if (q) {
     data = data.filter(t =>
       t.nama_tps?.toLowerCase().includes(q)
     )
   }
+  
+  // Sort status
+  data.sort((a, b) => {
+    const pA = statusPriority[a.status_angkut] || 99
+    const pB = statusPriority[b.status_angkut] || 99
 
-  // 4. Sort
-  if (scheduleSort.value === 'nama') {
-    data.sort((a, b) => a.nama_tps.localeCompare(b.nama_tps))
-  } else if (scheduleSort.value === 'status') {
-    data.sort((a, b) => a.status_angkut.localeCompare(b.status_angkut))
-  }
+    if (pA !== pB) return pA - pB
+
+    // optional: kalau sama → urut nama
+    return a.nama_tps.localeCompare(b.nama_tps)
+  })
 
   return data
+})
+
 async function fetchLaporan() {
   try {
     const res = await api.get('/api/lapor')
@@ -444,14 +459,23 @@ async function fetchLaporan() {
   }
 }
 
+async function fetchVolumeSampahData() {
+  try {
+    const res = await api.get('/api/dashboard')
+    volumeSampahHarian.value = res.data.volumeSampahHarian || []
+  } catch (err) {
+    console.error('Gagal ambil data volume sampah', err)
+  }
+}
+
 function openLaporanModal() {
   isModalLaporanOpen.value = true
   fetchLaporan()
 }
 
-function openDetail(laporan) {
-  selectedLaporan.value = laporan
-  showDetailModal.value = true
+function openVolumeSampahStatModal() {
+  isModalVolumeSampahOpen.value = true
+  fetchVolumeSampahData()
 }
 
 function kondisiText(kondisi) {
@@ -480,11 +504,10 @@ const kondisiPriority = {
   hampir_penuh: 3
 }
 
-// const sortedLaporan = computed(() => {
-//   return [...laporanList.value].sort((a, b) => {
-//     return kondisiPriority[a.kondisi_tps] - kondisiPriority[b.kondisi_tps]
-//   })
-// })
+const statusPriority = {
+  belum_diangkut: 1,
+  selesai: 2
+}
 
 const sortedLaporan = computed(() => {
   return laporanList.value
@@ -519,10 +542,7 @@ const {
 
 const statusInfo = {
   belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
-  selesai: { text: 'Selesai', icon: 'check_circle' }
-    belum_diangkut: { text: 'Belum Dimulai', icon: 'schedule' },
-    diangkut: { text: 'Sedang Berlangsung', icon: 'local_shipping' },
-    selesai: { text: 'Selesai', icon: 'check_circle' },
+  selesai: { text: 'Selesai', icon: 'check_circle' },
 }
 
 const getStatusText = (status) => {
@@ -534,21 +554,15 @@ const getStatusIcon = (status) => {
 }
 
 const openBottomSheet = () => {
-  console.log('openBottomSheet clicked (before):', isBottomSheetOpen.value)
   isBottomSheetOpen.value = true
-  console.log('openBottomSheet set to:', isBottomSheetOpen.value)
 }
 
 const closeBottomSheet = () => {
-  console.log('closeBottomSheet clicked (before):', isBottomSheetOpen.value)
   isBottomSheetOpen.value = false
-  console.log('closeBottomSheet set to:', isBottomSheetOpen.value)
 }
 
 const toggleBottomSheet = () => {
-  console.log('toggleBottomSheet (before):', isBottomSheetOpen.value)
   isBottomSheetOpen.value = !isBottomSheetOpen.value
-  console.log('toggleBottomSheet (after):', isBottomSheetOpen.value)
 }
 
 function openReport(id_tps = null) {
@@ -563,15 +577,30 @@ function openReport(id_tps = null) {
 function openScheduleModal(desa) { 
     selectedDesa.value = desa
     isModalScheduleOpen.value = true
-
-    modalTPSList.value = jadwalTPS.value.filter(
-        tps => tps.nama_dusun === desa.desaCode
-    )
+    
+    // Filter + debug dengan validasi status_angkut
+    modalTPSList.value = jadwalTPS.value
+        .filter(tps => tps.nama_dusun === desa.desaCode)
+        .map(tps => ({
+        ...tps,
+        // Pastikan status_angkut valid
+        status_angkut: ['belum_diangkut', 'selesai'].includes(tps.status_angkut)
+            ? tps.status_angkut
+            : 'belum_diangkut'
+        }))
 
     // reset filter & search setiap modal dibuka
     scheduleSearch.value  = ''
     scheduleSort.value    = 'id'
     scheduleFilter.value  = 'all'
+
+    // Log untuk debugging
+    console.log('Modal TPS list:', modalTPSList.value.map(t => ({
+        id: t.id_tps,
+        nama: t.nama_tps,
+        status: t.status_angkut
+    })))
+    
 }
 
 // ===== Date and Schedule Functions =====
@@ -637,9 +666,6 @@ onMounted(async () => {
 
     //Ambil data dulu
     const result = await fetchTitikTps()
-    // wastePoints.value = Array.isArray(result) ? result : []
-    // jadwalTPS.value = result
-    // jadwal tetap pakai semua data (untuk modal)
     jadwalTPS.value = Array.isArray(result) ? result : []
 
     // wastePoints deduplikasi — satu id_tps hanya satu marker
@@ -680,7 +706,6 @@ function initMap() {
 
     markerCluster.value = L.markerClusterGroup()
     map.value.addLayer(markerCluster.value)
-    // updateMarkers()
     watch(wastePoints, () => {
         if (map.value) {
             updateMarkers()
@@ -688,7 +713,8 @@ function initMap() {
     })
 }
 
-function getMarkerIcon(status_tps) {
+function getMarkerIcon(status_tps, status_tps_realtime) {
+    const status = status_tps_realtime || status_tps;
     const colors = {
         normal: '#4CAF50',
         hampir_penuh: '#FFC107',
@@ -701,7 +727,7 @@ function getMarkerIcon(status_tps) {
             <div style="
                 width: 30px;
                 height: 30px;
-                background: ${colors[status_tps]};
+                background: ${colors[status]};
                 border: 3px solid white;
                 border-radius: 50%;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -730,15 +756,16 @@ function formatTgl(date) {
 
 // pop up titik tps
 function createPopupContent(point) {
-    const statusClass = point.status_tps;
+    const statusClass = point.status_tps_realtime || point.status_tps;
     const statusText = {
         normal: 'Normal',
         hampir_penuh: 'Hampir Penuh',
         penuh: 'Penuh'
-    }[point.status_tps];
-    const persen = point.kapasitas
-        ? Math.round((point.volume_sampah / point.kapasitas) * 100)
-        : 0
+    }[statusClass];
+
+    //hitung persentase sampah utk kondisi tps
+    const persen = point.persentase_sampah || 
+        (point.kapasitas ? Math.round((point.volume_sampah / point.kapasitas) * 100) : 0)
 
     return `
         <div class="popup-content">
@@ -780,13 +807,13 @@ function updateMarkers() {
 
     const filtered = wastePoints.value.filter(p =>
     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
-    selectedStatus.value.includes(p.status_tps)
+    selectedStatus.value.includes(p.status_tps_realtime || p.status_tps)
     )
 
     filtered.forEach(point => {
     const marker = L.marker(
         [parseFloat(point.latitude), parseFloat(point.longitude)],
-        { icon: getMarkerIcon(point.status_tps) }
+        { icon: getMarkerIcon(point.status_tps, point.status_tps_realtime) }
     );
 
     // Use popup for both desktop and mobile

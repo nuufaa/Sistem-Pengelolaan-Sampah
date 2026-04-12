@@ -87,9 +87,15 @@ async function fetchDashboard() {
     totalLaporan.value = res.data.totalLaporan
     totalTPSPenuh.value = res.data.totalTPSPenuh
 
-    await nextTick()
-    renderStatusChart(res.data.statusTPS)
-    renderLaporanChart(res.data.laporan7Hari)
+    // await nextTick()
+    // renderStatusChart(res.data.statusTPS)
+    // renderLaporanChart(res.data.laporan7Hari)
+
+    // Gunakan setTimeout untuk render chart secara async
+    setTimeout(() => {
+      renderStatusChart(res.data.statusTPS)
+      renderLaporanChart(res.data.laporan7Hari)
+    }, 100)  // Delay kecil untuk memastikan UI thread bebas
 
   } catch (error) {
     console.error("Gagal ambil dashboard:", error)

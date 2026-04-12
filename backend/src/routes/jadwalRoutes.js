@@ -8,6 +8,7 @@ const { validateCreateJadwal } = require("../middlewares/validateJadwalMiddlewar
 
 router.post("/", auth, isAdmin(["admin"]), validateCreateJadwal, jadwal.createJadwal);
 router.get("/", auth, isAdmin(["admin"]), jadwal.getAllJadwal);
+router.get("/used-days/:id_tps", auth, isAdmin(["admin"]), jadwal.getUsedDaysByTPS);
 router.put("/:id", auth, isAdmin(["admin"]), jadwal.updateJadwal);
 router.delete("/:id", auth, isAdmin(["admin"]), jadwal.deleteJadwal);
 

@@ -1,4 +1,5 @@
 const TpsModel = require("../models/tpsModel");
+const TpsStatusService = require("../services/tpsStatusService");
 
 async function createTps(req, res) {
     try {
@@ -38,7 +39,13 @@ async function getAllTpsJadwal(req, res) {
     try {
         const data = await TpsModel.findAllJadwal();
 
-        return res.json(data);
+        // Enrich dengan status realtime
+        const enrichedData = data.map(tps => ({
+            ...tps,
+            status_tps_realtime: TpsStatusService.calculateStatusTPSRealtime(tps)
+        }));
+
+        return res.json(enrichedData);
     } catch (error) {
         console.error("ERROR TPS:", error)
         return res.status(500).json({
@@ -61,6 +68,7 @@ async function getAllTpsJadwal(req, res) {
 //     });
 //   }
 // }
+
 async function getStatusTPS(req, res) {
   try {
     let { status } = req.query;

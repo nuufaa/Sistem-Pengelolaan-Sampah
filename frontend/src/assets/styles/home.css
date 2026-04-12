@@ -711,7 +711,7 @@ input, select, textarea {
     color: var(--secondary-dark);
 }
 
-.popup-status.danger {
+.popup-status.penuh {
     background: var(--status-danger-bg);
     color: var(--status-danger);
 }
@@ -762,12 +762,14 @@ input, select, textarea {
     animation: fadeIn 0.3s ease;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
 }
 
 .modal.show {
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: auto;
 }
 
 @keyframes fadeIn {
@@ -788,11 +790,26 @@ input, select, textarea {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
-    display: flex;              /* tambah */
-    align-items: center;        /* tambah */
-    justify-content: center;    /* tambah */
-    z-index: 1;               /* tambah */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: auto;
 }
+/* .modal-overlay {
+    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;              tambah
+    align-items: center;        tambah
+    justify-content: center;    tambah
+    z-index: 1;               tambah
+} */
 
 .modal-content {
     position: relative;
@@ -807,11 +824,21 @@ input, select, textarea {
     z-index: 2;
     overscroll-behavior: contain;
     touch-action: auto;
+    /* baru */
+    pointer-events: auto; 
 }
 
-.modal, .modal-overlay, .modal-body {
-    touch-action: none;
+.modal.show,
+.modal.show .modal-overlay,
+.modal.show .modal-body {
+    /* touch-action: none; */
     overscroll-behavior: none;
+    pointer-events: auto;
+}
+
+/* Boleh tetap ada touch-action: none HANYA di overlay agar tidak scroll background */
+.modal-overlay {
+    touch-action: none;
 }
 
 .modal-schedule {
@@ -950,10 +977,32 @@ input, select, textarea {
     color: var(--text-secondary);
 }
 
-.modal-backdrop-active .map-container,
+.modal-backdrop-active .map-container {
+    filter: blur(4px);
+    pointer-events: none;
+}
+
 .modal-backdrop-active .bottom-sheet {
     filter: blur(4px);
     pointer-events: none;
+}
+
+/* Ensure buttons in bottom-sheet remain clickable even with modal active */
+.modal-backdrop-active .bottom-sheet button,
+.modal-backdrop-active .bottom-sheet input,
+.modal-backdrop-active .bottom-sheet a,
+.modal-backdrop-active .bottom-sheet label {
+    pointer-events: auto;
+}
+
+/* Always ensure bottom-sheet content is interactive */
+.bottom-sheet button,
+.bottom-sheet input,
+.bottom-sheet a,
+.bottom-sheet label {
+    position: relative;
+    z-index: 1501;
+    pointer-events: auto;
 }
 
 .modal-body {
@@ -1206,6 +1255,13 @@ input, select, textarea {
     cursor: pointer;
     border: none;
 }
+
+.btn-lihat-jadwal,
+.laporan-btn {
+    touch-action: manipulation; /* Cegah delay 300ms tap di mobile */
+    -webkit-tap-highlight-color: transparent;
+}
+
 
 .btn-lihat-jadwal:hover {
     background: #C8E6C9;
@@ -1479,6 +1535,13 @@ input, select, textarea {
     max-height: 70vh;
     transform: translateY(calc(100% - 80px));
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Aktifkan kembali hanya saat open/interaksi header */
+.bottom-sheet.open,
+.bottom-sheet-header {
+    pointer-events: auto;
 }
 
 .bottom-sheet.open {
@@ -1542,6 +1605,7 @@ input, select, textarea {
     max-height: calc(70vh - 70px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    pointer-events: auto;
 }
 
 .bottom-sheet-content::-webkit-scrollbar {
@@ -1588,6 +1652,27 @@ input, select, textarea {
 
 .bottom-sheet-trigger.hidden {
     display: none;
+}
+
+/* Bottom Sheet Backdrop - only shows on mobile when bottom-sheet is open */
+.bottom-sheet-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1499;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.bottom-sheet-backdrop.show {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 /* Mobile TPS Detail Bottom Sheet */
@@ -2794,7 +2879,18 @@ input, select, textarea {
     .tps-status-badge {
         flex-direction: row;
         white-space: nowrap;
+        padding: 3px 8px;       
+        font-size: 11px;         
+        gap: 4px;     
     }
+
+    .tps-status-badge .material-icons {
+    font-size: 14px !important; 
+    }
+
+    .tps-status-label {
+        font-size: 11px;
+    }   
 }
 
 /* css untuk jadwal lengkap tps */
@@ -2871,9 +2967,22 @@ input, select, textarea {
   flex-shrink: 0;
 }
 .tps-mini-icon .material-icons { font-size: 16px; color: #1a7a3a; }
-.tps-mini-info  { min-width: 0; }
+
+.tps-mini-info  { 
+    min-width: 0; 
+    flex: 1;
+}
+
 .tps-mini-no    { font-size: 10px; color: #aaa; margin-bottom: 1px; }
-.tps-mini-name  { font-size: 13px; font-weight: 500; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+
+.tps-mini-name  { 
+    font-size: 13px; 
+    font-weight: 500; 
+    color: #222; 
+    white-space: nowrap; 
+    max-width: 100px; 
+}
+
 .tps-mini-hari  { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
 
 .schedule-empty { text-align: center; padding: 40px 0; color: #888; }

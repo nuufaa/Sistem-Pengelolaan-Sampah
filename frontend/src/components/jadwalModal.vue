@@ -25,6 +25,14 @@
           </select>
         </div>
 
+        <!-- Info Hari yang Sudah Digunakan -->
+        <div v-if="usedDaysLabel" class="form-group info-box">
+          <p class="info-text">
+            <span class="material-icons">info</span>
+            Hari yang sudah digunakan: <strong>{{ usedDaysLabel }}</strong>
+          </p>
+        </div>
+
         <div class="form-group">
           <label>Hari Pengambilan</label>
           <small>Pilih hari pengambilan sampah</small>
@@ -34,12 +42,17 @@
               v-for="(hari, index) in daftarHari"
               :key="index"
               class="hari-pill"
-              :class="{ active: localForm.hari_pengambilan.includes(index) }"
+              :class="{ 
+                active: localForm.hari_pengambilan.includes(index),
+                disabled: isHariDisabled(index)
+              }"
+              :title="isHariDisabled(index) ? 'Hari ini sudah digunakan' : ''"
             > 
               <input
                 type="checkbox"
                 :value="index"
                 v-model="localForm.hari_pengambilan"
+                :disabled="isHariDisabled(index)"
               />
               {{ hari }}
             </label>
@@ -62,6 +75,56 @@
           </select>
         </div>
 
+        <!-- ERROR MESSAGE -->
+        <div v-if="errorMessage" class="form-group error-box">
+          <p class="error-text">
+            <span class="material-icons">error</span>
+            {{ errorMessage }}
+          </p>
+        </div>
+
+        <!-- STATUS SECTION
+        <div class="form-group">
+          <label>Status Jadwal</label>
+          <div class="status-grid">
+            <label class="status-radio">
+              <input
+                type="radio"
+                value="belum_mulai"
+                v-model="localForm.status"
+                required
+              />
+              <span class="status-label belum-mulai">
+                <span class="material-icons">schedule</span>
+                Belum Mulai
+              </span>
+            </label>
+
+            <label class="status-radio">
+              <input
+                type="radio"
+                value="selesai"
+                v-model="localForm.status"
+                required
+              />
+              <span class="status-label selesai">
+                <span class="material-icons">check_circle</span>
+                Selesai
+              </span>
+            </label>
+          </div>
+        </div> -->
+
+        <!-- TANGGAL PENGAMBILAN (hanya muncul jika status selesai) -->
+        <!-- <div v-if="localForm.status === 'selesai'" class="form-group">
+          <label>Tanggal Pengambilan Terakhir</label>
+          <input
+            type="date"
+            v-model="localForm.tgl_terakhir_diambil"
+            required
+          />
+        </div> -->
+
         <div class="modal-footer">
           <button
             type="button"
@@ -80,12 +143,16 @@
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, watch, computed, ref } from 'vue'
 
 const props = defineProps({
   modelValue: Object,
   tpsList: Array,
-  petugasList: Array
+  petugasList: Array,
+  usedDays: {
+    type: Array,
+    default: () => []
+  }
 })
 
 const emit = defineEmits(['save', 'close'])
@@ -100,13 +167,27 @@ const daftarHari = [
   'Minggu'
 ]
 
+const errorMessage = ref('')
+
 const localForm = reactive({
   id_jadwal: null,
   id_tps: '',
   id_petugas: '',
   hari_pengambilan: [],
-  tgl_terakhir_diambil: null
+  tgl_terakhir_diambil: null,
+  status: 'belum_mulai' // Default status
 })
+
+// COMPUTED: Label untuk hari yang sudah digunakan
+const usedDaysLabel = computed(() => {
+  if (!props.usedDays || props.usedDays.length === 0) return ''
+  return props.usedDays.map(day => daftarHari[day]).join(', ')
+})
+
+// METHOD: Check apakah hari sudah digunakan (disabled)
+function isHariDisabled(hariIndex) {
+  return props.usedDays && props.usedDays.includes(hariIndex)
+}
 
 watch(
   () => props.modelValue,
@@ -116,19 +197,106 @@ watch(
         id_jadwal: val.id_jadwal,
         id_tps: Number(val.id_tps), 
         id_petugas: Number(val.id_petugas),
-        hari_pengambilan:  Array.isArray(val.hari_pengambilan)
-      ? val.hari_pengambilan.map(Number)
-      : [],
-        tgl_terakhir_diambil: val.tgl_terakhir_diambil
+        hari_pengambilan: Array.isArray(val.hari_pengambilan)
+          ? val.hari_pengambilan.map(Number)
+          : [],
+        tgl_terakhir_diambil: val.tgl_terakhir_diambil,
+        status: val.status || 'belum_mulai'
       })
+      errorMessage.value = ''
     }
   },
   { immediate: true }
 )
 
 function submit() {
+  // VALIDASI: Cek apakah ada hari yang dipilih yang sudah disabled
+  const invalidDays = localForm.hari_pengambilan.filter(day => isHariDisabled(day))
+  
+  if (invalidDays.length > 0) {
+    const conflictingDays = invalidDays.map(day => daftarHari[day]).join(', ')
+    errorMessage.value = `Tidak dapat memilih hari yang sudah digunakan: ${conflictingDays}`
+    return
+  }
+
+  errorMessage.value = ''
   emit('save', { ...localForm })
 }
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
+
+<!-- <style scoped>
+/* Status Grid Layout */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.status-radio {
+  position: relative;
+  cursor: pointer;
+}
+
+.status-radio input[type="radio"] {
+  display: none;
+}
+
+.status-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.status-label .material-icons {
+  font-size: 1.5rem;
+}
+
+/* Belum Mulai Status */
+.status-label.belum-mulai {
+  color: #ff9800;
+}
+
+.status-radio input[value="belum_mulai"]:checked + .status-label.belum-mulai {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.status-label.belum-mulai:hover {
+  border-color: #ff9800;
+  background-color: #fff8f0;
+}
+
+/* Selesai Status */
+.status-label.selesai {
+  color: #4caf50;
+}
+
+.status-radio input[value="selesai"]:checked + .status-label.selesai {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.status-label.selesai:hover {
+  border-color: #4caf50;
+  background-color: #f1f8f6;
+}
+
+/* Responsive untuk mobile */
+@media (max-width: 768px) {
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style> -->

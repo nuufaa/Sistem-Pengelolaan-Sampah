@@ -1,10 +1,19 @@
 const {db} = require("../config/db");
 
-  async function create(data) {
+// Helper function untuk format tanggal lokal (YYYY-MM-DD) tanpa UTC conversion
+function formatDateLocal(date) {
+  if (typeof date === 'string') return date; // Jika sudah string, return as is
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+async function create(data) {
     // DEPRECATED: Gunakan sync() atau createForDate() untuk generate tugas
     // Method ini tetap ada untuk backward compatibility
     const { id_jadwal, id_petugas, id_tps, tgl_pengambilan } = data;
-    const targetDate = tgl_pengambilan || new Date().toISOString().split('T')[0];
+    const targetDate = tgl_pengambilan || formatDateLocal(new Date());
 
     try {
       const [rows] = await db.query(
@@ -59,12 +68,14 @@ async function findById(id) {
 async function addLogbook(data) {
     const { id_kendaraan, tpsVisited } = data
 
-   await db.query(
-    `UPDATE daftar_tugas
-     SET id_kendaraan = ?
-     WHERE id_tps IN (?)`,
-    [id_kendaraan, tpsVisited]
-  );
+    // IMPORTANT: Update HANYA untuk hari ini, jangan pengaruhi jadwal masa depan
+    await db.query(
+      `UPDATE daftar_tugas
+       SET id_kendaraan = ?
+       WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
+       AND tgl_pengambilan = CURDATE()`,
+      [id_kendaraan, ...tpsVisited]
+    );
 }
 
 // OPTIMIZED: Split query untuk mengurangi beban
@@ -73,7 +84,7 @@ async function addLogbook(data) {
 async function getByPetugas(id_petugas) {
   try {
     // QUERY 1: Main query - ambil daftar_tugas dengan detail minimal
-    // Strategy: Hanya JOIN tabel yang critical (tps, kendaraan)
+    // Strategy: Hanya JOIN tabel yang critical (tps, kendaraan, petugas)
     const [rows] = await db.query(
       `SELECT dt.id_daftar_tugas AS id,
               dt.id_jadwal,
@@ -84,10 +95,12 @@ async function getByPetugas(id_petugas) {
               dt.status_angkut,
               dt.volume_sampah,
               t.nama_tps,
-              k.nomor_kendaraan
+              k.nomor_kendaraan,
+              p.nama
        FROM daftar_tugas dt
        INNER JOIN tps t ON dt.id_tps = t.id_tps
        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
+       LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
        WHERE dt.id_petugas = ? 
          AND dt.status_angkut IN ('belum_diangkut', 'diangkut')
          AND dt.tgl_pengambilan = (
@@ -149,9 +162,11 @@ async function getAll() {
               dt.id_kendaraan,
               dt.status_angkut,
               dt.volume_sampah,
-              t.nama_tps
+              t.nama_tps,
+              p.nama
        FROM daftar_tugas dt
        INNER JOIN tps t ON dt.id_tps = t.id_tps
+       LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
        WHERE dt.status_angkut IN ('belum_diangkut', 'diangkut')
          AND dt.tgl_pengambilan = (
            SELECT MIN(tgl_pengambilan) 
@@ -253,15 +268,15 @@ async function syncTugasByTps(id_tps) {
       
       if (jadwalForDay) {
         // check apakah tugas sudah ada untuk tanggal ini
+        const dateStr = formatDateLocal(targetDate);
         const [existing] = await db.query(
           `SELECT id_daftar_tugas FROM daftar_tugas
-           WHERE id_tps = ? AND tgl_pengambilan = DATE(?)`,
-          [id_tps, targetDate.toISOString().split('T')[0]]
+           WHERE id_tps = ? AND tgl_pengambilan = ?`,
+          [id_tps, dateStr]
         );
 
         if (existing.length === 0) {
           // insert tugas baru
-          const dateStr = targetDate.toISOString().split('T')[0];
           await db.query(
             `INSERT INTO daftar_tugas 
             (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
@@ -276,19 +291,6 @@ async function syncTugasByTps(id_tps) {
     throw error;
   }
 }
-
-module.exports = {
-  create,
-  updateStatus,
-  findById,
-  getByPetugas,
-  getAll,
-  addLogbook,
-  updatePetugasByTpsToday,
-  syncTugasByTps,
-  getCompletedByPetugas,
-  getAllCompleted
-};
 
 // OPTIMIZED: Query untuk mendapatkan riwayat (history) yang selesai
 // Reduced JOINs pada main query untuk performa
@@ -379,7 +381,7 @@ async function getAllCompleted() {
       const [jadwalDetails] = await db.query(
         `SELECT DISTINCT j.id_jadwal,
                 GROUP_CONCAT(j.hari_pengambilan ORDER BY j.hari_pengambilan SEPARATOR ',') AS hari_pengambilan
-         FROM jadwal_pengambilan j
+                FROM jadwal_pengambilan j
          WHERE j.id_jadwal IN (${jadwalIds.map(() => '?').join(',')})\n         GROUP BY j.id_jadwal`,
         jadwalIds
       );
@@ -400,3 +402,16 @@ async function getAllCompleted() {
     throw error;
   }
 }
+
+module.exports = {
+  create,
+  updateStatus,
+  findById,
+  getByPetugas,
+  getAll,
+  addLogbook,
+  updatePetugasByTpsToday,
+  syncTugasByTps,
+  getCompletedByPetugas,
+  getAllCompleted
+};

@@ -23,8 +23,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(j, i) in jadwalList" :key="j.id_jadwal">
-            <td>{{ i + 1 }}</td>
+          <tr v-for="(j, i) in paginatedJadwal" :key="j.id_jadwal">
+            <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ j.nama_tps }}</td>
             <td>{{ j.nama}}</td>
             <td>Setiap {{ j.hari_label }}</td>
@@ -46,10 +46,9 @@
     <div class="card-list mobile-only">
       <div 
         class="data-card" 
-        v-for="(j, i) in jadwalList" 
+        v-for="(j) in paginatedJadwal" 
         :key="j.id_jadwal"
       >
-
         <!-- HEADER -->
         <div class="data-card-header">
           <div>
@@ -94,12 +93,42 @@
       </div>
     </div>
 
+    <!-- PAGINATION -->
+    <div class="pagination-container" v-if="totalPages > 1">
+      <button 
+        class="pagination-btn" 
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        <span class="material-icons">chevron_left</span>
+        Sebelumnya
+      </button>
+
+      <div class="pagination-info">
+        <span>Halaman {{ currentPage }} dari {{ totalPages }}</span>
+        <select v-model.number="itemsPerPage" class="items-per-page">
+          <option :value="5">5 per halaman</option>
+          <option :value="10">10 per halaman</option>
+        </select>
+      </div>
+
+      <button 
+        class="pagination-btn" 
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+      >
+        Selanjutnya
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+
     <!-- MODAL COMPONENT -->
     <JadwalModal
       v-if="showModal"
       :model-value="form"
       :tps-list="tpsList"
       :petugas-list="petugasList"
+      :used-days="usedDays"
       @save="save"
       @close="showModal = false"
     />
@@ -107,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted} from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import api from '@/services/api'
 import JadwalModal from '@/components/jadwalModal.vue'
 import { toIndex } from '@/services/hariJadwal'
@@ -117,6 +146,21 @@ const tpsList = ref([])
 const showModal = ref(false)
 const form = ref(null)
 const petugasList = ref([])
+const usedDays = ref([])
+
+const currentPage = ref(1)
+const itemsPerPage = ref(5)
+
+// COMPUTED: Pagination Logic
+const totalPages = computed(() => {
+  return Math.ceil(jadwalList.value.length / itemsPerPage.value)
+})
+
+const paginatedJadwal = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return jadwalList.value.slice(start, end)
+})
 
 async function fetchJadwal() {
   const res = await api.get('/api/jadwal')
@@ -133,6 +177,33 @@ async function fetchPetugas() {
   petugasList.value = res.data
 }
 
+async function fetchUsedDays(id_tps, excludeDays = []) {
+  try {
+    if (!id_tps) {
+      usedDays.value = []
+      return
+    }
+    const res = await api.get(`/api/jadwal/used-days/${id_tps}`)
+    // Filter out days that are currently being edited
+    usedDays.value = (res.data.usedDays || []).filter(day => !excludeDays.includes(day))
+  } catch (error) {
+    console.error('Error fetching used days:', error)
+    usedDays.value = []
+  }
+}
+
+// WATCH: Fetch used days ketika id_tps berubah
+watch(
+  () => form.value?.id_tps,
+  (newId_tps) => {
+    if (showModal.value) {
+      // Exclude current schedule's days when fetching used days
+      const currentDays = form.value?.hari_pengambilan || []
+      fetchUsedDays(newId_tps, currentDays)
+    }
+  }
+)
+
 onMounted(() => {
   fetchPetugas()
   fetchJadwal()
@@ -147,18 +218,23 @@ function openAdd() {
     hari_pengambilan: '',
     tgl_terakhir_diambil: null
   }
+  usedDays.value = []
   showModal.value = true
 }
 
 function openEdit(jadwal) {
+  const hariPengambilan = typeof jadwal.hari_pengambilan === 'string'
+    ? toIndex(jadwal.hari_pengambilan)
+    : jadwal.hari_pengambilan
+    
   form.value = {
     ...jadwal,
-    hari_pengambilan:
-      typeof jadwal.hari_pengambilan === 'string'
-        ? toIndex(jadwal.hari_pengambilan)
-        : jadwal.hari_pengambilan
+    hari_pengambilan: hariPengambilan
   }
-
+  
+  // Fetch used days untuk TPS yang di-edit, excluding current schedule's days
+  fetchUsedDays(jadwal.id_tps, hariPengambilan)
+  
   showModal.value = true
 }
 
@@ -179,13 +255,13 @@ async function save(data) {
     }
 
     if (data.id_jadwal && data.id_jadwal.length) {
-
       await api.put(`/api/jadwal/${data.id_tps}`, payload);
     } else {
       await api.post('/api/jadwal', payload);
     }
-
     showModal.value = false
+    usedDays.value = []
+    
     await fetchJadwal()
   } catch (error) {
     console.error(error.response?.data || error)
@@ -209,6 +285,19 @@ function formatDate(date) {
     year: 'numeric'
   })
 }
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>

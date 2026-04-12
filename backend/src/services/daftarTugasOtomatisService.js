@@ -3,12 +3,20 @@ const {db} = require("../config/db");
 const jadwalModel = require("../models/jadwalModel");
 const daftarTugasModel = require("../models/daftarTugasModel");
 
+// Helper function untuk format tanggal lokal (YYYY-MM-DD) tanpa UTC conversion
+function formatDateLocal(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Generate tugas untuk hari ini PLUS 14 hari ke depan (2 minggu)
 // Smart: hanya simpan jadwal belum selesai, jadi tidak menumpuk
 async function generateTugasHarian() {
   try {
     const today = new Date();
-    const hariUntuk = 7; // Generate untuk 2 minggu ke depan
+    const hariUntuk = 7; // Generate untuk 1 minggu ke depan
 
     // Loop untuk setiap hari
     for (let hitung = 0; hitung <= hariUntuk; hitung++) {
@@ -24,7 +32,7 @@ async function generateTugasHarian() {
       // Untuk setiap jadwal yang cocok dengan hari ini
       for (const jadwal of jadwalList) {
         // Check apakah sudah ada record untuk tanggal + jadwal ini
-        const dateStr = targetDate.toISOString().split('T')[0];
+        const dateStr = formatDateLocal(targetDate);
         const [existing] = await db.query(
           `SELECT id_daftar_tugas FROM daftar_tugas
            WHERE id_jadwal = ? AND tgl_pengambilan = ?`,
@@ -46,7 +54,7 @@ async function generateTugasHarian() {
     // CLEANUP: Hapus records yang sudah selesai lebih dari 60 hari lalu (untuk hemat storage)
     const cleanupDate = new Date(today);
     cleanupDate.setDate(cleanupDate.getDate() - 60);
-    const cleanupDateStr = cleanupDate.toISOString().split('T')[0];
+    const cleanupDateStr = formatDateLocal(cleanupDate);
     
     await db.query(
       `DELETE FROM daftar_tugas 
