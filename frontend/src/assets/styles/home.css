@@ -2879,7 +2879,18 @@ input, select, textarea {
     .tps-status-badge {
         flex-direction: row;
         white-space: nowrap;
+        padding: 3px 8px;       
+        font-size: 11px;         
+        gap: 4px;     
     }
+
+    .tps-status-badge .material-icons {
+    font-size: 14px !important; 
+    }
+
+    .tps-status-label {
+        font-size: 11px;
+    }   
 }
 
 /* css untuk jadwal lengkap tps */

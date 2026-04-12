@@ -1046,6 +1046,65 @@ body {
   border-color: #4CAF50;
 }
 
+/* disabled */
+.hari-pill.disabled {
+  background: #e0e0e0;
+  color: #999;
+  border-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.hari-pill.disabled:hover {
+  background: #e0e0e0;
+  border-color: #ccc;
+}
+
+/* ===== Alert Boxes ===== */
+.error-box,
+.info-box {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.error-box {
+  background: #ffebee;
+  border-left: 4px solid var(--status-danger);
+}
+
+.info-box {
+  background: #e3f2fd;
+  border-left: 4px solid #2196F3;
+}
+
+.error-text,
+.info-text {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.error-text {
+  color: var(--status-danger);
+  font-weight: 500;
+}
+
+.info-text {
+  color: #1976D2;
+  font-weight: 500;
+}
+
+.error-box .material-icons,
+.info-box .material-icons {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 480px) {
     .stats-cards {
         grid-template-columns: 1fr;

@@ -22,7 +22,7 @@
 
         <tbody>
           <tr v-for="(laporan, i) in paginatedLaporan" :key="laporan.id_laporan">
-            <td>{{ i + 1 }}</td>
+            <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ laporan.nama_tps }}</td>
             <td>{{ kondisiText(laporan.kondisi_tps) }}</td>
             <td>{{ laporan.nama_pelapor}}</td>
@@ -99,8 +99,6 @@
         <select v-model.number="itemsPerPage" class="items-per-page">
           <option :value="5">5 per halaman</option>
           <option :value="10">10 per halaman</option>
-          <option :value="20">20 per halaman</option>
-          <option :value="50">50 per halaman</option>
         </select>
       </div>
 

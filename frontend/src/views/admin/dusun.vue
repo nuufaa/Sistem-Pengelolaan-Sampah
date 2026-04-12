@@ -21,7 +21,7 @@
 
         <tbody>
           <tr v-for="(k, i) in paginatedDusun" :key="k.id_dusun">
-            <td>{{ i + 1 }}</td>
+            <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ k.nama_dusun }}</td>
             <td>{{ k.jumlah_kk }}</td>
             <td class="action-buttons">
@@ -85,8 +85,6 @@
         <select v-model.number="itemsPerPage" class="items-per-page">
           <option :value="5">5 per halaman</option>
           <option :value="10">10 per halaman</option>
-          <option :value="20">20 per halaman</option>
-          <option :value="50">50 per halaman</option>
         </select>
       </div>
 
@@ -119,7 +117,7 @@ const dusunList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(5)
 
 // COMPUTED: Pagination Logic
 const totalPages = computed(() => {

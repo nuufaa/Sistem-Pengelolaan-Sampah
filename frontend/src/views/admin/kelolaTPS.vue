@@ -112,8 +112,6 @@
         <select v-model.number="itemsPerPage" class="items-per-page">
           <option :value="5">5 per halaman</option>
           <option :value="10">10 per halaman</option>
-          <option :value="20">20 per halaman</option>
-          <option :value="50">50 per halaman</option>
         </select>
       </div>
 
@@ -149,7 +147,7 @@ const dusunList = ref([])
 const tpsList = ref([])
 
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(5)
 
 // COMPUTED: Pagination Logic
 const totalPages = computed(() => {

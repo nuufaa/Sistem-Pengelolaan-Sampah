@@ -24,7 +24,7 @@
         </thead>
         <tbody>
           <tr v-for="(j, i) in paginatedJadwal" :key="j.id_jadwal">
-            <td>{{ i + 1 }}</td>
+            <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ j.nama_tps }}</td>
             <td>{{ j.nama}}</td>
             <td>Setiap {{ j.hari_label }}</td>
@@ -109,8 +109,6 @@
         <select v-model.number="itemsPerPage" class="items-per-page">
           <option :value="5">5 per halaman</option>
           <option :value="10">10 per halaman</option>
-          <option :value="20">20 per halaman</option>
-          <option :value="50">50 per halaman</option>
         </select>
       </div>
 
@@ -130,6 +128,7 @@
       :model-value="form"
       :tps-list="tpsList"
       :petugas-list="petugasList"
+      :used-days="usedDays"
       @save="save"
       @close="showModal = false"
     />
@@ -137,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import api from '@/services/api'
 import JadwalModal from '@/components/jadwalModal.vue'
 import { toIndex } from '@/services/hariJadwal'
@@ -147,6 +146,7 @@ const tpsList = ref([])
 const showModal = ref(false)
 const form = ref(null)
 const petugasList = ref([])
+const usedDays = ref([])
 
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
@@ -177,6 +177,33 @@ async function fetchPetugas() {
   petugasList.value = res.data
 }
 
+async function fetchUsedDays(id_tps, excludeDays = []) {
+  try {
+    if (!id_tps) {
+      usedDays.value = []
+      return
+    }
+    const res = await api.get(`/api/jadwal/used-days/${id_tps}`)
+    // Filter out days that are currently being edited
+    usedDays.value = (res.data.usedDays || []).filter(day => !excludeDays.includes(day))
+  } catch (error) {
+    console.error('Error fetching used days:', error)
+    usedDays.value = []
+  }
+}
+
+// WATCH: Fetch used days ketika id_tps berubah
+watch(
+  () => form.value?.id_tps,
+  (newId_tps) => {
+    if (showModal.value) {
+      // Exclude current schedule's days when fetching used days
+      const currentDays = form.value?.hari_pengambilan || []
+      fetchUsedDays(newId_tps, currentDays)
+    }
+  }
+)
+
 onMounted(() => {
   fetchPetugas()
   fetchJadwal()
@@ -191,18 +218,23 @@ function openAdd() {
     hari_pengambilan: '',
     tgl_terakhir_diambil: null
   }
+  usedDays.value = []
   showModal.value = true
 }
 
 function openEdit(jadwal) {
+  const hariPengambilan = typeof jadwal.hari_pengambilan === 'string'
+    ? toIndex(jadwal.hari_pengambilan)
+    : jadwal.hari_pengambilan
+    
   form.value = {
     ...jadwal,
-    hari_pengambilan:
-      typeof jadwal.hari_pengambilan === 'string'
-        ? toIndex(jadwal.hari_pengambilan)
-        : jadwal.hari_pengambilan
+    hari_pengambilan: hariPengambilan
   }
-
+  
+  // Fetch used days untuk TPS yang di-edit, excluding current schedule's days
+  fetchUsedDays(jadwal.id_tps, hariPengambilan)
+  
   showModal.value = true
 }
 
@@ -228,6 +260,7 @@ async function save(data) {
       await api.post('/api/jadwal', payload);
     }
     showModal.value = false
+    usedDays.value = []
     
     await fetchJadwal()
   } catch (error) {
