@@ -108,7 +108,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onActivated } from 'vue'
 import api from '@/services/api'
 import PetugasModal from '@/components/petugasModal.vue'
 
@@ -122,6 +122,10 @@ async function fetchPetugas() {
 }
 
 onMounted(fetchPetugas)
+
+onActivated(() => {
+  fetchPetugas()
+})
 
 function openAdd() {
   form.value = {

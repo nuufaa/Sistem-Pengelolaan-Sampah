@@ -41,7 +41,7 @@ function kondisiText(kondisi) {
   return {
     hampir_penuh: 'Hampir Penuh',
     penuh: 'Sudah Penuh',
-    berserakan: 'Sampah Berserakan'
+    sampah_berserakan: 'Sampah Berserakan'
   }[kondisi] || kondisi
 }
 

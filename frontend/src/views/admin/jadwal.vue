@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onActivated } from 'vue'
 import api from '@/services/api'
 import JadwalModal from '@/components/jadwalModal.vue'
 import { toIndex } from '@/services/hariJadwal'
@@ -208,6 +208,10 @@ onMounted(() => {
   fetchPetugas()
   fetchJadwal()
   fetchTPS()
+})
+
+onActivated(() => {
+  fetchJadwal()
 })
 
 function openAdd() {
