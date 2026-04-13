@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, onActivated} from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import Chart from 'chart.js/auto' 
 
@@ -77,19 +77,24 @@ const laporanChartRef = ref(null)
 
 let statusChart = null
 let laporanChart = null
+const abortController = ref(null)
 
 async function fetchDashboard() {
   try {
-    const res = await api.get('/api/dashboard/admin')
+    // Cancel previous request jika ada
+    if (abortController.value) {
+      abortController.value.abort()
+    }
+    abortController.value = new AbortController()
+    
+    const res = await api.get('/api/dashboard/admin', {
+      signal: abortController.value.signal
+    })
 
     totalTPS.value = res.data.totalTPS
     totalPetugas.value = res.data.totalPetugas
     totalLaporan.value = res.data.totalLaporan
     totalTPSPenuh.value = res.data.totalTPSPenuh
-
-    // await nextTick()
-    // renderStatusChart(res.data.statusTPS)
-    // renderLaporanChart(res.data.laporan7Hari)
 
     // Gunakan setTimeout untuk render chart secara async
     setTimeout(() => {
@@ -98,14 +103,22 @@ async function fetchDashboard() {
     }, 100)  // Delay kecil untuk memastikan UI thread bebas
 
   } catch (error) {
-    console.error("Gagal ambil dashboard:", error)
+    if (error.name !== 'CanceledError') {
+      console.error("Gagal ambil dashboard:", error)
+    }
   }
 }
 
 onMounted(fetchDashboard)
 
-onActivated(() => {
-  fetchDashboard()
+onBeforeUnmount(() => {
+  // Cancel semua pending request ketika component di-unmount
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+  // Destroy charts untuk prevent memory leak
+  if (statusChart) statusChart.destroy()
+  if (laporanChart) laporanChart.destroy()
 })
 
 function renderStatusChart(data) {

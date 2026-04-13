@@ -109,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onActivated } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import api from '@/services/api'
 import dusunModal from '@/components/dusunModal.vue'
 
@@ -140,10 +140,6 @@ async function fetchDusun() {
 }
 
 onMounted(fetchDusun)
-
-onActivated(() => {
-  fetchDusun()
-})
 
 function openAdd() {
   selected.value = {

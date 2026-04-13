@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, onActivated } from 'vue'
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import JadwalModal from '@/components/jadwalModal.vue'
 import { toIndex } from '@/services/hariJadwal'
@@ -147,6 +147,7 @@ const showModal = ref(false)
 const form = ref(null)
 const petugasList = ref([])
 const usedDays = ref([])
+const abortController = ref(null)
 
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
@@ -163,18 +164,43 @@ const paginatedJadwal = computed(() => {
 })
 
 async function fetchJadwal() {
-  const res = await api.get('/api/jadwal')
-  jadwalList.value = res.data
+  try {
+    if (abortController.value) {
+      abortController.value.abort()
+    }
+    abortController.value = new AbortController()
+    
+    const res = await api.get('/api/jadwal', {
+      signal: abortController.value.signal
+    })
+    jadwalList.value = res.data
+  } catch (error) {
+    if (error.name !== 'CanceledError') {
+      console.error('Gagal fetch jadwal:', error)
+    }
+  }
 }
 
 async function fetchTPS() {
-  const res = await api.get('/api/tps')
-  tpsList.value = res.data
+  try {
+    const res = await api.get('/api/tps')
+    tpsList.value = res.data
+  } catch (error) {
+    if (error.name !== 'CanceledError') {
+      console.error('Gagal fetch TPS:', error)
+    }
+  }
 }
 
 async function fetchPetugas() {
-  const res = await api.get('/api/petugas')
-  petugasList.value = res.data
+  try {
+    const res = await api.get('/api/petugas')
+    petugasList.value = res.data
+  } catch (error) {
+    if (error.name !== 'CanceledError') {
+      console.error('Gagal fetch petugas:', error)
+    }
+  }
 }
 
 async function fetchUsedDays(id_tps, excludeDays = []) {
@@ -187,7 +213,9 @@ async function fetchUsedDays(id_tps, excludeDays = []) {
     // Filter out days that are currently being edited
     usedDays.value = (res.data.usedDays || []).filter(day => !excludeDays.includes(day))
   } catch (error) {
-    console.error('Error fetching used days:', error)
+    if (error.name !== 'CanceledError') {
+      console.error('Error fetching used days:', error)
+    }
     usedDays.value = []
   }
 }
@@ -210,8 +238,10 @@ onMounted(() => {
   fetchTPS()
 })
 
-onActivated(() => {
-  fetchJadwal()
+onBeforeUnmount(() => {
+  if (abortController.value) {
+    abortController.value.abort()
+  }
 })
 
 function openAdd() {
@@ -268,15 +298,23 @@ async function save(data) {
     
     await fetchJadwal()
   } catch (error) {
-    console.error(error.response?.data || error)
-    alert(error.response?.data?.message || 'Gagal menyimpan jadwal')
+    if (error.name !== 'CanceledError') {
+      console.error(error.response?.data || error)
+      alert(error.response?.data?.message || 'Gagal menyimpan jadwal')
+    }
   }
 }
 
 async function remove(id) {
   if (confirm('Hapus jadwal ini?')) {
-    await api.delete(`/api/jadwal/${id}`)
-    await fetchJadwal()
+    try {
+      await api.delete(`/api/jadwal/${id}`)
+      await fetchJadwal()
+    } catch (error) {
+      if (error.name !== 'CanceledError') {
+        console.error('Gagal hapus jadwal:', error)
+      }
+    }
   }
 }
 
