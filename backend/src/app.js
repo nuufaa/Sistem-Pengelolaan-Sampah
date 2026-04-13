@@ -15,6 +15,7 @@ const { startScheduler } = require("./services/daftarTugasOtomatisService");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const jamOperasionalRoutes = require("./routes/jamOperasionalRoutes");
 
+app.use(express.json());
 const allowedOrigins = [
   process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL 
@@ -48,7 +49,6 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
 
 app.use('/api/auth', authRoutes)
 app.use('/api/lapor', laporanRoutes)
