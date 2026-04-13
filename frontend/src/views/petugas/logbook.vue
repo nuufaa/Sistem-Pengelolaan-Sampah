@@ -69,27 +69,28 @@
         </div>
 
         <div class="logbook-body">
-          <!-- <div v-if="todayLogbook"> -->
-          <template v-if="todayLogbook">
+          <!-- KENDARAAN HARI INI - Tampilkan semua kendaraan yang digunakan hari ini -->
+          <template v-if="todayLogbook.length > 0">
+            <div v-for="vehicle in todayLogbook" :key="vehicle.id_kendaraan" class="today-vehicle-card">
+              <div class="logbook-info-item">
+                <span class="label">Kendaraan</span>
+                <span class="value">{{ vehicle.nomor_kendaraan }}</span>
+              </div>
+              <div class="logbook-info-item">
+                <span class="label">Petugas</span>
+                <span class="value">{{ vehicle.nama }}</span>
+              </div>
+              <div class="logbook-info-item">
+                <span class="label">Jumlah TPS</span>
+                <span class="value">{{ vehicle.tpsVisited.length }} TPS</span>
+              </div>
 
-            <div class="logbook-info-item">
-              <span class="label">Kendaraan</span>
-              <span class="value">{{ todayLogbook?.nomor_kendaraan }}</span>
-            </div>
-            <div class="logbook-info-item">
-              <span class="label">Petugas</span>
-              <span class="value">{{ todayLogbook?.nama }}</span>
-            </div>
-            <div class="logbook-info-item">
-              <span class="label">Jumlah TPS</span>
-              <span class="value">{{ todayLogbook?.tpsVisited?.length || 0 }} TPS</span>
-            </div>
-
-            <div class="logbook-info-item">
-              <span class="label">TPS</span>
-              <span class="value">
-                {{ todayLogbook?.tpsVisited?.join(', ') }}
-              </span>
+              <div class="logbook-info-item">
+                <span class="label">TPS</span>
+                <span class="value">
+                  {{ vehicle.tpsVisited.join(', ') }}
+                </span>
+              </div>
             </div>
           </template>
 
@@ -169,7 +170,7 @@ function getTodayDateString() {
 const todayLogbook = computed(() => {
   if (!daftarTugas.value.length) {
     console.log('[DEBUG] todayLogbook: no data')
-    return null
+    return []
   }
 
   const todayString = getTodayDateString()
@@ -192,26 +193,40 @@ const todayLogbook = computed(() => {
       itemDateStr = item.tgl_pengambilan
     }
     
-    const isMatch = itemDateStr === todayString
-    console.log(`[DEBUG]   item date: ${itemDateStr} (local), todayString: ${todayString}, match: ${isMatch}`)
+    const isMatch = itemDateStr === todayString && item.id_kendaraan
+    console.log(`[DEBUG]   item date: ${itemDateStr} (local), todayString: ${todayString}, kendaraan: ${item.nomor_kendaraan}, match: ${isMatch}`)
     return isMatch
   })
 
   console.log('[DEBUG] todayLogbook found:', todayData.length, 'items')
 
-  if (!todayData.length) return null
+  if (!todayData.length) return []
   
-  return {
-    nomor_kendaraan: todayData[0].nomor_kendaraan,
-    nama: todayData[0].nama,
-    tpsVisited: [...new Set(todayData.map(t => t.nama_tps))]
-  }
+  // FIX: Group by vehicle (id_kendaraan) - sama seperti historyLogbook
+  const grouped = {}
+  todayData.forEach(item => {
+    const vehicleId = item.id_kendaraan
+    
+    if (!grouped[vehicleId]) {
+      grouped[vehicleId] = {
+        id_kendaraan: vehicleId,
+        nomor_kendaraan: item.nomor_kendaraan,
+        nama: item.nama,
+        tpsVisited: []
+      }
+    }
+    
+    grouped[vehicleId].tpsVisited.push(item.nama_tps)
+  })
+  
+  return Object.values(grouped)
 })
 
 const historyLogbook = computed(() => {
   if (!daftarTugas.value.length) return []
 
   const grouped = {}
+  const todayStr = getTodayDateString() // tambahkan ini
 
   daftarTugas.value.forEach(item => {
     // ONLY include items that have tgl_terakhir_diambil (completed tasks)
@@ -229,6 +244,7 @@ const historyLogbook = computed(() => {
       tglStr = item.tgl_terakhir_diambil
     }
 
+    if (tglStr === todayStr) return // tambahkan ini — skip data hari ini
     const key = tglStr + "-" + item.id_kendaraan
 
     if (!grouped[key]) {
