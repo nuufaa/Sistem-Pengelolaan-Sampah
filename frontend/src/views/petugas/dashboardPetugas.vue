@@ -38,16 +38,6 @@
           <p>Selesai</p>
         </div>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#FFF9C4">
-          <span class="material-icons" style="color:#FBC02D">autorenew</span>
-        </div>
-        <div class="stat-info">
-          <h3>{{ progress }}</h3>
-          <p>Sedang Berlangsung</p>
-        </div>
-      </div>
     </div>
 
     <div class="today-tasks">
@@ -98,7 +88,6 @@ const today = new Date().toLocaleDateString('id-ID', {
 const total = ref(0)
 const pending = ref(0)
 const done = ref(0)
-const progress = ref(0)
 const volumeSampahHarian = ref([])
 
 const tpsData = ref([])
@@ -129,7 +118,6 @@ async function fetchDashboard() {
     total.value = res.data.total
     pending.value = res.data.pending
     done.value = res.data.done
-    progress.value = res.data.progress
     volumeSampahHarian.value = res.data.volumeSampahHarian
 
     // renderVolumeSampahChart(volumeSampahHarian)
