@@ -505,8 +505,8 @@ const kondisiPriority = {
 }
 
 const statusPriority = {
-  selesai: 2,
-  belum_diangkut: 1
+  belum_diangkut: 1,
+  selesai: 2
 }
 
 const sortedLaporan = computed(() => {

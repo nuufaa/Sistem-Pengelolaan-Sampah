@@ -25,27 +25,62 @@ async function getTotalLaporanBulanIni() {
 }
 
 async function getTotalTPSPenuh() {
-    const [rows] = await db.query(`
-        SELECT COUNT(*) as total
-        FROM tps
-        WHERE status_tps = 'penuh'
-        `)
-    return rows[0].total;
+  const [rows] = await db.query(`
+    SELECT COUNT(*) as total
+    FROM (
+      SELECT 
+        t.id_tps,
+        COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100 AS persentase
+      FROM tps t
+      LEFT JOIN daftar_tugas dt 
+        ON t.id_tps = dt.id_tps 
+        AND dt.status_angkut = 'selesai'
+      GROUP BY t.id_tps
+    ) AS sub
+    WHERE persentase >= 80
+  `)
+
+  return rows[0].total
 }
 
 async function getTotalTPSHampirPenuh() {
-    const [rows] = await db.query(`
-        SELECT COUNT(*) as total
-        FROM tps
-        WHERE status_tps = 'hampir_penuh'
-        `)
-    return rows[0].total;
+  const [rows] = await db.query(`
+    SELECT COUNT(*) as total
+    FROM (
+      SELECT 
+        t.id_tps,
+        COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100 AS persentase
+      FROM tps t
+      LEFT JOIN daftar_tugas dt 
+        ON t.id_tps = dt.id_tps 
+        AND dt.status_angkut = 'selesai'
+      GROUP BY t.id_tps
+    ) AS sub
+    WHERE persentase >= 50 AND persentase < 80
+  `)
+
+  return rows[0].total
 }
 
 async function getStatusTPS() {
     const [rows] = await db.query(`
-        SELECT status_tps, COUNT(*) as total
-        FROM tps
+        SELECT 
+        CASE 
+            WHEN persentase >= 80 THEN 'penuh'
+            WHEN persentase >= 50 THEN 'hampir_penuh'
+            ELSE 'normal'
+        END AS status_tps,
+        COUNT(*) AS total
+        FROM (
+        SELECT 
+            t.id_tps,
+            COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100 AS persentase
+        FROM tps t
+        LEFT JOIN daftar_tugas dt 
+            ON t.id_tps = dt.id_tps 
+            AND dt.status_angkut = 'selesai'
+        GROUP BY t.id_tps
+        ) AS sub
         GROUP BY status_tps
         `)
     return rows
