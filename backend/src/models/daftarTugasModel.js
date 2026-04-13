@@ -92,8 +92,7 @@ async function addLogbook(data) {
     `UPDATE daftar_tugas
      SET 
        id_kendaraan = ?,
-       tgl_terakhir_diambil = CURDATE(),
-       status_angkut = 'diangkut'
+       tgl_terakhir_diambil = CURDATE()
      WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
      AND id_petugas = ?
      AND status_angkut = 'belum_diangkut'`,
