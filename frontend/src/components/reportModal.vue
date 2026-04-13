@@ -35,17 +35,17 @@
             <label class="radio-label" v-for="c in kondisi_tps" :key="c">
               <input
                 type="radio"
-                :value="c"
+                :value="c.value"
                 v-model="form.kondisi_tps"
                 required
               />
-              <span>{{ c }}</span>
+              <span>{{ c.label }}</span>
             </label>
           </div>
         </div>
 
         <!-- Foto -->
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>Foto (Opsional)</label>
           <div class="file-upload">
             <input type="file" id="photoUpload" accept="image/*" @change="previewImage" />
@@ -57,7 +57,7 @@
           <div class="image-preview" :class="{ show: imagePreview }">
             <img :src="imagePreview" />
           </div>
-        </div>
+        </div> -->
 
         <!-- Keterangan -->
         <div class="form-group">
@@ -107,9 +107,9 @@ const form = ref({
 })
 
 const kondisi_tps = [
-  "hampir_penuh",
-  "penuh",
-  "sampah_berserakan"
+  { value: "hampir_penuh", label: "Hampir Penuh" },
+  { value: "penuh", label: "Penuh" },
+  { value: "sampah_berserakan", label: "Sampah Berserakan" }
 ]
 
 async function fetchTps() {

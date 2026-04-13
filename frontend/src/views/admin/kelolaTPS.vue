@@ -137,7 +137,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onActivated } from 'vue'
 import { apiFetch } from '../../services/api'
 import TPSModal from '@/components/TPSModal.vue'
 
@@ -179,11 +179,17 @@ async function fetchDusun() {
   }
 }
 
-onMounted(() => {
-  fetchTPS()
-  fetchDusun()
+let loaded = false
+
+onMounted(async () => {
+  await fetchTPS()
+  await fetchDusun()
+  loaded = true
 })
 
+onActivated(() => {
+  if (!loaded) fetchTPS()
+})
 function openAdd() {
   selectedTPS.value = null
   showModal.value = true

@@ -125,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import api from '@/services/api.js'
 import LaporanDetailModal from '@/components/laporanModalAdmin.vue'
 
@@ -161,6 +161,10 @@ async function fetchLaporan() {
 }
 
 onMounted(fetchLaporan)
+
+onActivated(() => {
+  fetchLaporan()
+})
 
 function kondisiText(kondisi) {
   return {

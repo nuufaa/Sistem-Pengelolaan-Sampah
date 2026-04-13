@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick} from 'vue'
+import { ref, onMounted, nextTick, onActivated} from 'vue'
 import api from '@/services/api'
 import Chart from 'chart.js/auto' 
 
@@ -101,13 +101,45 @@ async function fetchDashboard() {
     console.error("Gagal ambil dashboard:", error)
   }
 }
+
 onMounted(fetchDashboard)
+
+onActivated(() => {
+  fetchDashboard()
+})
 
 function renderStatusChart(data) {
   if (statusChart) statusChart.destroy()
 
-  const labels = data.map(item => item.status_tps)
-  const values = data.map(item => item.total)
+  const statusMap = {
+    normal: {
+      label: 'Normal',
+      color: '#4CAF50'
+    },
+    hampir_penuh: {
+      label: 'Hampir Penuh',
+      color: '#FF9800'
+    },
+    penuh: {
+      label: 'Penuh',
+      color: '#F44336'
+    }
+  }
+
+  // urutan yang kamu mau (IMPORTANT)
+  const order = ['normal', 'hampir_penuh', 'penuh']
+
+  const labels = []
+  const values = []
+  const colors = []
+
+  order.forEach(status => {
+    const found = data.find(item => item.status_tps === status)
+
+    labels.push(statusMap[status].label)
+    values.push(found ? found.total : 0)
+    colors.push(statusMap[status].color)
+  })
 
   statusChart = new Chart(statusChartRef.value, {
     type: 'pie',
@@ -116,7 +148,7 @@ function renderStatusChart(data) {
       datasets: [{
         label: 'Status TPS',
         data: values,
-        backgroundColor: ['#4CAF50', '#FF9800', '#F44336'],
+        backgroundColor: colors,
         borderWidth: 1
       }]
     },
