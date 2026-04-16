@@ -164,7 +164,6 @@ function renderStatusChart(data) {
   })
 }
 
-
 function renderLaporanChart(data) {
   if (laporanChart) laporanChart.destroy()
 
