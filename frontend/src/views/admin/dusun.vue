@@ -8,6 +8,45 @@
       </button>
     </div>
 
+    <!-- SEARCH & FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cari nama dusun..."
+        />
+        <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <select v-model="filterKK" class="filter-select">
+          <option value="">Semua Jumlah KK</option>
+          <option value="sedikit">Sedikit (< 100 KK)</option>
+          <option value="sedang">Sedang (100 - 300 KK)</option>
+          <option value="banyak">Banyak (> 300 KK)</option>
+        </select>
+
+        <button
+          v-if="searchQuery || filterKK"
+          class="btn-reset"
+          @click="resetFilter"
+        >
+          <span class="material-icons">filter_alt_off</span>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- INFO HASIL FILTER -->
+    <div class="filter-result-info" v-if="searchQuery || filterKK">
+      Menampilkan {{ filteredDusun.length }} dari {{ dusunList.length }} data
+    </div>
+
     <div class="table-container desktop-only">
       <table class="data-table">
         <thead>
@@ -34,6 +73,16 @@
             </td>
           </tr>
         </tbody>
+
+        <tr v-if="paginatedDusun.length === 0">
+          <td colspan="4">
+            <span class="material-icons">inbox</span>
+            <div class="filter-result-info">
+                  Data tidak ditemukan
+            </div>
+          </td>
+        </tr>
+
       </table>
     </div>
 
@@ -66,6 +115,12 @@
             Hapus
           </button>
         </div>
+      </div>
+
+      <div v-if="paginatedDusun.length === 0" class="empty-state-card">
+        <span class="material-icons">inbox</span>
+        <p>Data </p>
+        <small>data</small>
       </div>
     </div>
 
@@ -109,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onActivated } from 'vue'
+import { ref, onMounted, computed, onActivated, watch } from 'vue'
 import api from '@/services/api'
 import dusunModal from '@/components/dusunModal.vue'
 
@@ -119,16 +174,47 @@ const selected = ref(null)
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
+const searchQuery = ref('')
+const filterKK = ref('')
+
+// COMPUTED: Filter Logic
+const filteredDusun = computed(() => {
+  return dusunList.value.filter(k => {
+    const q = searchQuery.value.toLowerCase()
+    const matchSearch = !q || k.nama_dusun.toLowerCase().includes(q)
+
+    const jumlah = Number(k.jumlah_kk)
+    const matchKK =
+      !filterKK.value ||
+      (filterKK.value === 'sedikit' && jumlah < 100) ||
+      (filterKK.value === 'sedang' && jumlah >= 100 && jumlah <= 300) ||
+      (filterKK.value === 'banyak' && jumlah > 300)
+
+    return matchSearch && matchKK
+  })
+})
+
 // COMPUTED: Pagination Logic
 const totalPages = computed(() => {
-  return Math.ceil(dusunList.value.length / itemsPerPage.value)
+  return Math.ceil(filteredDusun.value.length / itemsPerPage.value)
 })
 
 const paginatedDusun = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
-  return dusunList.value.slice(start, end)
+  return filteredDusun.value.slice(start, end)
 })
+
+// Reset halaman saat filter berubah
+watch([searchQuery, filterKK], () => {
+  currentPage.value = 1
+})
+
+function resetFilter() {
+  searchQuery.value = ''
+  filterKK.value = ''
+  currentPage.value = 1
+}
 
 async function fetchDusun() {
   try {

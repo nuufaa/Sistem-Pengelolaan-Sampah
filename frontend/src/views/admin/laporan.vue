@@ -5,6 +5,71 @@
       <h2>Riwayat Pelaporan Masyarakat</h2>
     </div>
 
+    <!-- SEARCH & FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cari nama TPS atau pelapor..."
+        />
+        <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <select v-model="filterKondisi" class="filter-select">
+          <option value="">Semua Kondisi</option>
+          <option value="hampir_penuh">Hampir Penuh</option>
+          <option value="penuh">Sudah Penuh</option>
+          <option value="sampah_berserakan">Sampah Berserakan</option>
+        </select>
+
+        <!-- DATE INPUTS -->
+        <div class="date-field">
+          <label class="date-label">Dari</label>
+          <div class="date-input-wrapper">
+            <span class="material-icons date-icon">calendar_today</span>
+            <input
+              v-model="filterTanggalDari"
+              type="date"
+              class="filter-date"
+              :max="filterTanggalSampai || undefined"
+            />
+          </div>
+        </div>
+
+        <div class="date-field">
+          <label class="date-label">Sampai</label>
+          <div class="date-input-wrapper">
+            <span class="material-icons date-icon">calendar_today</span>
+            <input
+              v-model="filterTanggalSampai"
+              type="date"
+              class="filter-date"
+              :min="filterTanggalDari || undefined"
+            />
+          </div>
+        </div>
+
+        <button
+          v-if="searchQuery || filterKondisi || filterTanggalDari || filterTanggalSampai"
+          class="btn-reset"
+          @click="resetFilter"
+        >
+          <span class="material-icons">filter_alt_off</span>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- INFO HASIL FILTER -->
+    <div class="filter-result-info" v-if="searchQuery || filterKondisi || filterTanggalDari || filterTanggalSampai">
+      Menampilkan {{ filteredLaporan.length }} dari {{ laporanList.length }} laporan
+    </div>
     <!-- TABLE DESKTOP -->
     <div class="table-container desktop-only">
       <table class="data-table">
@@ -35,6 +100,14 @@
             </td>
           </tr>
         </tbody>
+
+        <tr v-if="paginatedLaporan.length === 0">
+          <td colspan="7" class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Data tidak ditemukan</p>
+          </td>
+        </tr>
+
       </table>
     </div>
 
@@ -81,6 +154,12 @@
           </button>
         </div>
       </div>
+
+      <div v-if="paginatedLaporan.length === 0" class="empty-state-card">
+        <span class="material-icons">inbox</span>
+        <p>Tidak ada laporan yang sesuai filter</p>
+      </div>
+
     </div>
 
     <!-- PAGINATION -->
@@ -123,7 +202,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onActivated} from 'vue'
+import { ref, computed, onMounted, onActivated, watch } from 'vue'
 import api from '@/services/api.js'
 import LaporanDetailModal from '@/components/laporanModalAdmin.vue'
 
@@ -131,23 +210,69 @@ const laporanList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
 
-const tpsDetail = computed(() =>
-  selected.value ?(selected.value.id_tps) : null
-)
-
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
+const searchQuery = ref('')
+const filterKondisi = ref('')
+const filterTanggalDari = ref('')
+const filterTanggalSampai = ref('')
+
+// COMPUTED: Filter Logic
+const filteredLaporan = computed(() => {
+  return laporanList.value.filter(laporan => {
+    const q = searchQuery.value.toLowerCase()
+    const matchSearch = !q ||
+      laporan.nama_tps.toLowerCase().includes(q) ||
+      laporan.nama_pelapor.toLowerCase().includes(q)
+
+    const matchKondisi = !filterKondisi.value ||
+      laporan.kondisi_tps === filterKondisi.value
+
+    // Normalisasi tanggal laporan ke midnight untuk perbandingan akurat
+    const tglLaporan = laporan.tgl_laporan
+      ? new Date(new Date(laporan.tgl_laporan).toDateString())
+      : null
+
+    const matchDari = !filterTanggalDari.value || (
+      tglLaporan && tglLaporan >= new Date(filterTanggalDari.value)
+    )
+
+    const matchSampai = !filterTanggalSampai.value || (
+      tglLaporan && tglLaporan <= new Date(filterTanggalSampai.value)
+    )
+
+    return matchSearch && matchKondisi && matchDari && matchSampai
+  })
+})
+
 // COMPUTED: Pagination Logic
 const totalPages = computed(() => {
-  return Math.ceil(laporanList.value.length / itemsPerPage.value)
+  return Math.ceil(filteredLaporan.value.length / itemsPerPage.value)
 })
 
 const paginatedLaporan = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
-  return laporanList.value.slice(start, end)
+  return filteredLaporan.value.slice(start, end)
 })
+
+// Reset halaman saat filter berubah
+watch([searchQuery, filterKondisi, filterTanggalDari, filterTanggalSampai], () => {
+  currentPage.value = 1
+})
+
+function resetFilter() {
+  searchQuery.value = ''
+  filterKondisi.value = ''
+  filterTanggalDari.value = ''
+  filterTanggalSampai.value = ''
+  currentPage.value = 1
+}
+
+const tpsDetail = computed(() =>
+  selected.value ?(selected.value.id_tps) : null
+)
 
 async function fetchLaporan() {
   try {
