@@ -8,6 +8,52 @@
       </button>
     </div>
 
+    <!-- SEARCH & FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cari nama TPS atau alamat..."
+        />
+        <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <select v-model="filterDusun" class="filter-select">
+          <option value="">Semua Dusun</option>
+          <option v-for="d in dusunList" :key="d.id_dusun" :value="d.id_dusun">
+            {{ d.nama_dusun }}
+          </option>
+        </select>
+
+        <select v-model="filterStatus" class="filter-select">
+          <option value="">Semua Status</option>
+          <option value="normal">Normal</option>
+          <option value="hampir_penuh">Hampir Penuh</option>
+          <option value="penuh">Penuh</option>
+        </select>
+
+        <button
+          v-if="searchQuery || filterDusun || filterStatus"
+          class="btn-reset"
+          @click="resetFilter"
+        >
+          <span class="material-icons">filter_alt_off</span>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- INFO HASIL FILTER -->
+    <div class="filter-result-info" v-if="searchQuery || filterDusun || filterStatus">
+      Menampilkan {{ filteredTPS.length }} dari {{ tpsList.length }} data
+    </div>
+
     <div class="table-container desktop-only">
       <table class="data-table">
         <thead>
@@ -45,6 +91,14 @@
               </button>
             </td>
           </tr>
+
+          <tr v-if="paginatedTPS.length === 0">
+            <td colspan="8" class="empty-state">
+              <span class="material-icons">inbox</span>
+              <p>Data tidak ditemukan</p>
+            </td>
+          </tr>
+
         </tbody>
       </table>
     </div>
@@ -137,7 +191,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onActivated } from 'vue'
+import { ref, onMounted, computed, onActivated, watch } from 'vue'
 import { apiFetch } from '../../services/api'
 import TPSModal from '@/components/TPSModal.vue'
 
@@ -149,16 +203,58 @@ const tpsList = ref([])
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
-// COMPUTED: Pagination Logic
+const searchQuery = ref('')
+const filterDusun = ref('')
+const filterStatus = ref('')
+
+// COMPUTED: Filter Logic
+const filteredTPS = computed(() => {
+  return tpsList.value.filter(tps => {
+    const q = searchQuery.value.toLowerCase()
+    const matchSearch = !q || 
+      tps.nama_tps.toLowerCase().includes(q) || 
+      tps.alamat.toLowerCase().includes(q)
+
+    const matchDusun = !filterDusun.value || tps.id_dusun == filterDusun.value
+
+    const matchStatus = !filterStatus.value || tps.status_tps === filterStatus.value
+
+    return matchSearch && matchDusun && matchStatus
+  })
+})
+
+// Update paginatedTPS agar pakai filteredTPS
 const totalPages = computed(() => {
-  return Math.ceil(tpsList.value.length / itemsPerPage.value)
+  return Math.ceil(filteredTPS.value.length / itemsPerPage.value)
 })
 
 const paginatedTPS = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
-  return tpsList.value.slice(start, end)
+  return filteredTPS.value.slice(start, end)
 })
+
+function resetFilter() {
+  searchQuery.value = ''
+  filterDusun.value = ''
+  filterStatus.value = ''
+  currentPage.value = 1
+}
+
+watch([searchQuery, filterDusun, filterStatus], () => {
+  currentPage.value = 1
+})
+
+// COMPUTED: Pagination Logic
+// const totalPages = computed(() => {
+//   return Math.ceil(tpsList.value.length / itemsPerPage.value)
+// })
+
+// const paginatedTPS = computed(() => {
+//   const start = (currentPage.value - 1) * itemsPerPage.value
+//   const end = start + itemsPerPage.value
+//   return tpsList.value.slice(start, end)
+// })
 
 async function fetchTPS() {
   try {
