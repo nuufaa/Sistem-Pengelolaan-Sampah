@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated } from 'vue'
+import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 import jamOperasionalModal from '@/components/jamOperasionalModal.vue'
 
@@ -108,10 +108,6 @@ async function fetchjamOperasional() {
 }
 
 onMounted(fetchjamOperasional)
-
-onActivated(() => {
-  fetchjamOperasional()
-})
 
 function openAdd() {
   selected.value = {
