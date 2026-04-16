@@ -65,18 +65,39 @@ async function findById(id) {
   return rows[0];
 }
 
-async function addLogbook(data) {
-    const { id_kendaraan, tpsVisited } = data
+// async function addLogbook(data) {
+//     const { id_kendaraan, tpsVisited } = data
 
-    // IMPORTANT: Update HANYA untuk hari ini, jangan pengaruhi jadwal masa depan
-    // FIX: Gunakan DATE(NOW()) untuk konsistensi timezone
-    await db.query(
-      `UPDATE daftar_tugas
-       SET id_kendaraan = ?
-       WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
-       AND DATE(tgl_pengambilan) = DATE(NOW())`,
-      [id_kendaraan, ...tpsVisited]
-    );
+//     // IMPORTANT: Update HANYA untuk hari ini, jangan pengaruhi jadwal masa depan
+//     // FIX: Gunakan DATE(NOW()) untuk konsistensi timezone
+//     await db.query(
+//       `UPDATE daftar_tugas
+//        SET id_kendaraan = ?
+//        WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
+//        AND DATE(tgl_pengambilan) = DATE(NOW())`,
+//       [id_kendaraan, ...tpsVisited]
+//     );
+// }
+
+async function addLogbook(data) {
+
+  console.log('=== addLogbook data ===', JSON.stringify(data))
+  const { id_kendaraan, tpsVisited, id_petugas } = data
+  console.log('tpsVisited:', tpsVisited, typeof tpsVisited)
+
+
+  // Update berdasarkan id_tps yang dipilih saja
+  // Tidak perlu filter tanggal — petugas boleh ambil lebih awal
+  await db.query(
+    `UPDATE daftar_tugas
+     SET 
+       id_kendaraan = ?,
+       tgl_terakhir_diambil = CURDATE()
+     WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
+     AND id_petugas = ?
+     AND status_angkut = 'belum_diangkut'`,
+    [id_kendaraan, ...tpsVisited, id_petugas]
+  )
 }
 
 // OPTIMIZED: Split query untuk mengurangi beban

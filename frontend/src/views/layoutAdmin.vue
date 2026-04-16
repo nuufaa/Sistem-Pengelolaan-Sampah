@@ -49,7 +49,7 @@
               @click="sidebarOpen = false"
             >
               <span class="material-icons">delete</span>
-              Kelola TPS
+              Data TPS
             </router-link>
 
             <router-link
@@ -69,7 +69,7 @@
               @click="sidebarOpen = false"
             >
               <span class="material-icons">domain</span>
-              Kelola Dusun
+              Data Dusun
             </router-link>
 
             <router-link
@@ -79,7 +79,7 @@
               @click="sidebarOpen = false"
             >
               <span class="material-icons">local_shipping</span>
-              Kelola Kendaraan
+              Data Kendaraan
             </router-link>
 
             <router-link
@@ -89,7 +89,7 @@
               @click="sidebarOpen = false"
             >
               <span class="material-icons">event</span>
-              Kelola Jadwal
+              Jadwal Pengambilan
             </router-link>
 
             <router-link
@@ -99,7 +99,7 @@
               @click="sidebarOpen = false"
             >
               <span class="material-icons">badge</span>
-              Kelola Petugas
+              Data Petugas
             </router-link>
 
             <router-link

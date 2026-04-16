@@ -22,20 +22,25 @@ async function updateStatus(req, res) {
 
 async function updateLogbook(req, res) {
   try {
+    console.log('=== req.body ===', req.body)  // tambahkan ini
     const { id_kendaraan, tpsVisited } = req.body
+    const id_petugas = req.user.id
 
     if (!id_kendaraan || !tpsVisited || !tpsVisited.length) {
       return res.status(400).json({
         message: "TPS harus dipilih"
       })
     }
-    await daftarTugasModel.addLogbook(
-      req.body
-    )
+    await daftarTugasModel.addLogbook({
+      id_kendaraan,
+      tpsVisited,
+      id_petugas
+    })
 
     res.json({
-      message: "Kendaraan berhasil diperbarui"
+      message: "Logbook berhasil disimpan"
     })
+
   } catch (error) {
     console.error(error)
     res.status(500).json({

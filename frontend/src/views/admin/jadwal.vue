@@ -9,6 +9,63 @@
       </button>
     </div>
 
+    <!-- SEARCH & FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cari nama TPS atau petugas..."
+        />
+        <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <select v-model="filterTPS" class="filter-select">
+          <option value="">Semua TPS</option>
+          <option v-for="t in tpsList" :key="t.id_tps" :value="t.id_tps">
+            {{ t.nama_tps }}
+          </option>
+        </select>
+
+        <select v-model="filterPetugas" class="filter-select">
+          <option value="">Semua Petugas</option>
+          <option v-for="p in petugasList" :key="p.id_petugas" :value="p.id_petugas">
+            {{ p.nama }}
+          </option>
+        </select>
+
+        <select v-model="filterHari" class="filter-select">
+          <option value="">Semua Hari</option>
+          <option value="0">Minggu</option>
+          <option value="1">Senin</option>
+          <option value="2">Selasa</option>
+          <option value="3">Rabu</option>
+          <option value="4">Kamis</option>
+          <option value="5">Jumat</option>
+          <option value="6">Sabtu</option>
+        </select>
+
+        <button
+          v-if="searchQuery || filterTPS || filterPetugas || filterHari !== ''"
+          class="btn-reset"
+          @click="resetFilter"
+        >
+          <span class="material-icons">filter_alt_off</span>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- INFO HASIL FILTER -->
+    <div class="filter-result-info" v-if="searchQuery || filterTPS || filterPetugas || filterHari !== ''">
+      Menampilkan {{ filteredJadwal.length }} dari {{ jadwalList.length }} data
+    </div>
+
     <!-- Desktop Table -->
     <div class="table-container desktop-only">
       <table class="data-table">
@@ -39,6 +96,14 @@
             </td>
           </tr>
         </tbody>
+
+        <tr v-if="paginatedJadwal.length === 0">
+          <td colspan="6" class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Data tidak ditemukan</p>
+          </td>
+        </tr>
+
       </table>
     </div>
 
@@ -91,6 +156,12 @@
           </button>
         </div>
       </div>
+
+      <div v-if="paginatedJadwal.length === 0" class="empty-state-card">
+        <span class="material-icons">inbox</span>
+        <p>Data tidak ditemukan</p>
+      </div>
+
     </div>
 
     <!-- PAGINATION -->
@@ -152,16 +223,59 @@ const abortController = ref(null)
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
+const searchQuery = ref('')
+const filterTPS = ref('')
+const filterPetugas = ref('')
+const filterHari = ref('')
+
+// COMPUTED: Filter Logic
+const filteredJadwal = computed(() => {
+  return jadwalList.value.filter(j => {
+    const q = searchQuery.value.toLowerCase()
+    const matchSearch = !q ||
+      j.nama_tps.toLowerCase().includes(q) ||
+      j.nama.toLowerCase().includes(q)
+
+    const matchTPS = !filterTPS.value || j.id_tps == filterTPS.value
+
+    const matchPetugas = !filterPetugas.value || j.id_petugas == filterPetugas.value
+
+    // hari_pengambilan bisa array atau string, cek keduanya
+    const matchHari = filterHari.value === '' || (() => {
+      const hariVal = Number(filterHari.value)
+      if (Array.isArray(j.hari_pengambilan)) {
+        return j.hari_pengambilan.map(Number).includes(hariVal)
+      }
+      return Number(j.hari_pengambilan) === hariVal
+    })()
+
+    return matchSearch && matchTPS && matchPetugas && matchHari
+  })
+})
+
 // COMPUTED: Pagination Logic
 const totalPages = computed(() => {
-  return Math.ceil(jadwalList.value.length / itemsPerPage.value)
+  return Math.ceil(filteredJadwal.value.length / itemsPerPage.value)
 })
 
 const paginatedJadwal = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
-  return jadwalList.value.slice(start, end)
+  return filteredJadwal.value.slice(start, end)
 })
+
+// Gabungkan watch yang sudah ada dengan watch filter baru
+watch([searchQuery, filterTPS, filterPetugas, filterHari], () => {
+  currentPage.value = 1
+})
+
+function resetFilter() {
+  searchQuery.value = ''
+  filterTPS.value = ''
+  filterPetugas.value = ''
+  filterHari.value = ''
+  currentPage.value = 1
+}
 
 async function fetchJadwal() {
   try {

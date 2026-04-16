@@ -1203,6 +1203,15 @@ textarea:focus {
     gap: 16px;
 }
 
+.today-vehicle-card {
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border-left: 4px solid #2196F3;
+    display: grid;
+    gap: 12px;
+}
+
 .logbook-info-item {
     display: flex;
     justify-content: space-between;
@@ -1466,6 +1475,16 @@ textarea:focus {
     accent-color: var(--primary);
     width: 16px;
     height: 16px;
+}
+
+.no-available {
+    padding: 16px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: 14px;
+    font-style: italic;
 }
 
 .form-footer {

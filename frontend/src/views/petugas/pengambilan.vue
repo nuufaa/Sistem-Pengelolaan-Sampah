@@ -273,7 +273,6 @@ async function handleSave(payload) {
 function statusText(status) {
   return {
     belum_diangkut: 'Belum Mulai',
-    diangkut: 'Sedang Berlangsung',
     selesai: 'Selesai'
   }[status]
 }
