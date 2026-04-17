@@ -202,9 +202,11 @@ async function updateTanggalTerakhir(id_jadwal) {
 }
 
 async function remove(id) {
+
+  const ids = id.split(",");
   await db.query(
-    "DELETE FROM jadwal_pengambilan WHERE id_jadwal = ?",
-    [id]
+    "DELETE FROM jadwal_pengambilan WHERE id_jadwal IN (?)",
+    [ids]
   );
 }
 

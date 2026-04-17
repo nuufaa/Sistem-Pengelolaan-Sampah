@@ -128,13 +128,19 @@ async function fetchDashboard() {
 }
 
 const todayTasks = computed(() => {
+  // Dapatkan tanggal hari ini tanpa waktu (jam, menit, detik)
   const todayDate = new Date()
+  const today = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate())
+  
   return pengambilanData.value.filter(task => {
     if (!task.tgl_pengambilan) return false
     
     const taskDate = new Date(task.tgl_pengambilan)
-    // tampilkan kalau tgl_pengambilan <= hari ini dan belum diambil
-    return taskDate <= todayDate && task.tgl_terakhir_diambil === null
+    // Normalisasi taskDate ke tengah malam untuk perbandingan hari yang akurat
+    const taskDateNormalized = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
+    
+    // Tampilkan hanya tugas yang tanggalnya persis hari ini dan belum diambil
+    return taskDateNormalized.getTime() === today.getTime() && task.tgl_terakhir_diambil === null
   })
 })
 

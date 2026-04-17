@@ -103,6 +103,26 @@
             </router-link>
 
             <router-link
+              to="/admin/kepatuhan"
+              class="nav-item"
+              exact-active-class="active"
+              @click="sidebarOpen = false"
+            >
+              <span class="material-icons">check_circle</span>
+              Kepatuhan Jadwal
+            </router-link>
+
+            <router-link
+              to="/admin/riwayat-logbook"
+              class="nav-item"
+              exact-active-class="active"
+              @click="sidebarOpen = false"
+            >
+              <span class="material-icons">history</span>
+              Riwayat Logbook
+            </router-link>
+
+            <router-link
               to="/admin/laporan"
               class="nav-item"
               exact-active-class="active"
