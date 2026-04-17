@@ -1,7 +1,7 @@
 <template>
   <section class="content-section active">
     <div class="section-header">
-      <h2>Kelola Titik Pengambilan Sampah (TPS)</h2>
+      <h2>Data Titik Pengambilan Sampah (TPS)</h2>
       <button class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah TPS
@@ -16,7 +16,7 @@
           v-model="searchQuery"
           type="text"
           class="search-input"
-          placeholder="Cari nama TPS atau alamat..."
+          placeholder="Cari"
         />
         <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
           <span class="material-icons">close</span>
@@ -24,12 +24,12 @@
       </div>
 
       <div class="filter-group">
-        <select v-model="filterDusun" class="filter-select">
+        <!-- <select v-model="filterDusun" class="filter-select">
           <option value="">Semua Dusun</option>
           <option v-for="d in dusunList" :key="d.id_dusun" :value="d.id_dusun">
             {{ d.nama_dusun }}
           </option>
-        </select>
+        </select> -->
 
         <select v-model="filterStatus" class="filter-select">
           <option value="">Semua Status</option>
@@ -39,7 +39,7 @@
         </select>
 
         <button
-          v-if="searchQuery || filterDusun || filterStatus"
+          v-if="searchQuery || filterStatus"
           class="btn-reset"
           @click="resetFilter"
         >
@@ -50,8 +50,22 @@
     </div>
 
     <!-- INFO HASIL FILTER -->
-    <div class="filter-result-info" v-if="searchQuery || filterDusun || filterStatus">
-      Menampilkan {{ filteredTPS.length }} dari {{ tpsList.length }} data
+    <div class="filter-result-info">
+      <span v-if="searchQuery || filterStatus">
+        Menampilkan {{ filteredTPS.length }} dari {{ tpsList.length }} data
+
+        <template v-if="searchQuery">
+          | Pencarian: "<b>{{ searchQuery }}</b>"
+        </template>
+
+        <template v-if="filterStatus">
+          | Status: <b>{{ statusText(filterStatus) }}</b>
+        </template>
+      </span>
+
+      <span v-else>
+        Total {{ tpsList.length }} data
+      </span>
     </div>
 
     <div class="table-container desktop-only">
@@ -148,6 +162,13 @@
           </button>
         </div>
       </div>
+
+        <div v-if="paginatedTPS.length === 0" class="empty-state-card">
+          <span class="material-icons">inbox</span>
+          <div class="filter-result-info">
+            Data tidak ditemukan
+          </div>
+        </div>
     </div>
 
     <!-- PAGINATION -->
@@ -204,22 +225,38 @@ const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
 const searchQuery = ref('')
-const filterDusun = ref('')
+// const filterDusun = ref('')
 const filterStatus = ref('')
 
 // COMPUTED: Filter Logic
+// const filteredTPS = computed(() => {
+//   return tpsList.value.filter(tps => {
+//     const q = searchQuery.value.toLowerCase()
+//     const matchSearch = !q || 
+//       tps.nama_tps.toLowerCase().includes(q) || 
+//       tps.alamat.toLowerCase().includes(q)
+
+//     const matchDusun = !filterDusun.value || tps.id_dusun == filterDusun.value
+
+//     const matchStatus = !filterStatus.value || tps.status_tps === filterStatus.value
+
+//     return matchSearch && matchDusun && matchStatus
+//   })
+// })
+
 const filteredTPS = computed(() => {
   return tpsList.value.filter(tps => {
     const q = searchQuery.value.toLowerCase()
-    const matchSearch = !q || 
-      tps.nama_tps.toLowerCase().includes(q) || 
-      tps.alamat.toLowerCase().includes(q)
 
-    const matchDusun = !filterDusun.value || tps.id_dusun == filterDusun.value
+    // 🔥 GLOBAL SEARCH
+    const matchSearch = !q || Object.values(tps).some(val =>
+      val && String(val).toLowerCase().includes(q)
+    )
 
+    // ✅ FILTER STATUS tetap ada
     const matchStatus = !filterStatus.value || tps.status_tps === filterStatus.value
 
-    return matchSearch && matchDusun && matchStatus
+    return matchSearch && matchStatus
   })
 })
 
@@ -236,12 +273,12 @@ const paginatedTPS = computed(() => {
 
 function resetFilter() {
   searchQuery.value = ''
-  filterDusun.value = ''
+  // filterDusun.value = ''
   filterStatus.value = ''
   currentPage.value = 1
 }
 
-watch([searchQuery, filterDusun, filterStatus], () => {
+watch([searchQuery, filterStatus], () => {
   currentPage.value = 1
 })
 

@@ -2,7 +2,7 @@
   <section class="content-section active">
     <!-- Header -->
     <div class="section-header">
-      <h2>Kelola Jadwal Pengambilan</h2>
+      <h2>Data Jadwal Pengambilan</h2>
       <button class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Jadwal
@@ -17,7 +17,7 @@
           v-model="searchQuery"
           type="text"
           class="search-input"
-          placeholder="Cari nama TPS atau petugas..."
+          placeholder="Cari"
         />
         <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
           <span class="material-icons">close</span>
@@ -25,12 +25,31 @@
       </div>
 
       <div class="filter-group">
-        <select v-model="filterTPS" class="filter-select">
-          <option value="">Semua TPS</option>
-          <option v-for="t in tpsList" :key="t.id_tps" :value="t.id_tps">
-            {{ t.nama_tps }}
-          </option>
-        </select>
+        <div class="date-field">
+          <label class="date-label">Dari</label>
+          <div class="date-input-wrapper">
+            <span class="material-icons date-icon">calendar_today</span>
+            <input
+              v-model="filterTanggalDari"
+              type="date"
+              class="filter-date"
+              :max="filterTanggalSampai || undefined"
+            />
+          </div>
+        </div>
+
+        <div class="date-field">
+          <label class="date-label">Sampai</label>
+          <div class="date-input-wrapper">
+            <span class="material-icons date-icon">calendar_today</span>
+            <input
+              v-model="filterTanggalSampai"
+              type="date"
+              class="filter-date"
+              :min="filterTanggalDari || undefined"
+            />
+          </div>
+        </div>
 
         <select v-model="filterPetugas" class="filter-select">
           <option value="">Semua Petugas</option>
@@ -41,17 +60,17 @@
 
         <select v-model="filterHari" class="filter-select">
           <option value="">Semua Hari</option>
-          <option value="0">Minggu</option>
-          <option value="1">Senin</option>
-          <option value="2">Selasa</option>
-          <option value="3">Rabu</option>
-          <option value="4">Kamis</option>
-          <option value="5">Jumat</option>
-          <option value="6">Sabtu</option>
+          <option value="0">Senin</option>
+          <option value="1">Selasa</option>
+          <option value="2">Rabu</option>
+          <option value="3">Kamis</option>
+          <option value="4">Jumat</option>
+          <option value="5">Sabtu</option>
+          <option value="7">Minggu</option>
         </select>
 
         <button
-          v-if="searchQuery || filterTPS || filterPetugas || filterHari !== ''"
+          v-if="searchQuery || filterPetugas || filterHari !== '' || filterTanggalDari || filterTanggalSampai"
           class="btn-reset"
           @click="resetFilter"
         >
@@ -62,8 +81,33 @@
     </div>
 
     <!-- INFO HASIL FILTER -->
-    <div class="filter-result-info" v-if="searchQuery || filterTPS || filterPetugas || filterHari !== ''">
-      Menampilkan {{ filteredJadwal.length }} dari {{ jadwalList.length }} data
+    <div class="filter-result-info">
+      <span v-if="searchQuery || filterPetugas || filterHari || filterTanggalDari || filterTanggalSampai">
+        Menampilkan {{ filteredJadwal.length }} dari {{ jadwalList.length }} data
+      </span>
+      <span v-else>
+        Total {{ jadwalList.length }} data
+      </span>
+
+      <!-- INFO SEARCH -->
+      <span v-if="searchQuery">
+        (Pencarian: "{{ searchQuery }}")
+      </span>
+
+      <!-- INFO HARI -->
+      <span v-if="filterHari !== ''">
+        (Hari: {{ ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu', 'Minggu'][Number(filterHari)] }})
+      </span>
+
+      <!-- INFO TANGGAL -->
+      <span v-if="filterTanggalDari || filterTanggalSampai">
+        (Tanggal: {{ filterTanggalDari || '...' }} - {{ filterTanggalSampai || '...' }})
+      </span>
+
+      <!-- INFO PETUGAS -->
+      <span v-if="filterPetugas">
+        (Petugas dipilih)
+      </span>
     </div>
 
     <!-- Desktop Table -->
@@ -224,32 +268,78 @@ const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
 const searchQuery = ref('')
-const filterTPS = ref('')
+// const filterTPS = ref('')
 const filterPetugas = ref('')
 const filterHari = ref('')
+const filterTanggalDari = ref('')
+const filterTanggalSampai = ref('')
 
 // COMPUTED: Filter Logic
+// const filteredJadwal = computed(() => {
+//   return jadwalList.value.filter(j => {
+//     const q = searchQuery.value.toLowerCase()
+//     const matchSearch = !q ||
+//       j.nama_tps.toLowerCase().includes(q) ||
+//       j.nama.toLowerCase().includes(q)
+
+//     const matchTPS = !filterTPS.value || j.id_tps == filterTPS.value
+
+//     const matchPetugas = !filterPetugas.value || j.id_petugas == filterPetugas.value
+
+//     // hari_pengambilan bisa array atau string, cek keduanya
+//     const matchHari = filterHari.value === '' || (() => {
+//       const hariVal = Number(filterHari.value)
+//       if (Array.isArray(j.hari_pengambilan)) {
+//         return j.hari_pengambilan.map(Number).includes(hariVal)
+//       }
+//       return Number(j.hari_pengambilan) === hariVal
+//     })()
+
+//     return matchSearch && matchTPS && matchPetugas && matchHari
+//   })
+// })
 const filteredJadwal = computed(() => {
   return jadwalList.value.filter(j => {
     const q = searchQuery.value.toLowerCase()
-    const matchSearch = !q ||
-      j.nama_tps.toLowerCase().includes(q) ||
-      j.nama.toLowerCase().includes(q)
 
-    const matchTPS = !filterTPS.value || j.id_tps == filterTPS.value
+    // 🔥 SAFE DATE (tanpa ISO biar ga geser)
+    const tgl = j.tgl_terakhir_diambil
+      ? new Date(j.tgl_terakhir_diambil)
+      : null
 
-    const matchPetugas = !filterPetugas.value || j.id_petugas == filterPetugas.value
+    const tglDari = filterTanggalDari.value
+      ? new Date(filterTanggalDari.value)
+      : null
 
-    // hari_pengambilan bisa array atau string, cek keduanya
-    const matchHari = filterHari.value === '' || (() => {
-      const hariVal = Number(filterHari.value)
-      if (Array.isArray(j.hari_pengambilan)) {
-        return j.hari_pengambilan.map(Number).includes(hariVal)
-      }
-      return Number(j.hari_pengambilan) === hariVal
-    })()
+    const tglSampai = filterTanggalSampai.value
+      ? new Date(filterTanggalSampai.value)
+      : null
 
-    return matchSearch && matchTPS && matchPetugas && matchHari
+    // 🔥 GLOBAL SEARCH (ANTI ERROR)
+    const matchSearch =
+      !q ||
+      Object.values(j).some(val =>
+        String(val ?? '').toLowerCase().includes(q)
+      ) ||
+      formatDate(j.tgl_terakhir_diambil).toLowerCase().includes(q)
+
+    // 🔥 FILTER PETUGAS
+    const matchPetugas =
+      !filterPetugas.value || j.id_petugas == filterPetugas.value
+
+    // 🔥 FIX HARI (PASTIIN NUMBER)
+    const matchHari =
+      filterHari.value === '' ||
+      (Array.isArray(j.hari_pengambilan)
+        ? j.hari_pengambilan.map(Number).includes(Number(filterHari.value))
+        : Number(j.hari_pengambilan) === Number(filterHari.value))
+
+    // 🔥 FILTER TANGGAL (REAL DATE COMPARISON)
+    const matchDate =
+      (!tglDari || (tgl && tgl >= tglDari)) &&
+      (!tglSampai || (tgl && tgl <= tglSampai))
+
+    return matchSearch && matchPetugas && matchHari && matchDate
   })
 })
 
@@ -265,15 +355,26 @@ const paginatedJadwal = computed(() => {
 })
 
 // Gabungkan watch yang sudah ada dengan watch filter baru
-watch([searchQuery, filterTPS, filterPetugas, filterHari], () => {
+// watch([searchQuery, filterTPS, filterPetugas, filterHari], () => {
+//   currentPage.value = 1
+// })
+watch([searchQuery, filterPetugas, filterHari, filterTanggalDari, filterTanggalSampai], () => {
   currentPage.value = 1
 })
 
+// function resetFilter() {
+//   searchQuery.value = ''
+//   filterTPS.value = ''
+//   filterPetugas.value = ''
+//   filterHari.value = ''
+//   currentPage.value = 1
+// }
 function resetFilter() {
   searchQuery.value = ''
-  filterTPS.value = ''
   filterPetugas.value = ''
   filterHari.value = ''
+  filterTanggalDari.value = ''
+  filterTanggalSampai.value = ''
   currentPage.value = 1
 }
 
