@@ -366,8 +366,7 @@ async function getLogbookSummary(filter = {}) {
       k.id_kendaraan,
       k.nomor_kendaraan,
       k.nomor_polisi,
-      p.id_petugas,
-      p.nama AS nama_petugas,
+      GROUP_CONCAT(DISTINCT p.nama SEPARATOR ', ') AS nama_petugas,
       COUNT(*) AS jumlah_tps,
       COALESCE(SUM(dt.volume_sampah), 0) AS total_volume_sampah
     FROM daftar_tugas dt
@@ -415,4 +414,6 @@ module.exports = {
     getTimbulanPerKapita,
     getKepatuhanAllPetugas,
     getDetailKepatuhanPetugas,
+    getLogbookHistory,
+    getLogbookSummary
 }

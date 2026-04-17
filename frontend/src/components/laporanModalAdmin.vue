@@ -34,7 +34,6 @@
 <script setup>
 const props = defineProps({
   laporan: Object,
-  // tps: Object
 })
 
 function kondisiText(kondisi) {
