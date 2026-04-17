@@ -1,11 +1,62 @@
 <template>
   <section class="content-section active">
     <div class="section-header">
-      <h2>Kelola Kendaraan</h2>
+      <h2>Data Kendaraan</h2>
       <button class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Kendaraan
       </button>
+    </div>
+
+    <!-- SEARCH & FILTER -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cari"
+        />
+        <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <select v-model="filterStatus" class="filter-select">
+          <option value="">Semua Status</option>
+          <option value="tersedia">Tersedia</option>
+          <option value="perbaikan">Perbaikan</option>
+        </select>
+
+        <button
+          v-if="searchQuery || filterStatus"
+          class="btn-reset"
+          @click="resetFilter"
+        >
+          <span class="material-icons">filter_alt_off</span>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- INFO HASIL FILTER -->
+    <div class="filter-result-info">
+      <span v-if="searchQuery || filterStatus">
+        Menampilkan {{ filteredKendaraan.length }} dari {{ kendaraanList.length }} data
+      </span>
+      <span v-else>
+        Total {{ kendaraanList.length }} data
+      </span>
+
+      <span v-if="searchQuery">
+        (Pencarian: "{{ searchQuery }}")
+      </span>
+
+      <span v-if="filterStatus">
+        (Status: {{ statusText(filterStatus) }})
+      </span>
     </div>
 
     <div class="table-container desktop-only">
@@ -22,8 +73,8 @@
         </thead>
 
         <tbody>
-          <tr v-for="(k, i) in kendaraanList" :key="k.id_kendaraan">
-            <td>{{ i + 1 }}</td>
+          <tr v-for="(k, i) in paginatedKendaraan" :key="k.id_kendaraan">
+            <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ k.nomor_kendaraan }}</td>
             <td>{{ k.nomor_polisi }}</td>
             <td>{{ k.kapasitas_angkut }}</td>
@@ -42,6 +93,13 @@
             </td>
           </tr>
         </tbody>
+
+        <tr v-if="paginatedKendaraan.length === 0">
+          <td colspan="6" class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Data tidak ditemukan</p>
+          </td>
+        </tr>
       </table>
     </div>
 
@@ -49,7 +107,7 @@
     <div class="card-list mobile-only">
       <div 
         class="data-card" 
-        v-for="(k, i) in kendaraanList" 
+        v-for="(k) in paginatedKendaraan"
         :key="k.id_kendaraan"
       >
         <div class="data-card-header">
@@ -86,6 +144,39 @@
           </button>
         </div>
       </div>
+
+      <div v-if="paginatedKendaraan.length === 0" class="empty-state-card">
+        <span class="material-icons">inbox</span>
+        <p>Data tidak ditemukan</p>
+      </div>
+    </div>
+
+    <div class="pagination-container" v-if="totalPages > 1">
+      <button 
+        class="pagination-btn" 
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        <span class="material-icons">chevron_left</span>
+        Sebelumnya
+      </button>
+
+      <div class="pagination-info">
+        <span>Halaman {{ currentPage }} dari {{ totalPages }}</span>
+        <select v-model.number="itemsPerPage" class="items-per-page">
+          <option :value="5">5 per halaman</option>
+          <option :value="10">10 per halaman</option>
+        </select>
+      </div>
+
+      <button 
+        class="pagination-btn" 
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+      >
+        Selanjutnya
+        <span class="material-icons">chevron_right</span>
+      </button>
     </div>
 
     <!-- MODAL COMPONENT -->
@@ -99,13 +190,69 @@
 </template>
 
 <script setup>
-import { ref, onMounted} from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import api from '@/services/api'
 import KendaraanModal from '@/components/kendaraanModal.vue'
 
 const kendaraanList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
+
+const searchQuery = ref('')
+const filterStatus = ref('')
+
+const currentPage = ref(1)
+const itemsPerPage = ref(5)
+
+const filteredKendaraan = computed(() => {
+  return kendaraanList.value.filter(k => {
+    const q = searchQuery.value.toLowerCase()
+
+    const matchSearch = !q ||
+      k.nomor_kendaraan.toLowerCase().includes(q) ||
+      k.nomor_polisi.toLowerCase().includes(q) ||
+      String(k.kapasitas_angkut).includes(q) ||
+      statusText(k.status_kendaraan).toLowerCase().includes(q)
+
+    const matchStatus =
+      !filterStatus.value ||
+      k.status_kendaraan === filterStatus.value
+
+    return matchSearch && matchStatus
+  })
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredKendaraan.value.length / itemsPerPage.value)
+})
+
+const paginatedKendaraan = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredKendaraan.value.slice(start, end)
+})
+
+watch([searchQuery, filterStatus], () => {
+  currentPage.value = 1
+})
+
+function resetFilter() {
+  searchQuery.value = ''
+  filterStatus.value = ''
+  currentPage.value = 1
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
 
 async function fetchKendaraan() {
   try {

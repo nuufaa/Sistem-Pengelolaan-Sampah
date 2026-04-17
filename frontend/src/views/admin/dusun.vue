@@ -1,7 +1,7 @@
 <template>
   <section class="content-section active">
     <div class="section-header">
-      <h2>Kelola Dusun</h2>
+      <h2>Data Dusun</h2>
       <button class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Dusun
@@ -16,7 +16,7 @@
           v-model="searchQuery"
           type="text"
           class="search-input"
-          placeholder="Cari nama dusun..."
+          placeholder="Cari"
         />
         <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
           <span class="material-icons">close</span>
@@ -43,8 +43,27 @@
     </div>
 
     <!-- INFO HASIL FILTER -->
-    <div class="filter-result-info" v-if="searchQuery || filterKK">
-      Menampilkan {{ filteredDusun.length }} dari {{ dusunList.length }} data
+    <div class="filter-result-info">
+      <span v-if="searchQuery || filterKK">
+        Menampilkan {{ filteredDusun.length }} dari {{ dusunList.length }} data
+        <template v-if="searchQuery">
+          | Pencarian: "<b>{{ searchQuery }}</b>"
+        </template>
+        <template v-if="filterKK">
+          | Filter KK: 
+          <b>
+            {{
+              filterKK === 'sedikit' ? 'Sedikit (< 100)' :
+              filterKK === 'sedang' ? 'Sedang (100 - 300)' :
+              'Banyak (> 300)'
+            }}
+          </b>
+        </template>
+      </span>
+
+      <span v-else>
+        Total {{ dusunList.length }} data
+      </span>
     </div>
 
     <div class="table-container desktop-only">
@@ -119,8 +138,9 @@
 
       <div v-if="paginatedDusun.length === 0" class="empty-state-card">
         <span class="material-icons">inbox</span>
-        <p>Data </p>
-        <small>data</small>
+        <div class="filter-result-info">
+          Data tidak ditemukan
+        </div>
       </div>
     </div>
 
@@ -178,10 +198,31 @@ const searchQuery = ref('')
 const filterKK = ref('')
 
 // COMPUTED: Filter Logic
+// const filteredDusun = computed(() => {
+//   return dusunList.value.filter(k => {
+//     const q = searchQuery.value.toLowerCase()
+//     const matchSearch = !q || k.nama_dusun.toLowerCase().includes(q)
+
+//     const jumlah = Number(k.jumlah_kk)
+//     const matchKK =
+//       !filterKK.value ||
+//       (filterKK.value === 'sedikit' && jumlah < 100) ||
+//       (filterKK.value === 'sedang' && jumlah >= 100 && jumlah <= 300) ||
+//       (filterKK.value === 'banyak' && jumlah > 300)
+
+//     return matchSearch && matchKK
+//   })
+// })
 const filteredDusun = computed(() => {
   return dusunList.value.filter(k => {
-    const q = searchQuery.value.toLowerCase()
-    const matchSearch = !q || k.nama_dusun.toLowerCase().includes(q)
+    const q = searchQuery.value.toLowerCase().trim()
+
+    const nama = (k.nama_dusun || '').toLowerCase()
+    const kk = String(k.jumlah_kk || '')
+
+    const matchSearch = !q ||
+      nama.includes(q) ||
+      kk.includes(q)
 
     const jumlah = Number(k.jumlah_kk)
     const matchKK =

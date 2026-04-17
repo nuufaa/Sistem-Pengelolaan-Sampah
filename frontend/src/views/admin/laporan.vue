@@ -13,7 +13,7 @@
           v-model="searchQuery"
           type="text"
           class="search-input"
-          placeholder="Cari nama TPS atau pelapor..."
+          placeholder="Cari"
         />
         <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
           <span class="material-icons">close</span>
@@ -67,9 +67,31 @@
     </div>
 
     <!-- INFO HASIL FILTER -->
-    <div class="filter-result-info" v-if="searchQuery || filterKondisi || filterTanggalDari || filterTanggalSampai">
-      Menampilkan {{ filteredLaporan.length }} dari {{ laporanList.length }} laporan
+    <div class="filter-result-info">
+      <!-- jumlah data -->
+      <span v-if="searchQuery || filterKondisi || filterTanggalDari || filterTanggalSampai">
+        Menampilkan {{ filteredLaporan.length }} dari {{ laporanList.length }} laporan
+      </span>
+      <span v-else>
+        Total {{ laporanList.length }} laporan
+      </span>
+
+      <!-- keterangan search -->
+      <span v-if="searchQuery">
+        (Pencarian: "{{ searchQuery }}")
+      </span>
+
+      <!-- keterangan kondisi -->
+      <span v-if="filterKondisi">
+        (Kondisi: {{ kondisiText(filterKondisi) }})
+      </span>
+
+      <!-- keterangan tanggal -->
+      <span v-if="filterTanggalDari || filterTanggalSampai">
+        (Tanggal: {{ filterTanggalDari || '...' }} - {{ filterTanggalSampai || '...' }})
+      </span>
     </div>
+
     <!-- TABLE DESKTOP -->
     <div class="table-container desktop-only">
       <table class="data-table">
@@ -157,7 +179,7 @@
 
       <div v-if="paginatedLaporan.length === 0" class="empty-state-card">
         <span class="material-icons">inbox</span>
-        <p>Tidak ada laporan yang sesuai filter</p>
+        <p>Data tidak ditemukan</p>
       </div>
 
     </div>
@@ -219,17 +241,54 @@ const filterTanggalDari = ref('')
 const filterTanggalSampai = ref('')
 
 // COMPUTED: Filter Logic
+// const filteredLaporan = computed(() => {
+//   return laporanList.value.filter(laporan => {
+//     const q = searchQuery.value.toLowerCase()
+//     const matchSearch = !q ||
+//       laporan.nama_tps.toLowerCase().includes(q) ||
+//       laporan.nama_pelapor.toLowerCase().includes(q)
+
+//     const matchKondisi = !filterKondisi.value ||
+//       laporan.kondisi_tps === filterKondisi.value
+
+//     // Normalisasi tanggal laporan ke midnight untuk perbandingan akurat
+//     const tglLaporan = laporan.tgl_laporan
+//       ? new Date(new Date(laporan.tgl_laporan).toDateString())
+//       : null
+
+//     const matchDari = !filterTanggalDari.value || (
+//       tglLaporan && tglLaporan >= new Date(filterTanggalDari.value)
+//     )
+
+//     const matchSampai = !filterTanggalSampai.value || (
+//       tglLaporan && tglLaporan <= new Date(filterTanggalSampai.value)
+//     )
+
+//     return matchSearch && matchKondisi && matchDari && matchSampai
+//   })
+// })
 const filteredLaporan = computed(() => {
   return laporanList.value.filter(laporan => {
     const q = searchQuery.value.toLowerCase()
+
+    // format tanggal biar bisa dicari
+    const formattedDate = laporan.tgl_laporan
+      ? formatDate(laporan.tgl_laporan).toLowerCase()
+      : ''
+
+    // ubah kondisi jadi text biar bisa dicari
+    const kondisi = kondisiText(laporan.kondisi_tps).toLowerCase()
+
     const matchSearch = !q ||
       laporan.nama_tps.toLowerCase().includes(q) ||
-      laporan.nama_pelapor.toLowerCase().includes(q)
+      laporan.nama_pelapor.toLowerCase().includes(q) ||
+      kondisi.includes(q) ||
+      formattedDate.includes(q) ||
+      (laporan.deskripsi || '').toLowerCase().includes(q)
 
     const matchKondisi = !filterKondisi.value ||
       laporan.kondisi_tps === filterKondisi.value
 
-    // Normalisasi tanggal laporan ke midnight untuk perbandingan akurat
     const tglLaporan = laporan.tgl_laporan
       ? new Date(new Date(laporan.tgl_laporan).toDateString())
       : null

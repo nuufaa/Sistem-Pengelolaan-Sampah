@@ -2,11 +2,60 @@
   <section class="content-section active">
     <!-- HEADER -->
     <div class="section-header">
-      <h2>Kelola Data Petugas</h2>
+      <h2>Data Petugas</h2>
       <button class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Petugas
       </button>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cari"
+        />
+        <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <select v-model="filterStatus" class="filter-select">
+          <option value="">Semua Status</option>
+          <option value="1">Aktif</option>
+          <option value="0">Non-Aktif</option>
+        </select>
+
+        <button
+          v-if="searchQuery || filterStatus"
+          class="btn-reset"
+          @click="resetFilter"
+        >
+          <span class="material-icons">filter_alt_off</span>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-result-info">
+      <span v-if="searchQuery || filterStatus">
+        Menampilkan {{ filteredPetugas.length }} dari {{ petugasList.length }} data
+      </span>
+      <span v-else>
+        Total {{ petugasList.length }} data
+      </span>
+
+      <span v-if="searchQuery">
+        (Pencarian: "{{ searchQuery }}")
+      </span>
+
+      <span v-if="filterStatus">
+        (Status: {{ filterStatus === '1' ? 'Aktif' : 'Non-Aktif' }})
+      </span>
     </div>
 
     <!-- TABLE -->
@@ -24,8 +73,8 @@
         </thead>
 
         <tbody>
-          <tr v-for="(p, i) in petugasList" :key="p.id_petugas">
-            <td>{{ i + 1 }}</td>
+          <tr v-for="(p, i) in paginatedPetugas" :key="p.id_petugas">
+            <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ p.nama }}</td>
             <td>{{ p.no_telp }}</td>
             <td>{{ p.username }}</td>
@@ -44,6 +93,13 @@
             </td>
           </tr>
         </tbody>
+
+        <tr v-if="paginatedPetugas.length === 0">
+          <td colspan="6" class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Data tidak ditemukan</p>
+          </td>
+        </tr>
       </table>
     </div>
 
@@ -51,7 +107,7 @@
     <div class="card-list mobile-only">
       <div 
         class="data-card" 
-        v-for="(p, i) in petugasList" 
+        v-for="(p) in paginatedPetugas"
         :key="p.id_petugas"
       >
 
@@ -95,6 +151,39 @@
           </button>
         </div>
       </div>
+
+      <div v-if="paginatedPetugas.length === 0" class="empty-state-card">
+        <span class="material-icons">inbox</span>
+        <p>Data tidak ditemukan</p>
+      </div>
+    </div>
+
+    <div class="pagination-container" v-if="totalPages > 1">
+      <button 
+        class="pagination-btn" 
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        <span class="material-icons">chevron_left</span>
+        Sebelumnya
+      </button>
+
+      <div class="pagination-info">
+        <span>Halaman {{ currentPage }} dari {{ totalPages }}</span>
+        <select v-model.number="itemsPerPage" class="items-per-page">
+          <option :value="5">5 per halaman</option>
+          <option :value="10">10 per halaman</option>
+        </select>
+      </div>
+
+      <button 
+        class="pagination-btn" 
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+      >
+        Selanjutnya
+        <span class="material-icons">chevron_right</span>
+      </button>
     </div>
 
     <!-- MODAL COMPONENT -->
@@ -108,7 +197,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { onMounted, ref, onBeforeUnmount, computed, watch  } from 'vue'
 import api from '@/services/api'
 import PetugasModal from '@/components/petugasModal.vue'
 
@@ -116,6 +205,62 @@ const petugasList = ref([])
 const showModal = ref(false)
 const form = ref(null)
 const abortController = ref(null)
+
+const searchQuery = ref('')
+const filterStatus = ref('')
+
+const currentPage = ref(1)
+const itemsPerPage = ref(5)
+
+const filteredPetugas = computed(() => {
+  return petugasList.value.filter(p => {
+    const q = searchQuery.value.toLowerCase()
+
+    const matchSearch = !q ||
+      p.nama.toLowerCase().includes(q) ||
+      p.no_telp.toLowerCase().includes(q) ||
+      p.username.toLowerCase().includes(q) ||
+      (p.status_petugas === 1 ? 'aktif' : 'non-aktif').includes(q)
+
+    const matchStatus =
+      !filterStatus.value ||
+      String(p.status_petugas) === filterStatus.value
+
+    return matchSearch && matchStatus
+  })
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredPetugas.value.length / itemsPerPage.value)
+})
+
+const paginatedPetugas = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredPetugas.value.slice(start, end)
+})
+
+watch([searchQuery, filterStatus], () => {
+  currentPage.value = 1
+})
+
+function resetFilter() {
+  searchQuery.value = ''
+  filterStatus.value = ''
+  currentPage.value = 1
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
 
 async function fetchPetugas() {
   try {
