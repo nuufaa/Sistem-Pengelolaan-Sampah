@@ -241,6 +241,163 @@ async function getTimbulanPerKapita() {
   return rows
 }
 
+// Kepatuhan Petugas - untuk admin dashboard
+async function getKepatuhanAllPetugas() {
+  const [rows] = await db.query(`
+    SELECT
+      p.id_petugas,
+      p.nama,
+      COUNT(CASE WHEN dt.status_angkut = 'selesai' THEN 1 END) AS total_selesai,
+      COUNT(CASE 
+        WHEN dt.status_angkut = 'selesai' 
+        AND DATE(dt.tgl_terakhir_diambil) <= DATE(dt.tgl_pengambilan)
+        THEN 1 
+      END) AS tepat_waktu,
+      COUNT(CASE 
+        WHEN dt.status_angkut = 'selesai' 
+        AND DATE(dt.tgl_terakhir_diambil) > DATE(dt.tgl_pengambilan)
+        THEN 1 
+      END) AS terlambat,
+      ROUND(
+        COUNT(CASE 
+          WHEN dt.status_angkut = 'selesai' 
+          AND DATE(dt.tgl_terakhir_diambil) <= DATE(dt.tgl_pengambilan)
+          THEN 1 
+        END) / NULLIF(COUNT(CASE WHEN dt.status_angkut = 'selesai' THEN 1 END), 0) * 100,
+        1
+      ) AS persentase_tepat_waktu
+    FROM petugas p
+    LEFT JOIN daftar_tugas dt ON p.id_petugas = dt.id_petugas
+    GROUP BY p.id_petugas, p.nama
+    ORDER BY persentase_tepat_waktu DESC, p.nama ASC
+  `)
+  return rows
+}
+
+// Detail kepatuhan untuk satu petugas - untuk dashboard petugas
+async function getDetailKepatuhanPetugas(id_petugas) {
+  const [rows] = await db.query(`
+    SELECT
+      dt.id_daftar_tugas,
+      t.nama_tps,
+      j.hari_pengambilan,
+      dt.tgl_pengambilan,
+      dt.tgl_terakhir_diambil,
+      dt.status_angkut,
+      CASE 
+        WHEN dt.status_angkut = 'selesai' THEN
+          CASE 
+            WHEN DATE(dt.tgl_terakhir_diambil) <= DATE(dt.tgl_pengambilan) THEN 'Tepat Waktu'
+            WHEN DATEDIFF(DATE(dt.tgl_terakhir_diambil), DATE(dt.tgl_pengambilan)) = 1 THEN 'Terlambat 1 Hari'
+            ELSE CONCAT('Terlambat ', DATEDIFF(DATE(dt.tgl_terakhir_diambil), DATE(dt.tgl_pengambilan)), ' Hari')
+          END
+        ELSE 'Belum Selesai'
+      END AS status_kepatuhan
+    FROM daftar_tugas dt
+    INNER JOIN tps t ON dt.id_tps = t.id_tps
+    LEFT JOIN jadwal_pengambilan j ON dt.id_jadwal = j.id_jadwal
+    WHERE dt.id_petugas = ?
+    AND dt.status_angkut = 'selesai'
+    ORDER BY dt.tgl_pengambilan DESC
+    LIMIT 50
+  `, [id_petugas])
+  return rows
+}
+
+// Riwayat Logbook Kendaraan - untuk admin dashboard
+async function getLogbookHistory(filter = {}) {
+  const { start_date, end_date, id_petugas, id_kendaraan } = filter
+
+  let query = `
+    SELECT 
+      dt.id_daftar_tugas,
+      DATE(dt.tgl_terakhir_diambil) AS tanggal,
+      k.id_kendaraan,
+      k.nomor_kendaraan,
+      k.nomor_polisi,
+      p.id_petugas,
+      p.nama AS nama_petugas,
+      t.nama_tps,
+      dt.volume_sampah,
+      dt.status_angkut
+    FROM daftar_tugas dt
+    INNER JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
+    INNER JOIN petugas p ON dt.id_petugas = p.id_petugas
+    INNER JOIN tps t ON dt.id_tps = t.id_tps
+    WHERE dt.tgl_terakhir_diambil IS NOT NULL
+    AND dt.status_angkut = 'selesai'
+  `
+
+  const params = []
+
+  if (start_date) {
+    query += ` AND DATE(dt.tgl_terakhir_diambil) >= ?`
+    params.push(start_date)
+  }
+
+  if (end_date) {
+    query += ` AND DATE(dt.tgl_terakhir_diambil) <= ?`
+    params.push(end_date)
+  }
+
+  if (id_petugas) {
+    query += ` AND dt.id_petugas = ?`
+    params.push(id_petugas)
+  }
+
+  if (id_kendaraan) {
+    query += ` AND dt.id_kendaraan = ?`
+    params.push(id_kendaraan)
+  }
+
+  query += ` ORDER BY dt.tgl_terakhir_diambil DESC, k.nomor_kendaraan ASC`
+
+  const [rows] = await db.query(query, params)
+  return rows
+}
+
+// Summary Logbook - Group by Kendaraan & Tanggal
+async function getLogbookSummary(filter = {}) {
+  const { start_date, end_date } = filter
+
+  let query = `
+    SELECT
+      DATE(dt.tgl_terakhir_diambil) AS tanggal,
+      k.id_kendaraan,
+      k.nomor_kendaraan,
+      k.nomor_polisi,
+      p.id_petugas,
+      p.nama AS nama_petugas,
+      COUNT(*) AS jumlah_tps,
+      COALESCE(SUM(dt.volume_sampah), 0) AS total_volume_sampah
+    FROM daftar_tugas dt
+    INNER JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
+    INNER JOIN petugas p ON dt.id_petugas = p.id_petugas
+    WHERE dt.tgl_terakhir_diambil IS NOT NULL
+    AND dt.status_angkut = 'selesai'
+  `
+
+  const params = []
+
+  if (start_date) {
+    query += ` AND DATE(dt.tgl_terakhir_diambil) >= ?`
+    params.push(start_date)
+  }
+
+  if (end_date) {
+    query += ` AND DATE(dt.tgl_terakhir_diambil) <= ?`
+    params.push(end_date)
+  }
+
+  query += `
+    GROUP BY DATE(dt.tgl_terakhir_diambil), k.id_kendaraan
+    ORDER BY tanggal DESC, nomor_kendaraan ASC
+  `
+
+  const [rows] = await db.query(query, params)
+  return rows
+}
+
 module.exports = {
     getTotalTPS,
     getTotalPetugas,
@@ -256,4 +413,6 @@ module.exports = {
     getVolumeSampah,
     getRankingTPS,
     getTimbulanPerKapita,
+    getKepatuhanAllPetugas,
+    getDetailKepatuhanPetugas,
 }

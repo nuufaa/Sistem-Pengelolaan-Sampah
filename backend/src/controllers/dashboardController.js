@@ -134,4 +134,85 @@ async function getDashboardStat(req, res) {
     }
 }
 
-module.exports = { getDashboard, getDashboardPetugas, getDashboardMas, getDashboardStat }
+// Kepatuhan semua petugas - untuk admin dashboard
+async function getKepatuhanAllPetugas(req, res) {
+  try {
+    const kepatuhan = await dashboardModel.getKepatuhanAllPetugas();
+    res.json(kepatuhan);
+  } catch (error) {
+    console.error("Error getKepatuhanAllPetugas:", error);
+    res.status(500).json({ message: "Gagal mengambil data kepatuhan petugas" });
+  }
+}
+
+// Detail kepatuhan satu petugas - untuk dashboard petugas
+async function getDetailKepatuhanPetugas(req, res) {
+  try {
+    const id_petugas = req.user ? req.user.id : null;
+
+    if (!id_petugas) {
+      return res.status(401).json({ message: "Petugas tidak terautentikasi" });
+    }
+
+    const detail = await dashboardModel.getDetailKepatuhanPetugas(id_petugas);
+    res.json(detail);
+  } catch (error) {
+    console.error("Error getDetailKepatuhanPetugas:", error);
+    res.status(500).json({ message: "Gagal mengambil detail kepatuhan" });
+  }
+}
+
+// Detail kepatuhan satu petugas - untuk admin (dengan parameter id_petugas)
+async function getDetailKepatuhanPetugasAdmin(req, res) {
+  try {
+    const { id_petugas } = req.params;
+
+    if (!id_petugas) {
+      return res.status(400).json({ message: "ID Petugas tidak ditemukan" });
+    }
+
+    const detail = await dashboardModel.getDetailKepatuhanPetugas(id_petugas);
+    res.json(detail);
+  } catch (error) {
+    console.error("Error getDetailKepatuhanPetugasAdmin:", error);
+    res.status(500).json({ message: "Gagal mengambil detail kepatuhan" });
+  }
+}
+
+// Riwayat Logbook - untuk admin dashboard
+async function getLogbookHistory(req, res) {
+  try {
+    const { start_date, end_date, id_petugas, id_kendaraan } = req.query;
+
+    const filter = {};
+    if (start_date) filter.start_date = start_date;
+    if (end_date) filter.end_date = end_date;
+    if (id_petugas) filter.id_petugas = id_petugas;
+    if (id_kendaraan) filter.id_kendaraan = id_kendaraan;
+
+    const logbook = await dashboardModel.getLogbookHistory(filter);
+    res.json(logbook);
+  } catch (error) {
+    console.error("Error getLogbookHistory:", error);
+    res.status(500).json({ message: "Gagal mengambil riwayat logbook" });
+  }
+}
+
+// Summary Logbook - untuk admin dashboard
+async function getLogbookSummary(req, res) {
+  try {
+    const { start_date, end_date } = req.query;
+
+    const filter = {};
+    if (start_date) filter.start_date = start_date;
+    if (end_date) filter.end_date = end_date;
+
+    const summary = await dashboardModel.getLogbookSummary(filter);
+    res.json(summary);
+  } catch (error) {
+    console.error("Error getLogbookSummary:", error);
+    res.status(500).json({ message: "Gagal mengambil ringkasan logbook" });
+  }
+}
+
+module.exports = { getDashboard, getDashboardPetugas, getDashboardMas, getDashboardStat, getKepatuhanAllPetugas, getDetailKepatuhanPetugas, getDetailKepatuhanPetugasAdmin, getLogbookHistory, getLogbookSummary }
