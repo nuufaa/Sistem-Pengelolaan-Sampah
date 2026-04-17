@@ -79,8 +79,8 @@
           <h2>Filter Tampilan</h2>
       </div>
       <div class="card-body">
-          <div class="filter-group">
-            <label class="filter-label">Status Titik Sampah:</label>
+        <label class="filter-label">Status Titik Sampah:</label>
+        <div class="filter-group">
             <label class="checkbox-label status-normal">
                 <input 
                 type="checkbox"
