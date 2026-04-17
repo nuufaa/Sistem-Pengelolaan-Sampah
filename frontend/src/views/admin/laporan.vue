@@ -224,7 +224,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onActivated, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/services/api.js'
 import LaporanDetailModal from '@/components/laporanModalAdmin.vue'
 
@@ -240,33 +240,6 @@ const filterKondisi = ref('')
 const filterTanggalDari = ref('')
 const filterTanggalSampai = ref('')
 
-// COMPUTED: Filter Logic
-// const filteredLaporan = computed(() => {
-//   return laporanList.value.filter(laporan => {
-//     const q = searchQuery.value.toLowerCase()
-//     const matchSearch = !q ||
-//       laporan.nama_tps.toLowerCase().includes(q) ||
-//       laporan.nama_pelapor.toLowerCase().includes(q)
-
-//     const matchKondisi = !filterKondisi.value ||
-//       laporan.kondisi_tps === filterKondisi.value
-
-//     // Normalisasi tanggal laporan ke midnight untuk perbandingan akurat
-//     const tglLaporan = laporan.tgl_laporan
-//       ? new Date(new Date(laporan.tgl_laporan).toDateString())
-//       : null
-
-//     const matchDari = !filterTanggalDari.value || (
-//       tglLaporan && tglLaporan >= new Date(filterTanggalDari.value)
-//     )
-
-//     const matchSampai = !filterTanggalSampai.value || (
-//       tglLaporan && tglLaporan <= new Date(filterTanggalSampai.value)
-//     )
-
-//     return matchSearch && matchKondisi && matchDari && matchSampai
-//   })
-// })
 const filteredLaporan = computed(() => {
   return laporanList.value.filter(laporan => {
     const q = searchQuery.value.toLowerCase()
