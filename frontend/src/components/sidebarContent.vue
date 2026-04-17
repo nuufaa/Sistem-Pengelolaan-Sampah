@@ -199,7 +199,7 @@
       <!-- DATA -->
       <div v-else class="ranking-list">
         <div
-            v-for="(item, index) in rankingTPS"
+            v-for="(item, index) in rankingTPS.slice(0, 3)"
             :key="item.id_tps"
             class="sidebar-ranking-item"
         >
@@ -325,7 +325,6 @@ function formatJam(val) {
   if (!val) return '--:--'
   return String(val).slice(0, 5)
 }
-
 
 const filterTimbulanData = computed(() =>
 timbulanPerKapita.value.filter(item => parseFloat(item.timbulan_kg_per_kk_per_hari) > 0)
@@ -474,7 +473,7 @@ function getTpsCountByDesa(desaCode) {
   const uniqueTps = new Set(
     jadwalTPS.value
       .filter(tps => tps.nama_dusun === desaCode)
-      .map(tps => tps.id_tps) // ganti sesuai field unik TPS
+      .map(tps => tps.id_tps) 
   )
 
   return uniqueTps.size
