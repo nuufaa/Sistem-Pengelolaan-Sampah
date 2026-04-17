@@ -202,6 +202,7 @@ const laporanChartRef = ref(null)
 
 let statusChart = null
 let laporanChart = null
+const abortController = ref(null)
 
 // Chart config
 const periode = ref('mingguan')   // 'mingguan' | 'bulanan'

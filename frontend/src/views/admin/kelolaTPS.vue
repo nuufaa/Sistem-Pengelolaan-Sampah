@@ -275,17 +275,11 @@ async function fetchDusun() {
   }
 }
 
-let loaded = false
-
 onMounted(async () => {
-  await fetchTPS()
-  await fetchDusun()
-  loaded = true
+  fetchTPS()
+  fetchDusun()
 })
 
-onActivated(() => {
-  if (!loaded) fetchTPS()
-})
 function openAdd() {
   selectedTPS.value = null
   showModal.value = true

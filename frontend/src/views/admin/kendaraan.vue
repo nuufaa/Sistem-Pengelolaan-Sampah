@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated } from 'vue'
+import { ref, onMounted} from 'vue'
 import api from '@/services/api'
 import KendaraanModal from '@/components/kendaraanModal.vue'
 
@@ -117,10 +117,6 @@ async function fetchKendaraan() {
 }
 
 onMounted(fetchKendaraan)
-
-onActivated(() => {
-  fetchKendaraan()
-})
 
 function openAdd() {
   selected.value = {

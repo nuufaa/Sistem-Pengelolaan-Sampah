@@ -283,15 +283,8 @@ async function fetchLaporan() {
   }
 }
 
-let loaded = false
-
 onMounted(async () => {
-  await fetchLaporan()
-  loaded = true
-})
-
-onActivated(() => {
-  if (!loaded) fetchLaporan()
+  fetchLaporan()
 })
 
 function kondisiText(kondisi) {

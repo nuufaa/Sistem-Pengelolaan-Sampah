@@ -108,23 +108,46 @@
 </template>
 
 <script setup>
-import { onMounted, ref, onActivated } from 'vue'
+import { onMounted, ref, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import PetugasModal from '@/components/petugasModal.vue'
 
 const petugasList = ref([])
 const showModal = ref(false)
 const form = ref(null)
+const abortController = ref(null)
 
 async function fetchPetugas() {
-  const res = await api.get('/api/petugas')
-  petugasList.value = res.data
+  try {
+    // Cancel previous request jika ada
+    if (abortController.value) {
+      abortController.value.abort()
+    }
+    
+    // Create new abort controller untuk request ini
+    abortController.value = new AbortController()
+    
+    const res = await api.get('/api/petugas', {
+      signal: abortController.value.signal
+    })
+    petugasList.value = res.data
+  } catch (error) {
+    // Abaikan error jika request di-cancel
+    if (error.name === 'CanceledError') {
+      console.log('Petugas fetch cancelled')
+      return
+    }
+    console.error('Gagal fetch petugas:', error)
+  }
 }
 
 onMounted(fetchPetugas)
 
-onActivated(() => {
-  fetchPetugas()
+onBeforeUnmount(() => {
+  // Cancel semua pending request ketika component di-unmount
+  if (abortController.value) {
+    abortController.value.abort()
+  }
 })
 
 function openAdd() {
@@ -172,7 +195,9 @@ async function save(data) {
     await fetchPetugas()
     
   } catch (error) {
-    console.error('Gagal simpan petugas', error)
+    if (error.name !== 'CanceledError') {
+      console.error('Gagal simpan petugas', error)
+    }
   }
 }
 
@@ -183,7 +208,9 @@ async function remove(id) {
     await api.delete(`/api/petugas/${id}`)
     await fetchPetugas()
   } catch (err) {
-    console.error('Gagal hapus petugas', err)
+    if (err.name !== 'CanceledError') {
+      console.error('Gagal hapus petugas', err)
+    }
   }
 }
 </script>

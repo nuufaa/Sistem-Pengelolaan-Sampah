@@ -227,10 +227,6 @@ async function fetchDusun() {
 
 onMounted(fetchDusun)
 
-onActivated(() => {
-  fetchDusun()
-})
-
 function openAdd() {
   selected.value = {
     id_dusun: null,
