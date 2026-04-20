@@ -284,6 +284,10 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { ref, onMounted, watch, nextTick, computed} from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import api from '@/services/api'
+import { useDesaLogo } from '@/services/useDesaLogo'
+
+const { logoSrc, fetchLogo } = useDesaLogo()
+onMounted(fetchLogo)
 
 // Date and Schedule
 const currentDate = ref('')

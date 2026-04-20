@@ -14,8 +14,9 @@ const petugasRoutes = require("./routes/petugasRoutes");
 const { startScheduler } = require("./services/daftarTugasOtomatisService");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const jamOperasionalRoutes = require("./routes/jamOperasionalRoutes");
+const desaSettingsRoutes = require('./routes/desaSettingsRoutes')
 
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 const allowedOrigins = [
   process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL 
@@ -61,6 +62,7 @@ app.use("/api/daftar-tugas", daftarTugasRoutes);
 app.use("/api/petugas", petugasRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/jam-operasional", jamOperasionalRoutes);
+app.use('/api', desaSettingsRoutes)
 
 if (process.env.NODE_ENV !== 'test') {
   startScheduler();

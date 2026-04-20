@@ -78,7 +78,8 @@ async function getPendingTugas(id_petugas) {
     `SELECT COUNT(*) as total
       FROM daftar_tugas
       WHERE id_petugas = ?
-      AND status_angkut = 'belum_diangkut'`,
+      AND status_angkut = 'belum_diangkut'
+      AND YEARWEEK(tgl_pengambilan, 1) = YEARWEEK(CURDATE(), 1)`,
     [id_petugas]
   );
   return rows[0].total;

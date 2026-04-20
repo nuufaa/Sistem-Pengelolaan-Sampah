@@ -93,9 +93,9 @@
             <span class="legend-dot" :style="{ background: item.color }"></span>
             <span class="legend-label">{{ item.label }}</span>
             <span class="legend-value">{{ item.value }}</span>
-            <span class="legend-pct">
+            <!-- <span class="legend-pct">
               ({{ statusTotal > 0 ? Math.round((item.value / statusTotal) * 100) : 0 }}%)
-            </span>
+            </span> -->
           </div>
         </div>
       </div>
@@ -162,7 +162,7 @@
         <!-- Summary bawah chart -->
         <div class="chart-summary" v-if="!loading">
           <div class="summary-item" title="Total laporan dalam periode yang dipilih">
-            <span class="summary-label">Total Periode</span>
+            <span class="summary-label">Total Laporan</span>
             <span class="summary-value">{{ laporanTotal }}</span>
             <span class="summary-info">laporan</span>
           </div>
@@ -172,7 +172,7 @@
             <span class="summary-info">laporan</span>
           </div>
           <div class="summary-item" title="Jumlah laporan tertinggi dalam periode" style="border-color: #3b82f6; background: rgba(59,130,246,0.05);">
-            <span class="summary-label">Nilai Tertinggi</span>
+            <span class="summary-label">Jumlah Laporan Tertinggi</span>
             <span class="summary-value summary-high">{{ laporanMax }}</span>
             <span class="summary-info">laporan</span>
           </div>

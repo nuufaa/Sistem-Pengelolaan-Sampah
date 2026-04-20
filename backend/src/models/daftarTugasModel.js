@@ -109,9 +109,10 @@ async function addLogbook(data) {
   console.log('tpsVisited:', tpsVisited, typeof tpsVisited)
 
 
-  // Update berdasarkan id_tps yang dipilih, TAPI hanya tugas terawal (1 saja per TPS).
-  // Karena cron men-generate tugas 7 hari ke depan, jika tidak di-limit, 
-  // tugas besok dan lusa untuk TPS ini akan ikut terisi kendaraannya.
+  // Update berdasarkan id_tps yang dipilih, TAPI hanya tugas terawal (1 saja per TPS)
+  // yang jadwal pengambilannya adalah HARI INI atau SEBELUMNYA.
+  // Ini mencegah tugas jadwal masa depan (selanjutnya) ikut terupdate
+  // jika petugas tidak sengaja memilih TPS yang sudah selesai hari ini.
   for (const id_tps of tpsVisited) {
     await db.query(
       `UPDATE daftar_tugas
@@ -121,6 +122,7 @@ async function addLogbook(data) {
        WHERE id_tps = ?
        AND id_petugas = ?
        AND status_angkut = 'belum_diangkut'
+       AND tgl_pengambilan <= CURDATE()
        ORDER BY tgl_pengambilan ASC
        LIMIT 1`,
       [id_kendaraan, id_tps, id_petugas]
