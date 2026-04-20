@@ -66,9 +66,10 @@ async function findAllJadwal() {
         ) jadwal ON t.id_tps = jadwal.id_tps
 
         LEFT JOIN (
-            SELECT id_tps, MAX(volume_sampah) as volume_sampah, MAX(status_angkut) as status_angkut
+            SELECT id_tps, MAX(volume_sampah) as volume_sampah, MIN(status_angkut) as status_angkut
             FROM daftar_tugas
-            WHERE tgl_pengambilan = CURDATE()
+            WHERE DATE(tgl_terakhir_diambil) = CURDATE() 
+               OR (tgl_pengambilan <= CURDATE() AND status_angkut != 'selesai')
             GROUP BY id_tps
         ) dt_today ON t.id_tps = dt_today.id_tps
 
@@ -135,6 +136,13 @@ async function findStatusTPS(statusList = []) {
     return rows;
 }
 
+async function updateStatusTPS(id_tps, status_tps) {
+  await db.query(
+    `UPDATE tps SET status_tps = ? WHERE id_tps = ?`,
+    [status_tps, id_tps]
+  );
+}
+
 async function remove(id) {
     await db.query(
         "DELETE FROM tps WHERE id_tps = ?",
@@ -159,12 +167,20 @@ async function getStatistics() {
   return rows;
 }
 
+async function updateStatusTPS(id_tps, status_tps) {
+  await db.query(
+    `UPDATE tps SET status_tps = ? WHERE id_tps = ?`,
+    [status_tps, id_tps]
+  );
+}
+
 module.exports = {
     create,
     findAll,
     findAllJadwal,
     findById,
     update,
+    updateStatusTPS,
     remove,
     findForMap,
     getStatistics,

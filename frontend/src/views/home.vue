@@ -713,8 +713,8 @@ function initMap() {
     })
 }
 
-function getMarkerIcon(status_tps, status_tps_realtime) {
-    const status = status_tps_realtime || status_tps;
+function getMarkerIcon(status_tps) {
+    const status = status_tps;
     const colors = {
         normal: '#4CAF50',
         hampir_penuh: '#FFC107',
@@ -756,7 +756,7 @@ function formatTgl(date) {
 
 // pop up titik tps
 function createPopupContent(point) {
-    const statusClass = point.status_tps_realtime || point.status_tps;
+    const statusClass = point.status_tps;
     const statusText = {
         normal: 'Normal',
         hampir_penuh: 'Hampir Penuh',
@@ -807,13 +807,13 @@ function updateMarkers() {
 
     const filtered = wastePoints.value.filter(p =>
     (selectedVillage.value === 'all' || p.village === selectedVillage.value) &&
-    selectedStatus.value.includes(p.status_tps_realtime || p.status_tps)
+    selectedStatus.value.includes(p.status_tps)
     )
 
     filtered.forEach(point => {
     const marker = L.marker(
         [parseFloat(point.latitude), parseFloat(point.longitude)],
-        { icon: getMarkerIcon(point.status_tps, point.status_tps_realtime) }
+        { icon: getMarkerIcon(point.status_tps) }
     );
 
     // Use popup for both desktop and mobile

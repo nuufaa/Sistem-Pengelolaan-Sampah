@@ -15,7 +15,17 @@
         </div>
         <div class="stat-info">
           <h3>{{ total }}</h3>
-          <p>Total Tugas</p>
+          <p>Total Seluruh Tugas</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#E3F2FD">
+          <span class="material-icons" style="color:#2196F3">assignment</span>
+        </div>
+        <div class="stat-info">
+          <h3>{{ progress }}</h3>
+          <p>Total Tugas Minggu Ini</p>
         </div>
       </div>
 
@@ -86,6 +96,7 @@ const today = new Date().toLocaleDateString('id-ID', {
 })
 
 const total = ref(0)
+const progress = ref(0)
 const pending = ref(0)
 const done = ref(0)
 const volumeSampahHarian = ref([])
@@ -99,6 +110,8 @@ const selectedItem = ref(null)
 
 async function fetchPengambilan() {
   try {
+    // Generate tugas untuk memastikan tidak ada delay jika cron belum jalan
+    await api.post('/api/daftar-tugas/generate');
     const res = await api.get('/api/daftar-tugas');
     pengambilanData.value = res.data;
     tpsData.value = res.data.tps || []
@@ -116,6 +129,7 @@ async function fetchDashboard() {
   try {
     const res = await api.get('/api/dashboard/petugas')
     total.value = res.data.total
+    progress.value = res.data.progress
     pending.value = res.data.pending
     done.value = res.data.done
     volumeSampahHarian.value = res.data.volumeSampahHarian
@@ -168,7 +182,7 @@ function openUpdateModal(id) {
 }
 
 onMounted(async () => {
-  fetchPengambilan()
+  await fetchPengambilan()
   fetchDashboard()
   fetchKendaraan()
 })

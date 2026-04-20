@@ -1,7 +1,8 @@
 const cron = require("node-cron");
-const {db} = require("../config/db");
+const { db } = require("../config/db");
 const jadwalModel = require("../models/jadwalModel");
 const daftarTugasModel = require("../models/daftarTugasModel");
+const tpsModel = require("../models/tpsModel");
 
 // Helper function untuk format tanggal lokal (YYYY-MM-DD) tanpa UTC conversion
 function formatDateLocal(date) {
@@ -55,7 +56,7 @@ async function generateTugasHarian() {
     const cleanupDate = new Date(today);
     cleanupDate.setDate(cleanupDate.getDate() - 60);
     const cleanupDateStr = formatDateLocal(cleanupDate);
-    
+
     await db.query(
       `DELETE FROM daftar_tugas 
        WHERE status_angkut = 'selesai' 
@@ -69,15 +70,29 @@ async function generateTugasHarian() {
   }
 }
 
+// Reset semua status_tps ke 'normal' setiap tengah malam (H+1)
+async function resetStatusTPS() {
+  try {
+    await db.query(`UPDATE tps SET status_tps = 'normal'`);
+    console.log(`[${new Date().toISOString()}] status_tps semua TPS direset ke 'normal'`);
+  } catch (error) {
+    console.error("Error reset status TPS:", error);
+  }
+}
+
 function startScheduler() {
-  // Jalankan setiap hari tengah malam: 0 jam 0 menit
+  // Generate tugas setiap hari tengah malam
   cron.schedule("0 0 * * *", generateTugasHarian);
 
-  // BONUS: Jalankan juga saat aplikasi start (untuk catch-up)
+  // Reset status_tps ke 'normal' setiap tengah malam (H+1)
+  cron.schedule("0 0 * * *", resetStatusTPS);
+
+  // Jalankan saat aplikasi start (catch-up)
   generateTugasHarian();
 }
 
 module.exports = {
   generateTugasHarian,
+  resetStatusTPS,
   startScheduler
 };
