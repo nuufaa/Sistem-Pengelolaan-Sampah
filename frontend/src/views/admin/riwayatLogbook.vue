@@ -15,7 +15,7 @@
         <input
           v-model="filter.search"
           type="text"
-          placeholder="Cari kendaraan, petugas..."
+          placeholder="Cari"
           class="search-input"
         />
         <button v-if="filter.search" class="clear-btn" @click="filter.search = ''">
@@ -62,7 +62,41 @@
       </div>
     </div>
 
-    <p class="filter-result-info">Total {{ filteredLogbook.length }} data</p>
+    <div class="filter-result-info">
+      <span v-if="filter.search || filter.id_petugas || filter.start_date || filter.end_date || filter.hari">
+        Menampilkan {{ filteredLogbook.length }} dari {{ logbookSummary.length }} data
+      </span>
+      <span v-else>
+        Total {{ logbookSummary.length }} data
+      </span>
+
+      <span v-if="filter.search">
+        (Pencarian: "{{ filter.search }}")
+      </span>
+
+      <span v-if="filter.id_petugas">
+        (Petugas: {{ petugasList.find(p => p.id_petugas == filter.id_petugas)?.nama }})
+      </span>
+
+      <span v-if="filter.start_date">
+        (Dari: {{ formatDate(filter.start_date) }})
+      </span>
+
+      <span v-if="filter.end_date">
+        (Sampai: {{ formatDate(filter.end_date) }})
+      </span>
+
+      <span v-if="filter.hari">
+        (
+          {{
+            filter.hari === 'today' ? 'Hari Ini' :
+            filter.hari === 'yesterday' ? 'Kemarin' :
+            filter.hari === 'week' ? '7 Hari Terakhir' :
+            filter.hari === 'month' ? 'Bulan Ini' : ''
+          }}
+        )
+      </span>
+    </div>
 
     <!-- LOADING STATE -->
     <div v-if="loading" class="loading-state">
@@ -89,11 +123,11 @@
           <tr v-for="(item, index) in filteredLogbook" :key="`${item.tanggal}-${item.id_kendaraan}`">
             <td>{{ index + 1 }}</td>
             <td>{{ formatDate(item.tanggal) }}</td>
-            <td>{{ item.nomor_kendaraan }}</td>
-            <td>{{ item.nomor_polisi }}</td>
-            <td>{{ item.nama_petugas }}</td>
-            <td>{{ item.jumlah_tps }} TPS</td>
-            <td>{{ item.total_volume_sampah }} kg</td>
+            <td>{{ item.nomor_kendaraan || '-' }}</td>
+            <td>{{ item.nomor_polisi || '-' }}</td>
+            <td>{{ item.nama_petugas || '-' }}</td>
+            <td>{{ item.jumlah_tps ? item.jumlah_tps + ' TPS' : '-' }}</td>
+            <td>{{ item.total_volume_sampah ? item.total_volume_sampah + ' kg' : '-' }}</td>
             <td>
               <div class="action-buttons">
                 <button class="btn-action" @click="lihatDetail(item)" title="Lihat Detail">
@@ -103,7 +137,10 @@
             </td>
           </tr>
           <tr v-if="filteredLogbook.length === 0">
-            <td colspan="8" class="empty-state">Tidak ada data riwayat logbook</td>
+            <td colspan="8" class="empty-state">
+              <span class="material-icons">inbox</span>
+              <p>Data tidak ditemukan</p>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -145,8 +182,9 @@
         </div>
       </div>
 
-      <div v-if="filteredLogbook.length === 0" class="data-card empty-state">
-        Tidak ada data riwayat logbook
+      <div v-if="filteredLogbook.length === 0" class="empty-state-card">
+        <span class="material-icons">inbox</span>
+        <p>Data tidak ditemukan</p>
       </div>
     </div>
 
@@ -169,23 +207,29 @@
             <div class="detail-info-grid">
               <div class="form-group">
                 <label>Tanggal</label>
-                <p class="detail-value">{{ formatDate(detailItem.tanggal) }}</p>
+                <p class="detail-value">{{ formatDate(detailItem.tanggal) || '-' }}</p>
               </div>
               <div class="form-group">
                 <label>Kendaraan</label>
-                <p class="detail-value">{{ detailItem.nomor_kendaraan }} ({{ detailItem.nomor_polisi }})</p>
+                  <p class="detail-value">
+                    {{
+                      detailItem.nomor_kendaraan || detailItem.nomor_polisi
+                        ? `${detailItem.nomor_kendaraan || '-'} (${detailItem.nomor_polisi || '-'})`
+                        : '-'
+                    }}
+                  </p>
               </div>
               <div class="form-group">
                 <label>Petugas</label>
-                <p class="detail-value">{{ detailItem.nama_petugas }}</p>
+                <p class="detail-value">{{ detailItem.nama_petugas || '-' }}</p>
               </div>
               <div class="form-group">
                 <label>Total TPS</label>
-                <p class="detail-value">{{ detailItem.jumlah_tps }} TPS</p>
+                <p class="detail-value">{{ detailItem.jumlah_tps ? detailItem.jumlah_tps + ' TPS' : '-' }}</p>
               </div>
               <div class="form-group">
                 <label>Total Volume</label>
-                <p class="detail-value">{{ detailItem.total_volume_sampah }} kg</p>
+                <p class="detail-value">{{ detailItem.total_volume_sampah ? detailItem.total_volume_sampah + ' kg' : '-' }}</p>
               </div>
             </div>
 
@@ -202,8 +246,14 @@
                 <tbody>
                   <tr v-for="(tps, idx) in detailTPSList" :key="idx">
                     <td>{{ idx + 1 }}</td>
-                    <td>{{ tps.nama_tps }}</td>
-                    <td>{{ tps.volume_sampah || 0 }} kg</td>
+                    <td>{{ tps.nama_tps || '-' }}</td>
+                    <td>{{ tps.volume_sampah ? tps.volume_sampah + ' kg' : '-' }}</td>
+                  </tr>
+                  <tr v-if="detailTPSList.length === 0">
+                    <td colspan="3" class="empty-state">
+                      <span class="material-icons">inbox</span>
+                      <p>Data tidak ditemukan</p>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -249,12 +299,20 @@ const todayVehicles = computed(() => {
 
 const filteredLogbook = computed(() => {
   const q = filter.search.toLowerCase()
-  if (!q) return logbookSummary.value
-  return logbookSummary.value.filter(item =>
-    item.nomor_kendaraan?.toLowerCase().includes(q) ||
-    item.nomor_polisi?.toLowerCase().includes(q) ||
-    item.nama_petugas?.toLowerCase().includes(q)
-  )
+
+  return logbookSummary.value.filter(item => {
+    if (!q) return true
+
+    // format tanggal biar bisa dicari user
+    const tanggalFormatted = formatDate(item.tanggal).toLowerCase()
+
+    return (
+      Object.values(item).some(val =>
+        String(val ?? '').toLowerCase().includes(q)
+      ) ||
+      tanggalFormatted.includes(q)
+    )
+  })
 })
 
 async function fetchLogbook() {
