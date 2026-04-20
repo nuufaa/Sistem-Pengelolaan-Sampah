@@ -59,7 +59,7 @@
               @click="sidebarOpen = false"
             >
               <span class="material-icons">event</span>
-              Jam Operasional
+              Pengaturan Sistem
             </router-link>
 
             <router-link
