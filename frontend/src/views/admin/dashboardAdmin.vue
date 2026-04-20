@@ -2,7 +2,6 @@
   <section class="content-section active">
     <div class="section-header">
       <h2 class="section-title">Dashboard</h2>
-      <p class="section-subtitle">Ringkasan data TPS & laporan terkini</p>
     </div>
 
     <!-- STAT CARDS -->
@@ -106,7 +105,9 @@
         <div class="chart-header">
           <div>
             <h3 class="chart-title">Tren Laporan</h3>
-            <p class="chart-subtitle">Jumlah laporan per periode</p>
+            <p class="chart-subtitle">
+              <strong>X-Axis:</strong> Tanggal | <strong>Y-Axis:</strong> Jumlah Laporan
+            </p>
           </div>
           <div class="chart-controls">
             <!-- Toggle Chart Type -->
@@ -160,17 +161,20 @@
 
         <!-- Summary bawah chart -->
         <div class="chart-summary" v-if="!loading">
-          <div class="summary-item">
+          <div class="summary-item" title="Total laporan dalam periode yang dipilih">
             <span class="summary-label">Total Periode</span>
             <span class="summary-value">{{ laporanTotal }}</span>
+            <span class="summary-info">laporan</span>
           </div>
-          <div class="summary-item">
+          <div class="summary-item" title="Rata-rata laporan per hari">
             <span class="summary-label">Rata-rata / Hari</span>
             <span class="summary-value">{{ laporanAvg }}</span>
+            <span class="summary-info">laporan</span>
           </div>
-          <div class="summary-item">
-            <span class="summary-label">Tertinggi</span>
+          <div class="summary-item" title="Jumlah laporan tertinggi dalam periode" style="border-color: #3b82f6; background: rgba(59,130,246,0.05);">
+            <span class="summary-label">Nilai Tertinggi</span>
             <span class="summary-value summary-high">{{ laporanMax }}</span>
+            <span class="summary-info">laporan</span>
           </div>
         </div>
       </div>
@@ -179,7 +183,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onActivated, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onActivated, onUnmounted, watch, nextTick } from 'vue'
 import api from '@/services/api'
 import Chart from 'chart.js/auto'
 
@@ -203,6 +207,7 @@ const laporanChartRef = ref(null)
 let statusChart = null
 let laporanChart = null
 const abortController = ref(null)
+let resizeObserver = null
 
 // Chart config
 const periode = ref('mingguan')   // 'mingguan' | 'bulanan'
@@ -243,6 +248,24 @@ const laporanAvg   = computed(() =>
     ? (laporanTotal.value / laporanValues.value.values.length).toFixed(1)
     : 0
 )
+
+// ── Debounce Helper ────────────────────────────────────
+function debounce(fn, delay = 300) {
+  let timeoutId
+  return function (...args) {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+}
+
+const debouncedRenderCharts = debounce(() => {
+  if (!loading.value) {
+    nextTick(() => {
+      renderStatusChart()
+      renderLaporanChart()
+    })
+  }
+}, 200)
 
 // ── Animate counter ────────────────────────────────────
 function animateCount(target, animated, duration = 800) {
@@ -293,8 +316,55 @@ async function fetchDashboard() {
   }
 }
 
-onMounted(fetchDashboard)
-onActivated(fetchDashboard)
+// ── Setup Resize Observer & Window Listener ────────────────────────────
+function setupResizeObserver() {
+  if (typeof ResizeObserver === 'undefined') return
+  
+  const container = document.querySelector('.dashboard-charts')
+  if (!container) return
+
+  resizeObserver = new ResizeObserver(() => {
+    debouncedRenderCharts()
+  })
+
+  resizeObserver.observe(container)
+}
+
+function setupWindowResizeListener() {
+  window.addEventListener('resize', debouncedRenderCharts)
+}
+
+function removeWindowResizeListener() {
+  window.removeEventListener('resize', debouncedRenderCharts)
+}
+
+onMounted(() => {
+  fetchDashboard()
+  setupResizeObserver()
+  setupWindowResizeListener()
+})
+
+onActivated(() => {
+  fetchDashboard()
+  setupResizeObserver()
+  setupWindowResizeListener()
+})
+
+onUnmounted(() => {
+  removeWindowResizeListener()
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+  if (statusChart) {
+    statusChart.destroy()
+    statusChart = null
+  }
+  if (laporanChart) {
+    laporanChart.destroy()
+    laporanChart = null
+  }
+})
 
 // ── Watch filter / chart type ───────────────────────────
 watch([periode, chartType], () => {
@@ -446,350 +516,4 @@ function setChartType(val) {
 }
 </script>
 
-<style scoped>
-/* ── Section Header ────────────────────────────────── */
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 2px;
-}
-.section-subtitle {
-  font-size: 0.82rem;
-  color: #94a3b8;
-  margin: 0 0 20px;
-}
-
-/* ── Stat Cards ────────────────────────────────────── */
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  border-radius: 14px;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: default;
-}
-.stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-}
-
-.stat-green  { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); }
-.stat-orange { background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); }
-.stat-blue   { background: linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%); }
-.stat-red    { background: linear-gradient(135deg, #fff1f2 0%, #fecdd3 100%); }
-
-.stat-icon-wrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.stat-green  .stat-icon-wrap { background: rgba(34,197,94,0.2);  }
-.stat-orange .stat-icon-wrap { background: rgba(245,158,11,0.2); }
-.stat-blue   .stat-icon-wrap { background: rgba(59,130,246,0.2); }
-.stat-red    .stat-icon-wrap { background: rgba(239,68,68,0.2);  }
-
-.stat-green  .stat-icon-wrap .material-icons { color: #16a34a; }
-.stat-orange .stat-icon-wrap .material-icons { color: #d97706; }
-.stat-blue   .stat-icon-wrap .material-icons { color: #2563eb; }
-.stat-red    .stat-icon-wrap .material-icons { color: #dc2626; }
-
-.stat-value {
-  font-size: 1.8rem;
-  font-weight: 800;
-  line-height: 1;
-  color: #0f172a;
-  margin: 0 0 3px;
-}
-.stat-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin: 0;
-  font-weight: 500;
-}
-
-/* background decorative icon */
-.stat-bg-icon {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  opacity: 0.07;
-}
-.stat-bg-icon .material-icons { font-size: 72px; }
-
-/* ── Chart Cards ───────────────────────────────────── */
-.dashboard-charts {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
-@media (max-width: 960px) {
-  .dashboard-charts { grid-template-columns: 1fr; }
-}
-
-.chart-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  border: 1px solid #f1f5f9;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.chart-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.chart-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 2px;
-}
-.chart-subtitle {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  margin: 0;
-}
-
-/* Refresh button */
-.btn-refresh {
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-.btn-refresh:hover { background: #e2e8f0; }
-.btn-refresh .material-icons { font-size: 18px; color: #64748b; }
-.btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.spinning {
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Chart body */
-.chart-body {
-  height: 190px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.chart-body-tall {
-  height: 240px;
-  display: block;
-}
-
-/* Skeleton loading */
-.chart-skeleton {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.skeleton-circle {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-  background-size: 400% 100%;
-  animation: shimmer 1.2s infinite;
-}
-.skeleton-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  height: 100%;
-  width: 100%;
-  padding: 16px 8px 0;
-}
-.skeleton-bar {
-  flex: 1;
-  border-radius: 6px 6px 0 0;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-  background-size: 400% 100%;
-  animation: shimmer 1.2s infinite;
-}
-@keyframes shimmer {
-  0%   { background-position: 200% center; }
-  100% { background-position: -200% center; }
-}
-
-/* ── Controls: Toggle & Filter ─────────────────────── */
-.chart-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-/* Toggle chart type */
-.toggle-group {
-  display: flex;
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-}
-.toggle-btn {
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  width: 30px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.toggle-btn .material-icons { font-size: 16px; color: #94a3b8; }
-.toggle-btn.active {
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-.toggle-btn.active .material-icons { color: #3b82f6; }
-
-/* Filter tabs */
-.filter-tabs {
-  display: flex;
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-}
-.filter-tab {
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-.filter-tab.active {
-  background: #ffffff;
-  color: #3b82f6;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-
-/* ── Custom Legend (Pie) ───────────────────────────── */
-.custom-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.8rem;
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
-}
-.legend-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.legend-label { color: #475569; flex: 1; font-weight: 500; }
-.legend-value { font-weight: 800; color: #0f172a; min-width: 20px; text-align: right; }
-.legend-pct   { color: #94a3b8; font-size: 0.7rem; min-width: 42px; text-align: right; }
-
-/* ── Summary (Line/Bar) ────────────────────────────── */
-.chart-summary {
-  display: flex;
-  gap: 8px;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 14px;
-}
-.summary-item {
-  flex: 1;
-  text-align: center;
-  padding: 10px 8px;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
-  border-radius: 10px;
-}
-.summary-label {
-  display: block;
-  font-size: 0.68rem;
-  color: #94a3b8;
-  margin-bottom: 4px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.summary-value {
-  display: block;
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1;
-}
-.summary-high { color: #3b82f6; }
-
-/* ── Doughnut center label ─────────────────────────── */
-.doughnut-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  pointer-events: none;
-}
-.doughnut-total {
-  display: block;
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1;
-}
-.doughnut-label {
-  display: block;
-  font-size: 0.65rem;
-  color: #94a3b8;
-  font-weight: 500;
-  margin-top: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-</style>
+<style scoped src="@/assets/styles/admin.css"></style>

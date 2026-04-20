@@ -5,13 +5,69 @@
       <h2>Kepatuhan Jadwal Petugas</h2>
     </div>
 
+    <!-- SEARCH & FILTER -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cari"
+        />
+        <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <select v-model="filterPetugas" class="filter-select">
+          <option value="">Semua Petugas</option>
+          <option 
+            v-for="p in kepatuhanData" 
+            :key="p.id_petugas" 
+            :value="p.id_petugas"
+          >
+            {{ p.nama }}
+          </option>
+        </select>
+
+        <button
+          v-if="searchQuery || filterPetugas"
+          class="btn-reset"
+          @click="resetFilter"
+        >
+          <span class="material-icons">filter_alt_off</span>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- INFO HASIL FILTER -->
+    <div class="filter-result-info">
+      <span v-if="searchQuery || filterPetugas">
+        Menampilkan {{ filteredKepatuhan.length }} dari {{ kepatuhanData.length }} data
+      </span>
+      <span v-else>
+        Total {{ kepatuhanData.length }} data
+      </span>
+
+      <span v-if="searchQuery">
+        (Pencarian: "{{ searchQuery }}")
+      </span>
+
+      <span v-if="filterPetugas">
+        (Petugas: {{ kepatuhanData.find(p => p.id_petugas == filterPetugas)?.nama }})
+      </span>
+    </div>
+
     <!-- LOADING STATE -->
     <div v-if="loading" class="loading-state">
       <p>Memuat data kepatuhan...</p>
     </div>
 
     <!-- TABLE -->
-    <div v-else class="table-container">
+    <div v-else class="table-container desktop-only">
       <table class="data-table">
         <thead>
           <tr>
@@ -26,7 +82,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in kepatuhanData" :key="item.id_petugas + '-' + index" class="data-row">
+          <tr v-for="(item, index) in filteredKepatuhan" :key="item.id_petugas + '-' + index">
             <td data-label="No">{{ index + 1 }}</td>
             <td data-label="Nama Petugas" class="nama-petugas">{{ item.nama }}</td>
             <td data-label="Total">{{ item.total_selesai }}</td>
@@ -68,58 +124,93 @@
               </button>
             </td>
           </tr>
-          <tr v-if="kepatuhanData.length === 0">
-            <td colspan="8" class="no-data">
-              Tidak ada data kepatuhan petugas
+          <tr v-if="filteredKepatuhan.length === 0">
+            <td colspan="8" class="empty-state">
+              <span class="material-icons">inbox</span>
+              <p>Data tidak ditemukan</p>
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
 
-    <!-- MODAL DETAIL -->
-    <!-- <div v-if="showDetail" class="modal-overlay" @click.self="showDetail = false">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Detail Kepatuhan - {{ detailPetugasNama }}</h3>
-          <button class="btn-close" @click="showDetail = false">
-            <span class="material-icons">close</span>
+    </div>
+    <!-- MOBILE CARD -->
+    <div v-if="!loading" class="card-list mobile-only">
+      <div 
+        class="data-card"
+        v-for="(item, index) in filteredKepatuhan"
+        :key="item.id_petugas + '-' + index"
+      >
+        <!-- HEADER -->
+        <div class="data-card-header">
+          <div>
+            <div class="data-card-title">
+              {{ item.nama }}
+            </div>
+            <div class="data-card-subtitle">
+              Total: {{ item.total_selesai }} pengambilan
+            </div>
+          </div>
+
+          <span
+            class="status-badge"
+            :class="item.persentase_tepat_waktu >= 80 ? 'excellent' : item.persentase_tepat_waktu >= 60 ? 'good' : 'warning'"
+          >
+            {{
+              item.persentase_tepat_waktu >= 80
+                ? 'Sangat Baik'
+                : item.persentase_tepat_waktu >= 60
+                  ? 'Baik'
+                  : 'Perlu Perhatian'
+            }}
+          </span>
+        </div>
+
+        <!-- BODY -->
+        <div class="data-card-body">
+          <div class="data-card-item">
+            <span class="data-card-label">Tepat Waktu</span>
+            <span class="data-card-value">{{ item.tepat_waktu }}</span>
+          </div>
+
+          <div class="data-card-item">
+            <span class="data-card-label">Terlambat</span>
+            <span class="data-card-value">{{ item.terlambat }}</span>
+          </div>
+
+          <div class="data-card-item">
+            <span class="data-card-label">Persentase</span>
+            <span class="data-card-value">{{ item.persentase_tepat_waktu || 0 }}%</span>
+          </div>
+
+          <!-- PROGRESS BAR -->
+          <div class="persentase-container">
+            <div class="persentase-bar">
+              <div
+                class="persentase-fill"
+                :class="item.persentase_tepat_waktu >= 80 ? 'good' : item.persentase_tepat_waktu >= 60 ? 'medium' : 'poor'"
+                :style="{ width: item.persentase_tepat_waktu + '%' }"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="data-card-footer">
+          <button class="btn-card-action" @click="lihatDetail(item)">
+            <span class="material-icons">visibility</span>
+            Detail
           </button>
         </div>
-        <div class="modal-body">
-          <div v-if="detailLoading" class="loading-state">
-            <p>Memuat detail...</p>
-          </div>
-          <table v-else class="data-table">
-            <thead>
-              <tr>
-                <th>TPS</th>
-                <th>Hari Jadwal</th>
-                <th>Tanggal Jadwal</th>
-                <th>Tanggal Pengambilan</th>
-                <th>Status Kepatuhan</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="detail in detailKepatuhan" :key="detail.id_daftar_tugas" class="detail-row">
-                <td data-label="TPS">{{ detail.nama_tps }}</td>
-                <td data-label="Hari Jadwal">{{ detail.hari_pengambilan }}</td>
-                <td data-label="Tanggal Jadwal">{{ formatDate(detail.tgl_pengambilan) }}</td>
-                <td data-label="Tanggal Pengambilan">{{ detail.tgl_terakhir_diambil ? formatDate(detail.tgl_terakhir_diambil) : '-' }}</td>
-                <td data-label="Status Kepatuhan">
-                  <span
-                    class="status-kepatuhan"
-                    :class="detail.status_kepatuhan === 'Tepat Waktu' ? 'tepat' : 'terlambat'"
-                  >
-                    {{ detail.status_kepatuhan }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
-    </div> -->
+
+      <!-- EMPTY -->
+      <div v-if="filteredKepatuhan.length === 0" class="empty-state-card">
+        <span class="material-icons">inbox</span>
+        <p>Data tidak ditemukan</p>
+      </div>
+    </div>
+
     <!-- MODAL COMPONENT -->
     <kepatuhanDetailModal
       v-if="showModal && selected"
@@ -132,20 +223,50 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch} from 'vue'
 import api from '@/services/api'
 import kepatuhanDetailModal from '@/components/kepatuhanJadwal.vue'
 
 const kepatuhanData = ref([])
-const detailKepatuhan = ref([])
 const loading = ref(false)
 const detailLoading = ref(false)
-const showDetail = ref(false)
-const detailPetugasId = ref(null)
-const detailPetugasNama = ref('')
 const showModal = ref(false)
 const selected = ref(null)
 const detailData = ref([])
+const searchQuery = ref('')
+const filterPetugas = ref('')
+
+const filteredKepatuhan = computed(() => {
+  return kepatuhanData.value.filter(item => {
+    const q = searchQuery.value.toLowerCase()
+
+  const statusText =
+    item.persentase_tepat_waktu >= 80
+      ? 'sangat baik'
+      : item.persentase_tepat_waktu >= 60
+        ? 'baik'
+        : 'perlu perhatian'
+
+  const matchSearch =
+    !q ||
+    Object.values(item).some(val =>
+      String(val ?? '').toLowerCase().includes(q)
+    ) ||
+    statusText.includes(q)
+
+    // FILTER PETUGAS
+    const matchPetugas =
+      !filterPetugas.value ||
+      item.id_petugas == filterPetugas.value
+
+    return matchSearch && matchPetugas
+  })
+})
+
+function resetFilter() {
+  searchQuery.value = ''
+  filterPetugas.value = ''
+}
 
 async function fetchKepatuhan() {
   loading.value = true
@@ -190,5 +311,5 @@ onMounted(() => {
 })
 
 </script>
-<style scoped src="@/assets/styles/admin.css"></style>
 
+<style scoped src="@/assets/styles/admin.css"></style>
