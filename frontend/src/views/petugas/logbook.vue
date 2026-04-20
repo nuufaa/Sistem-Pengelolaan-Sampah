@@ -100,13 +100,23 @@
         </div>
       </div>
 
-      <!-- RIWAYAT -->
       <div class="logbook-history">
-        <h3>Riwayat Logbook</h3>
+        <div class="history-header">
+          <h3>Riwayat Logbook</h3>
+          <div class="search-box">
+            <span class="material-icons">search</span>
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              placeholder="Cari kendaraan, petugas, atau TPS..." 
+              class="form-control-search"
+            />
+          </div>
+        </div>
 
-        <div v-if="historyLogbook.length" class="logbook-list">
+        <div v-if="filteredHistoryLogbook.length" class="logbook-list">
           <div
-            v-for="log in historyLogbook"
+            v-for="log in filteredHistoryLogbook"
             :key="log.id"
             class="logbook-item"
           >
@@ -133,7 +143,7 @@
         </div>
 
         <div v-else class="no-logbook">
-          Belum ada riwayat logbook
+          {{ searchQuery ? 'Pencarian tidak ditemukan' : 'Belum ada riwayat logbook' }}
         </div>
       </div>
     </div>
@@ -153,6 +163,8 @@ const form = reactive({
   id_kendaraan: '',
   tpsVisited: []
 })
+
+const searchQuery = ref('')
 
 // FIX: Helper function untuk get hari ini dalam format YYYY-MM-DD
 function getTodayDateString() {
@@ -176,33 +188,36 @@ const todayLogbook = computed(() => {
   const todayString = getTodayDateString()
   console.log('[DEBUG] todayLogbook filtering for:', todayString)
   
-  // FIX: Parse ISO string as Date, then get LOCAL date components
-  // Don't split on T because date part is always UTC
   const todayData = daftarTugas.value.filter(item => {
-    if (!item.tgl_pengambilan) return false
+    // Hanya tampilkan yang KENDARAANNYA SUDAH DIPILIH (aktif)
+    if (!item.id_kendaraan) return false
     
-    let itemDateStr
-    if (item.tgl_pengambilan.includes('T')) {
-      // Parse ISO string: 2026-04-11T16:00:00.000Z
-      const date = new Date(item.tgl_pengambilan)
-      const localYear = date.getFullYear()
-      const localMonth = String(date.getMonth() + 1).padStart(2, '0')
-      const localDay = String(date.getDate()).padStart(2, '0')
-      itemDateStr = `${localYear}-${localMonth}-${localDay}`
-    } else {
-      itemDateStr = item.tgl_pengambilan
+    // Jika sudah selesai (biasanya masuk riwayat), pastikan selesainya hari ini
+    // agar riwayat hari-hari sebelumnya tidak muncul di "Kendaraan Hari Ini"
+    if (item.tgl_terakhir_diambil) {
+      let completedDateStr
+      if (item.tgl_terakhir_diambil.includes('T')) {
+        const date = new Date(item.tgl_terakhir_diambil)
+        const localYear = date.getFullYear()
+        const localMonth = String(date.getMonth() + 1).padStart(2, '0')
+        const localDay = String(date.getDate()).padStart(2, '0')
+        completedDateStr = `${localYear}-${localMonth}-${localDay}`
+      } else {
+        completedDateStr = item.tgl_terakhir_diambil
+      }
+      return completedDateStr === todayString
     }
     
-    const isMatch = itemDateStr === todayString && item.id_kendaraan
-    console.log(`[DEBUG]   item date: ${itemDateStr} (local), todayString: ${todayString}, kendaraan: ${item.nomor_kendaraan}, match: ${isMatch}`)
-    return isMatch
+    // Jika KENDARAAN SUDAH DIPILIH dan BELUM SELESAI, selalu tampilkan
+    // (meskipun tgl_pengambilan / jadwalnya bukan hari ini)
+    return true
   })
 
   console.log('[DEBUG] todayLogbook found:', todayData.length, 'items')
 
   if (!todayData.length) return []
   
-  // FIX: Group by vehicle (id_kendaraan) - sama seperti historyLogbook
+  // Group by vehicle (id_kendaraan)
   const grouped = {}
   todayData.forEach(item => {
     const vehicleId = item.id_kendaraan
@@ -266,6 +281,21 @@ const historyLogbook = computed(() => {
   })
 })
 
+const filteredHistoryLogbook = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim()
+  if (!query) return historyLogbook.value
+
+  return historyLogbook.value.filter(log => {
+    const dateFormatted = formatDate(log.tanggal).toLowerCase()
+    const vehicleMatch = log.kendaraan.toLowerCase().includes(query)
+    const officerMatch = log.nama.toLowerCase().includes(query)
+    const tpsMatch = log.tpsVisited.some(tps => tps.toLowerCase().includes(query))
+    const dateMatch = dateFormatted.includes(query)
+    
+    return vehicleMatch || officerMatch || tpsMatch || dateMatch
+  })
+})
+
 
 async function fetchKendaraan() {
   const res = await api.get('/api/kendaraan')
@@ -279,14 +309,16 @@ async function fetchTPS() {
 
 async function fetchDaftarTugas() {
   try {
-    const res = await api.get('/api/daftar-tugas')
+    const [resActive, resHistory] = await Promise.all([
+      api.get('/api/daftar-tugas'),
+      api.get('/api/daftar-tugas/history/completed')
+    ])
     
-    console.log('[DEBUG] fetchDaftarTugas Response:', res.data.length, 'items')
-    res.data.forEach((item, idx) => {
-      console.log(`  [${idx}] tgl: ${item.tgl_pengambilan}, kendaraan: ${item.nomor_kendaraan}, status: ${item.status_angkut}`)
-    })
+    // Gabungkan data yang masih aktif dan yang sudah selesai
+    // agar todayLogbook dan historyLogbook punya data yang lengkap
+    daftarTugas.value = [...resActive.data, ...resHistory.data]
     
-    daftarTugas.value = res.data
+    console.log('[DEBUG] fetchDaftarTugas: Loaded', resActive.data.length, 'active and', resHistory.data.length, 'completed tasks.')
   } catch (error) {
     console.error('[ERROR] fetchDaftarTugas:', error)
   }
@@ -379,3 +411,59 @@ onMounted(() => {
 </script>
 
 <style scoped src="@/assets/styles/petugas.css"></style>
+
+<style scoped>
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.history-header h3 {
+  margin: 0 !important;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+}
+
+.search-box .material-icons {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #757575;
+  font-size: 20px;
+}
+
+.form-control-search {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-control-search:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+@media (max-width: 600px) {
+  .history-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .search-box {
+    max-width: none;
+  }
+}
+</style>

@@ -2,7 +2,15 @@
     <header class="header">
         <div class="header-left">
             <div class="logo-container">
-                <span class="material-icons logo-icon">domain</span>
+                <div class="logo-icon-wrapper">
+                    <img 
+                        v-if="logoSrc" 
+                        :src="logoSrc" 
+                        alt="Logo Desa"
+                        class="logo-img-navbar"
+                    />
+                    <span v-else class="material-icons logo-icon">domain</span>
+                </div>
                 <div class="logo-text">
                     <h1>Sistem Pengelolaan Sampah</h1>
                     <p>Desa Sembalun Bumbung</p>
@@ -353,6 +361,10 @@ import sidebarContent from '@/components/sidebarContent.vue'
 import volumeSampahStat from '@/components/volumeSampahStat.vue'
 import { useToast } from '@/services/useToast'
 import api from '@/services/api'
+import { useDesaLogo } from '@/services/useDesaLogo'
+
+const { logoSrc, fetchLogo } = useDesaLogo()
+onMounted(fetchLogo)
 
 // Mobile detection
 let isMobile = ref(window.innerWidth <= 768);

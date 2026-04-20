@@ -2989,3 +2989,19 @@ input, select, textarea {
 .schedule-empty .material-icons { font-size: 36px; opacity: .4; display: block; margin-bottom: 8px; }
 .schedule-empty p { font-size: 13px; }
 .schedule-footer-count { font-size: 11px; color: #888; margin-top: 10px; text-align: right; }
+
+.logo-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.logo-img-navbar {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    border-radius: 6px;
+}
