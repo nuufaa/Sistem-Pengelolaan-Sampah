@@ -1,4 +1,5 @@
 const {db} = require("../config/db");
+const tpsModel = require("./tpsModel");
 
 // Helper function untuk format tanggal lokal (YYYY-MM-DD) tanpa UTC conversion
 function formatDateLocal(date) {
@@ -55,6 +56,28 @@ async function updateStatus(id, data) {
       id
     ]
   );
+
+  // Jika status selesai dan ada volume_sampah, hitung persentase & update status_tps
+  if (data.status_angkut === 'selesai' && data.volume_sampah) {
+    const tugas = await findById(id);
+    if (tugas) {
+      const [tpsRows] = await db.query(
+        'SELECT kapasitas FROM tps WHERE id_tps = ?',
+        [tugas.id_tps]
+      );
+      const kapasitas = tpsRows[0]?.kapasitas;
+      if (kapasitas && kapasitas > 0) {
+        const persentase = (data.volume_sampah / kapasitas) * 100;
+
+        let status_tps = 'normal';
+        if (persentase >= 80) status_tps = 'penuh';
+        else if (persentase >= 50) status_tps = 'hampir_penuh';
+
+        await tpsModel.updateStatusTPS(tugas.id_tps, status_tps);
+        console.log(`[TPS ${tugas.id_tps}] Persentase: ${persentase.toFixed(1)}% → status_tps: ${status_tps}`);
+      }
+    }
+  }
 }
 
 async function findById(id) {
@@ -86,18 +109,23 @@ async function addLogbook(data) {
   console.log('tpsVisited:', tpsVisited, typeof tpsVisited)
 
 
-  // Update berdasarkan id_tps yang dipilih saja
-  // Tidak perlu filter tanggal — petugas boleh ambil lebih awal
-  await db.query(
-    `UPDATE daftar_tugas
-     SET 
-       id_kendaraan = ?,
-       tgl_terakhir_diambil = CURDATE()
-     WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
-     AND id_petugas = ?
-     AND status_angkut = 'belum_diangkut'`,
-    [id_kendaraan, ...tpsVisited, id_petugas]
-  )
+  // Update berdasarkan id_tps yang dipilih, TAPI hanya tugas terawal (1 saja per TPS).
+  // Karena cron men-generate tugas 7 hari ke depan, jika tidak di-limit, 
+  // tugas besok dan lusa untuk TPS ini akan ikut terisi kendaraannya.
+  for (const id_tps of tpsVisited) {
+    await db.query(
+      `UPDATE daftar_tugas
+       SET 
+         id_kendaraan = ?,
+         tgl_terakhir_diambil = CURDATE()
+       WHERE id_tps = ?
+       AND id_petugas = ?
+       AND status_angkut = 'belum_diangkut'
+       ORDER BY tgl_pengambilan ASC
+       LIMIT 1`,
+      [id_kendaraan, id_tps, id_petugas]
+    )
+  }
 }
 
 // OPTIMIZED: Split query untuk mengurangi beban
@@ -333,10 +361,12 @@ async function getCompletedByPetugas(id_petugas) {
               dt.volume_sampah,
               dt.tgl_terakhir_diambil,
               t.nama_tps,
-              k.nomor_kendaraan
+              k.nomor_kendaraan,
+              p.nama
        FROM daftar_tugas dt
        INNER JOIN tps t ON dt.id_tps = t.id_tps
        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
+       LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
        WHERE dt.id_petugas = ? 
          AND dt.status_angkut = 'selesai'
        ORDER BY dt.tgl_pengambilan DESC

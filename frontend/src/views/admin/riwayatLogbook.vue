@@ -1,104 +1,78 @@
 <template>
   <section class="content-section active">
+
     <!-- HEADER -->
     <div class="section-header">
-      <h2>Riwayat Logbook Kendaraan</h2>
-      <p class="section-subtitle">History pengambilan sampah kendaraan</p>
-    </div>
-
-    <!-- FILTER -->
-    <div class="filter-card">
-      <div class="filter-header">
-        <span class="material-icons">filter_list</span>
-        <h3>Filter Data</h3>
-      </div>
-
-      <div class="filter-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Tanggal Mulai</label>
-            <input v-model="filter.start_date" type="date" class="form-control" />
-          </div>
-
-          <div class="form-group">
-            <label>Tanggal Akhir</label>
-            <input v-model="filter.end_date" type="date" class="form-control" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Kendaraan</label>
-            <select v-model="filter.id_kendaraan" class="form-control">
-              <option value="">-- Semua Kendaraan --</option>
-              <option v-for="k in kendaraanList" :key="k.id_kendaraan" :value="k.id_kendaraan">
-                {{ k.nomor_kendaraan }} ({{ k.nomor_polisi }})
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Petugas</label>
-            <select v-model="filter.id_petugas" class="form-control">
-              <option value="">-- Semua Petugas --</option>
-              <option v-for="p in petugasList" :key="p.id_petugas" :value="p.id_petugas">
-                {{ p.nama }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="filter-actions">
-          <button class="btn-secondary" @click="resetFilter">Reset Filter</button>
-          <button class="btn-primary" @click="fetchLogbook" :disabled="loading">
-            <span class="material-icons">search</span>
-            Cari
-          </button>
-        </div>
+      <div>
+        <h2>Riwayat Logbook Kendaraan</h2>
       </div>
     </div>
 
-    <!-- SUMMARY -->
-    <div v-if="logbookSummary.length > 0" class="summary-cards">
-      <div class="summary-card">
-        <div class="summary-icon">
-          <span class="material-icons">local_shipping</span>
-        </div>
-        <div class="summary-info">
-          <h3>{{ totalTripAhari }}</h3>
-          <p>Total Trip Hari Ini</p>
-        </div>
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          v-model="filter.search"
+          type="text"
+          placeholder="Cari kendaraan, petugas..."
+          class="search-input"
+        />
+        <button v-if="filter.search" class="clear-btn" @click="filter.search = ''">
+          <span>close</span>
+        </button>
       </div>
 
-      <div class="summary-card">
-        <div class="summary-icon">
-          <span class="material-icons">delete</span>
+      <div class="filter-group">
+        <div class="date-field">
+          <span class="date-label">Dari</span>
+          <div class="date-input-wrapper">
+            <span class="material-icons date-icon">calendar_today</span>
+            <input v-model="filter.start_date" type="date" class="filter-date" @change="fetchLogbook" />
+          </div>
         </div>
-        <div class="summary-info">
-          <h3>{{ totalTPS }}</h3>
-          <p>Total TPS Dikunjungi</p>
-        </div>
-      </div>
 
-      <div class="summary-card">
-        <div class="summary-icon">
-          <span class="material-icons">scale</span>
+        <div class="date-field">
+          <span class="date-label">Sampai</span>
+          <div class="date-input-wrapper">
+            <span class="material-icons date-icon">calendar_today</span>
+            <input v-model="filter.end_date" type="date" class="filter-date" @change="fetchLogbook" />
+          </div>
         </div>
-        <div class="summary-info">
-          <h3>{{ totalVolume }} kg</h3>
-          <p>Total Volume Sampah</p>
-        </div>
+
+        <select v-model="filter.id_petugas" class="filter-select" @change="fetchLogbook">
+          <option value="">Semua Petugas</option>
+          <option v-for="p in petugasList" :key="p.id_petugas" :value="p.id_petugas">
+            {{ p.nama }}
+          </option>
+        </select>
+
+        <select v-model="filter.hari" class="filter-select" @change="fetchLogbook">
+          <option value="">Semua Hari</option>
+          <option value="today">Hari Ini</option>
+          <option value="yesterday">Kemarin</option>
+          <option value="week">7 Hari Terakhir</option>
+          <option value="month">Bulan Ini</option>
+        </select>
+
+        <button class="btn-reset" @click="resetFilter">
+          <span class="material-icons">refresh</span>
+          Reset
+        </button>
       </div>
     </div>
+
+    <p class="filter-result-info">Total {{ filteredLogbook.length }} data</p>
 
     <!-- LOADING STATE -->
     <div v-if="loading" class="loading-state">
+      <div class="loader"></div>
       <p>Memuat data riwayat logbook...</p>
     </div>
 
-    <!-- TABLE -->
-    <div v-else class="table-container">
-      <table class="logbook-table">
+    <!-- TABLE DESKTOP -->
+    <div v-else class="table-container desktop-only">
+      <table class="data-table">
         <thead>
           <tr>
             <th>No</th>
@@ -112,89 +86,133 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in logbookSummary" :key="`${item.tanggal}-${item.id_kendaraan}`" class="data-row">
-            <td data-label="No">{{ index + 1 }}</td>
-            <td data-label="Tanggal" class="tanggal">{{ formatDate(item.tanggal) }}</td>
-            <td data-label="Kendaraan">{{ item.nomor_kendaraan }}</td>
-            <td data-label="Polisi">{{ item.nomor_polisi }}</td>
-            <td data-label="Petugas" class="petugas">{{ item.nama_petugas }}</td>
-            <td data-label="TPS">{{ item.jumlah_tps }} TPS</td>
-            <td data-label="Volume">{{ item.total_volume_sampah }} kg</td>
-            <td data-label="Aksi">
-              <button class="btn-lihat" @click="lihatDetail(item)">
-                <span class="material-icons">visibility</span>
-              </button>
+          <tr v-for="(item, index) in filteredLogbook" :key="`${item.tanggal}-${item.id_kendaraan}`">
+            <td>{{ index + 1 }}</td>
+            <td>{{ formatDate(item.tanggal) }}</td>
+            <td>{{ item.nomor_kendaraan }}</td>
+            <td>{{ item.nomor_polisi }}</td>
+            <td>{{ item.nama_petugas }}</td>
+            <td>{{ item.jumlah_tps }} TPS</td>
+            <td>{{ item.total_volume_sampah }} kg</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-action" @click="lihatDetail(item)" title="Lihat Detail">
+                  <span class="material-icons">visibility</span>
+                </button>
+              </div>
             </td>
           </tr>
-          <tr v-if="logbookSummary.length === 0">
-            <td colspan="8" class="no-data">
-              Tidak ada data riwayat logbook
-            </td>
+          <tr v-if="filteredLogbook.length === 0">
+            <td colspan="8" class="empty-state">Tidak ada data riwayat logbook</td>
           </tr>
         </tbody>
       </table>
     </div>
 
+    <!-- MOBILE CARD LIST -->
+    <div v-if="!loading" class="card-list mobile-only">
+      <div
+        v-for="item in filteredLogbook"
+        :key="`mobile-${item.tanggal}-${item.id_kendaraan}`"
+        class="data-card"
+      >
+        <div class="data-card-header">
+          <div>
+            <div class="data-card-title">{{ item.nomor_kendaraan }}</div>
+            <div class="data-card-subtitle">{{ item.nomor_polisi }}</div>
+          </div>
+          <span class="status-badge aktif">{{ formatDate(item.tanggal) }}</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-item">
+            <span class="data-card-label">Petugas</span>
+            <span class="data-card-value">{{ item.nama_petugas }}</span>
+          </div>
+          <div class="data-card-item">
+            <span class="data-card-label">Jumlah TPS</span>
+            <span class="data-card-value">{{ item.jumlah_tps }} TPS</span>
+          </div>
+          <div class="data-card-item">
+            <span class="data-card-label">Total Volume</span>
+            <span class="data-card-value">{{ item.total_volume_sampah }} kg</span>
+          </div>
+        </div>
+        <div class="data-card-footer">
+          <button class="btn-card-action" @click="lihatDetail(item)">
+            <span class="material-icons">visibility</span>
+            Lihat Detail
+          </button>
+        </div>
+      </div>
+
+      <div v-if="filteredLogbook.length === 0" class="data-card empty-state">
+        Tidak ada data riwayat logbook
+      </div>
+    </div>
+
     <!-- MODAL DETAIL -->
-    <div v-if="showDetail" class="modal-overlay" @click.self="showDetail = false">
-      <div class="modal-content">
+    <div v-if="showDetail" class="modal show">
+      <div class="modal-overlay" @click="showDetail = false"></div>
+      <div class="modal-content modal-large">
         <div class="modal-header">
-          <h3>Detail Logbook - {{ detailItem.nomor_kendaraan }}</h3>
-          <button class="btn-close" @click="showDetail = false">
+          <h2>Detail Logbook - {{ detailItem.nomor_kendaraan }}</h2>
+          <button class="modal-close" @click="showDetail = false">
             <span class="material-icons">close</span>
           </button>
         </div>
         <div class="modal-body">
           <div v-if="detailLoading" class="loading-state">
+            <div class="loader"></div>
             <p>Memuat detail...</p>
           </div>
           <div v-else>
-            <!-- Detail Header -->
-            <div class="detail-header">
-              <div class="detail-item">
-                <span class="label">Tanggal</span>
-                <span class="value">{{ formatDate(detailItem.tanggal) }}</span>
+            <div class="detail-info-grid">
+              <div class="form-group">
+                <label>Tanggal</label>
+                <p class="detail-value">{{ formatDate(detailItem.tanggal) }}</p>
               </div>
-              <div class="detail-item">
-                <span class="label">Kendaraan</span>
-                <span class="value">{{ detailItem.nomor_kendaraan }} ({{ detailItem.nomor_polisi }})</span>
+              <div class="form-group">
+                <label>Kendaraan</label>
+                <p class="detail-value">{{ detailItem.nomor_kendaraan }} ({{ detailItem.nomor_polisi }})</p>
               </div>
-              <div class="detail-item">
-                <span class="label">Petugas</span>
-                <span class="value">{{ detailItem.nama_petugas }}</span>
+              <div class="form-group">
+                <label>Petugas</label>
+                <p class="detail-value">{{ detailItem.nama_petugas }}</p>
               </div>
-              <div class="detail-item">
-                <span class="label">Total TPS</span>
-                <span class="value">{{ detailItem.jumlah_tps }} TPS</span>
+              <div class="form-group">
+                <label>Total TPS</label>
+                <p class="detail-value">{{ detailItem.jumlah_tps }} TPS</p>
               </div>
-              <div class="detail-item">
-                <span class="label">Total Volume</span>
-                <span class="value">{{ detailItem.total_volume_sampah }} kg</span>
+              <div class="form-group">
+                <label>Total Volume</label>
+                <p class="detail-value">{{ detailItem.total_volume_sampah }} kg</p>
               </div>
             </div>
 
-            <!-- Detail Table -->
-            <h4 class="tps-list-header">Daftar TPS yang Dikunjungi:</h4>
-            <table class="detail-table">
-              <thead>
-                <tr>
-                  <th>No</th>
-                  <th>TPS</th>
-                  <th>Volume Sampah</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(tps, idx) in detailTPSList" :key="idx">
-                  <td>{{ idx + 1 }}</td>
-                  <td>{{ tps.nama_tps }}</td>
-                  <td>{{ tps.volume_sampah || 0 }} kg</td>
-                </tr>
-              </tbody>
-            </table>
+            <h3 class="tps-list-title">Daftar TPS yang Dikunjungi</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>TPS</th>
+                    <th>Volume Sampah</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(tps, idx) in detailTPSList" :key="idx">
+                    <td>{{ idx + 1 }}</td>
+                    <td>{{ tps.nama_tps }}</td>
+                    <td>{{ tps.volume_sampah || 0 }} kg</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
   </section>
 </template>
 
@@ -208,25 +226,63 @@ const showDetail = ref(false)
 
 const logbookSummary = ref([])
 const logbookDetail = ref([])
-const kendaraanList = ref([])
 const petugasList = ref([])
 
 const filter = reactive({
+  search: '',
   start_date: '',
   end_date: '',
-  id_kendaraan: '',
-  id_petugas: ''
+  id_petugas: '',
+  hari: ''
 })
 
 const detailItem = ref({})
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0]
+}
+
+const todayVehicles = computed(() => {
+  const today = todayStr()
+  return logbookSummary.value.filter(item => item.tanggal === today)
+})
+
+const filteredLogbook = computed(() => {
+  const q = filter.search.toLowerCase()
+  if (!q) return logbookSummary.value
+  return logbookSummary.value.filter(item =>
+    item.nomor_kendaraan?.toLowerCase().includes(q) ||
+    item.nomor_polisi?.toLowerCase().includes(q) ||
+    item.nama_petugas?.toLowerCase().includes(q)
+  )
+})
 
 async function fetchLogbook() {
   loading.value = true
   try {
     const params = new URLSearchParams()
-    if (filter.start_date) params.append('start_date', filter.start_date)
-    if (filter.end_date) params.append('end_date', filter.end_date)
-    if (filter.id_kendaraan) params.append('id_kendaraan', filter.id_kendaraan)
+
+    if (filter.hari === 'today') {
+      params.append('start_date', todayStr())
+      params.append('end_date', todayStr())
+    } else if (filter.hari === 'yesterday') {
+      const y = new Date(); y.setDate(y.getDate() - 1)
+      const ys = y.toISOString().split('T')[0]
+      params.append('start_date', ys)
+      params.append('end_date', ys)
+    } else if (filter.hari === 'week') {
+      const w = new Date(); w.setDate(w.getDate() - 7)
+      params.append('start_date', w.toISOString().split('T')[0])
+      params.append('end_date', todayStr())
+    } else if (filter.hari === 'month') {
+      const m = new Date()
+      params.append('start_date', `${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}-01`)
+      params.append('end_date', todayStr())
+    } else {
+      if (filter.start_date) params.append('start_date', filter.start_date)
+      if (filter.end_date) params.append('end_date', filter.end_date)
+    }
+
     if (filter.id_petugas) params.append('id_petugas', filter.id_petugas)
 
     const res = await api.get(`/api/dashboard/logbook/summary?${params.toString()}`)
@@ -243,13 +299,16 @@ async function lihatDetail(item) {
   detailItem.value = item
   showDetail.value = true
   detailLoading.value = true
-
   try {
     const params = new URLSearchParams()
-    params.append('start_date', item.tanggal)
-    params.append('end_date', item.tanggal)
+    const tanggal = new Date(item.tanggal)
+tanggal.setDate(tanggal.getDate() + 1)  // kompensasi offset UTC
+const tanggalStr = tanggal.toISOString().split('T')[0]
+
+    params.append('start_date', tanggalStr)
+    params.append('end_date', tanggalStr)
     params.append('id_kendaraan', item.id_kendaraan)
-    params.append('id_petugas', item.id_petugas)
+    // params.append('id_petugas', item.id_petugas)
 
     const res = await api.get(`/api/dashboard/logbook/history?${params.toString()}`)
     logbookDetail.value = res.data
@@ -258,15 +317,6 @@ async function lihatDetail(item) {
     logbookDetail.value = []
   } finally {
     detailLoading.value = false
-  }
-}
-
-async function fetchKendaraan() {
-  try {
-    const res = await api.get('/api/kendaraan')
-    kendaraanList.value = res.data
-  } catch (error) {
-    console.error('Gagal mengambil kendaraan:', error)
   }
 }
 
@@ -280,549 +330,181 @@ async function fetchPetugas() {
 }
 
 function resetFilter() {
+  filter.search = ''
   filter.start_date = ''
   filter.end_date = ''
-  filter.id_kendaraan = ''
   filter.id_petugas = ''
-  logbookSummary.value = []
+  filter.hari = ''
+  fetchLogbook()
 }
 
 function formatDate(date) {
   if (!date) return '-'
-  const d = new Date(date)
-  return d.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
+  return new Date(date).toLocaleDateString('id-ID', {
+    day: 'numeric', month: 'long', year: 'numeric'
   })
 }
 
 const detailTPSList = computed(() => {
+    console.log('logbookDetail:', logbookDetail.value)
+  console.log('detailItem:', detailItem.value)
   return logbookDetail.value.filter(
-    item => item.tanggal === detailItem.value.tanggal && item.id_kendaraan === detailItem.value.id_kendaraan
+    item =>
+      item.tanggal === detailItem.value.tanggal &&
+      item.id_kendaraan === detailItem.value.id_kendaraan
   )
 })
 
-const totalTripAhari = computed(() => logbookSummary.value.length)
-const totalTPS = computed(() => logbookSummary.value.reduce((sum, item) => sum + item.jumlah_tps, 0))
-const totalVolume = computed(() => logbookSummary.value.reduce((sum, item) => sum + item.total_volume_sampah, 0))
-
 onMounted(() => {
-  fetchKendaraan()
   fetchPetugas()
+  fetchLogbook()
 })
 </script>
 
+<style scoped src="@/assets/styles/admin.css"></style>
 <style scoped>
-.content-section {
-  padding: 20px;
-}
-
-.section-header {
-  margin-bottom: 30px;
-}
-
-.section-header h2 {
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: #333;
-}
+/* Hanya style tambahan yang belum ada di global CSS */
 
 .section-subtitle {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
+  margin-top: 4px;
 }
 
-/* Filter Card */
-.filter-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.filter-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* Kendaraan Hari Ini */
+.today-section {
+  padding: 16px 20px;
   margin-bottom: 20px;
 }
 
-.filter-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.filter-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.form-control {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: inherit;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #2196f3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-}
-
-.filter-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+.today-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s;
+  margin-bottom: 14px;
 }
 
-.btn-primary {
-  background: #2196f3;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #1976d2;
-}
-
-.btn-primary:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #e0e0e0;
-  color: #333;
-}
-
-.btn-secondary:hover {
-  background: #d0d0d0;
-}
-
-/* Summary Cards */
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.summary-card {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.summary-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #e3f2fd;
-  color: #2196f3;
-  flex-shrink: 0;
-}
-
-.summary-info h3 {
+/* .today-header .material-icons {
+  color: var(--secondary);
   font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-  color: #333;
-}
+} */
 
-.summary-info p {
-  font-size: 12px;
-  color: #666;
-  margin: 5px 0 0 0;
-}
-
-/* Table */
-.table-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
-}
-
-.logbook-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.logbook-table thead {
-  background: #f5f5f5;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-.logbook-table th {
-  padding: 15px;
-  text-align: left;
+.today-header h3 {
+  font-size: 15px;
   font-weight: 600;
-  color: #333;
-  font-size: 13px;
-  white-space: nowrap;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
 }
 
-.logbook-table td {
-  padding: 15px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 13px;
-}
-
-.logbook-table tbody tr {
-  transition: background 0.2s;
-}
-
-.logbook-table tbody tr:hover {
-  background: #fafafa;
-}
-
-.tanggal,
-.petugas {
-  font-weight: 500;
-  color: #333;
-}
-
-.btn-lihat {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #2196f3;
-  padding: 5px;
-  border-radius: 6px;
-  transition: background 0.2s;
+.today-empty {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
-.btn-lihat:hover {
-  background: #e3f2fd;
+.today-cards {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.material-icons {
-  font-size: 20px;
+.today-card {
+  flex: 1;
+  min-width: 180px;
+  cursor: pointer;
+  padding: 14px;
 }
 
-.no-data {
+.icon-blue {
+  background: #E3F2FD;
+  color: var(--status-aktif);
+  width: 44px;
+  height: 44px;
+}
+
+.today-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.today-petugas {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+/* 
+.today-petugas .material-icons {
+  font-size: 14px;
+} */
+
+/* Loading */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+/* Empty state */
+.empty-state {
   text-align: center;
-  color: #999;
+  color: var(--text-secondary);
   padding: 40px !important;
 }
 
-.loading-state {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 10px;
-  overflow: auto;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  max-width: 900px;
-  width: 100%;
-  max-height: 80vh;
-  overflow: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
-  flex-shrink: 0;
-  gap: 15px;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  flex: 1;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #999;
-  padding: 5px;
-  border-radius: 6px;
-  transition: background 0.2s;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.btn-close:hover {
-  background: #f0f0f0;
-}
-
-.modal-body {
-  padding: 20px;
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.detail-header {
+/* Detail modal */
+.detail-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 25px;
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 8px;
-}
-
-.detail-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-item .label {
-  font-size: 11px;
-  color: #666;
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.detail-item .value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.tps-list-header {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin: 20px 0 10px 0;
-}
-
-.detail-table {
-  width: 100%;
-  border-collapse: collapse;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 16px;
   margin-bottom: 20px;
 }
 
-.detail-table thead {
-  background: #f5f5f5;
+.detail-info-grid .form-group {
+  margin-bottom: 0;
 }
 
-.detail-table th {
-  padding: 12px;
-  text-align: left;
+.detail-info-grid label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
   font-weight: 600;
-  font-size: 12px;
-  color: #333;
-  border-bottom: 2px solid #e0e0e0;
 }
 
-.detail-table td {
-  padding: 12px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 12px;
+.detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 4px;
 }
 
-/* Responsive Mobile */
+.tps-list-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
 @media (max-width: 768px) {
-  .content-section {
-    padding: 15px;
-  }
-
-  .section-header h2 {
-    font-size: 22px;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .filter-actions {
+  .today-cards {
     flex-direction: column;
   }
 
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
-
-  /* Table Mobile - Card View */
-  .logbook-table {
-    display: block;
-  }
-
-  .logbook-table thead {
-    display: none;
-  }
-
-  .logbook-table tbody {
-    display: block;
-  }
-
-  .logbook-table tbody tr {
-    display: block;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    overflow: hidden;
-  }
-
-  .logbook-table td {
-    display: block;
-    padding: 12px;
-    border-bottom: 1px solid #f0f0f0;
-    text-align: left;
-    position: relative;
-    padding-left: 120px;
-  }
-
-  .logbook-table td:first-child {
-    background: #f9f9f9;
-    padding: 10px 12px;
-    padding-left: 12px;
-    font-weight: 600;
-    border-bottom: 2px solid #e0e0e0;
-  }
-
-  .logbook-table td:last-child {
-    border-bottom: none;
-    display: flex;
-    justify-content: center;
-    padding-left: 12px;
-  }
-
-  .logbook-table td:before {
-    content: attr(data-label);
-    position: absolute;
-    left: 12px;
-    font-weight: 600;
-    color: #666;
-    font-size: 11px;
-    text-transform: uppercase;
-    width: 110px;
-  }
-
-  .logbook-table td:first-child:before,
-  .logbook-table td:last-child:before {
-    display: none;
-  }
-
-  /* Modal Mobile */
-  .modal-overlay {
-    padding: 0;
-    align-items: flex-end;
-    justify-content: stretch;
-    background: rgba(0, 0, 0, 0.4);
-  }
-
-  .modal-content {
-    border-radius: 20px 20px 0 0;
-    width: 100%;
-    max-width: 100%;
-    max-height: 85vh;
-  }
-
-  .modal-header {
-    padding: 16px 15px;
-    gap: 12px;
-  }
-
-  .modal-header h3 {
-    font-size: 16px;
-  }
-
-  .btn-close {
-    width: 44px;
-    height: 44px;
-  }
-
-  .modal-body {
-    padding: 15px;
-  }
-
-  .detail-header {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 12px;
+  .today-card {
+    min-width: unset;
   }
 }
 </style>
