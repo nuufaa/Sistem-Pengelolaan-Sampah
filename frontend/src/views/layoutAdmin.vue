@@ -53,16 +53,6 @@
             </router-link>
 
             <router-link
-              to="/admin/jam-operasional"
-              class="nav-item"
-              exact-active-class="active"
-              @click="sidebarOpen = false"
-            >
-              <span class="material-icons">event</span>
-              Pengaturan Sistem
-            </router-link>
-
-            <router-link
               to="/admin/dusun"
               class="nav-item"
               exact-active-class="active"
@@ -132,15 +122,15 @@
               Riwayat Laporan
             </router-link>
 
-            <!-- <router-link
-              to="/admin/riwayat-pengambilan"
+            <router-link
+              to="/admin/jam-operasional"
               class="nav-item"
               exact-active-class="active"
               @click="sidebarOpen = false"
             >
-              <span class="material-icons">report</span>
-              Riwayat Pengambilan
-            </router-link> -->
+              <span class="material-icons">event</span>
+              Pengaturan Sistem
+            </router-link>
 
           </nav>
         </div>
