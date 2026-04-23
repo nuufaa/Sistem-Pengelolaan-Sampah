@@ -19,6 +19,8 @@ import AdminLaporan from '../views/admin/laporan.vue'
 import AdminJamOperasional from '../views/admin/jamOperasional.vue'
 import AdminKepatuhan from '../views/admin/kepatuhan.vue'
 import AdminRiwayatLogbook from '../views/admin/riwayatLogbook.vue'
+import AdminRankingTPS from '../views/admin/rankingTPS.vue'
+import AdminTimbulanPerKapita from '../views/admin/timbulanPerKapita.vue'
 // import AdminRiwayatPengambilan from '../views/admin/riwayatPengambilan.vue'
 
 
@@ -107,6 +109,16 @@ const routes = [
       path: 'riwayat-logbook',
       name: 'admin-riwayat-logbook',
       component: AdminRiwayatLogbook
+    },
+    {
+      path: 'ranking-tps',
+      name: 'admin-ranking-tps',
+      component: AdminRankingTPS
+    },
+    {
+      path: 'timbulan-perkapita',
+      name: 'admin-timbulan-perkapita',
+      component: AdminTimbulanPerKapita
     }
     // {
     //   path: 'riwayat-pengambilan',

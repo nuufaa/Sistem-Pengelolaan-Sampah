@@ -31,20 +31,24 @@
         </div>
 
         <div class="form-group">
-          <label>TPS yang Dikunjungi</label>
-          <div class="checkbox-group">
+          <label>TPS yang Dikunjungi (Belum Diambil)</label>
+          <div v-if="pendingTasks.length" class="checkbox-group">
             <label
-              v-for="tps in tpsList"
-              :key="tps.id_tps"
+              v-for="task in pendingTasks"
+              :key="task.id"
               class="checkbox-label"
             >
               <input
                 type="checkbox"
-                :value="tps.id_tps"
-                v-model="form.tpsVisited"
+                :value="task.id"
+                v-model="form.tasksSelected"
               />
-              {{ tps.nama_tps }}
+              <span class="tps-name">{{ task.nama_tps }}</span>
+              <span class="task-date">({{ formatDateShort(task.tgl_pengambilan) }})</span>
             </label>
+          </div>
+          <div v-else class="no-tasks-info">
+            Semua tugas Anda sudah memiliki logbook.
           </div>
         </div>
 
@@ -71,7 +75,11 @@
         <div class="logbook-body">
           <!-- KENDARAAN HARI INI - Tampilkan semua kendaraan yang digunakan hari ini -->
           <template v-if="todayLogbook.length > 0">
-            <div v-for="vehicle in todayLogbook" :key="vehicle.id_kendaraan" class="today-vehicle-card">
+            <div 
+              v-for="vehicle in todayLogbook" 
+              :key="vehicle.id_kendaraan + (vehicle.tgl_terakhir_diambil || 'active')" 
+              class="today-vehicle-card"
+            >
               <div class="logbook-info-item">
                 <span class="label">Kendaraan</span>
                 <span class="value">{{ vehicle.nomor_kendaraan }}</span>
@@ -84,7 +92,10 @@
                 <span class="label">Jumlah TPS</span>
                 <span class="value">{{ vehicle.tpsVisited.length }} TPS</span>
               </div>
-
+              <div class="logbook-info-item">
+                <span class="label">Tanggal</span>
+                <span class="value">{{ formatDate(vehicle.tgl_terakhir_diambil || getTodayDateString()) }}</span>
+              </div>
               <div class="logbook-info-item">
                 <span class="label">TPS</span>
                 <span class="value">
@@ -161,7 +172,7 @@ const loading = ref(false)
 
 const form = reactive({
   id_kendaraan: '',
-  tpsVisited: []
+  tasksSelected: []
 })
 
 const searchQuery = ref('')
@@ -186,55 +197,67 @@ const todayLogbook = computed(() => {
   }
 
   const todayString = getTodayDateString()
-  console.log('[DEBUG] todayLogbook filtering for:', todayString)
   
   const todayData = daftarTugas.value.filter(item => {
-    // Hanya tampilkan yang KENDARAANNYA SUDAH DIPILIH (aktif)
+    // 1. Jika tgl_pengambilan adalah HARI INI, tampilkan (agar jadwal muncul)
+    let pengambilanDateStr = ''
+    if (item.tgl_pengambilan) {
+      if (item.tgl_pengambilan.includes('T')) {
+        const date = new Date(item.tgl_pengambilan)
+        pengambilanDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      } else {
+        pengambilanDateStr = item.tgl_pengambilan
+      }
+    }
+    
+    if (pengambilanDateStr === todayString) return true
+
+    // 2. Jika bukan jadwal hari ini, hanya tampilkan yang KENDARAANNYA SUDAH DIPILIH (aktif)
     if (!item.id_kendaraan) return false
     
-    // Jika sudah selesai (biasanya masuk riwayat), pastikan selesainya hari ini
-    // agar riwayat hari-hari sebelumnya tidak muncul di "Kendaraan Hari Ini"
+    // Jika sudah selesai, pastikan selesainya hari ini
     if (item.tgl_terakhir_diambil) {
       let completedDateStr
       if (item.tgl_terakhir_diambil.includes('T')) {
         const date = new Date(item.tgl_terakhir_diambil)
-        const localYear = date.getFullYear()
-        const localMonth = String(date.getMonth() + 1).padStart(2, '0')
-        const localDay = String(date.getDate()).padStart(2, '0')
-        completedDateStr = `${localYear}-${localMonth}-${localDay}`
+        completedDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       } else {
         completedDateStr = item.tgl_terakhir_diambil
       }
       return completedDateStr === todayString
     }
     
-    // Jika KENDARAAN SUDAH DIPILIH dan BELUM SELESAI, selalu tampilkan
-    // (meskipun tgl_pengambilan / jadwalnya bukan hari ini)
     return true
   })
 
-  console.log('[DEBUG] todayLogbook found:', todayData.length, 'items')
-
-  if (!todayData.length) return []
-  
-  // Group by vehicle (id_kendaraan)
+  // Group by vehicle (id_kendaraan) AND date to separate same vehicle on different batches/days
   const grouped = {}
   todayData.forEach(item => {
-    const vehicleId = item.id_kendaraan
+    const dateKey = item.tgl_terakhir_diambil 
+      ? (item.tgl_terakhir_diambil.includes('T') ? item.tgl_terakhir_diambil.substring(0, 10) : item.tgl_terakhir_diambil.substring(0, 10))
+      : 'active'
     
-    if (!grouped[vehicleId]) {
-      grouped[vehicleId] = {
+    const vehicleId = (item.id_kendaraan || 'unassigned')
+    const groupKey = `${vehicleId}-${dateKey}`
+    
+    if (!grouped[groupKey]) {
+      grouped[groupKey] = {
         id_kendaraan: vehicleId,
-        nomor_kendaraan: item.nomor_kendaraan,
-        nama: item.nama,
+        nomor_kendaraan: item.nomor_kendaraan || 'Belum Ada Kendaraan',
+        nama: item.nama || '-',
+        tgl_terakhir_diambil: item.tgl_terakhir_diambil,
         tpsVisited: []
       }
     }
     
-    grouped[vehicleId].tpsVisited.push(item.nama_tps)
+    grouped[groupKey].tpsVisited.push(item.nama_tps)
   })
   
-  return Object.values(grouped)
+  return Object.values(grouped).sort((a, b) => {
+    if (a.id_kendaraan === 'unassigned') return -1
+    if (b.id_kendaraan === 'unassigned') return 1
+    return 0
+  })
 })
 
 const historyLogbook = computed(() => {
@@ -297,6 +320,17 @@ const filteredHistoryLogbook = computed(() => {
 })
 
 
+const pendingTasks = computed(() => {
+  return daftarTugas.value
+    .filter(item => item.status_angkut !== 'selesai')
+    .map(item => ({
+      id: item.id, // ini id_daftar_tugas
+      id_tps: item.id_tps,
+      nama_tps: item.nama_tps,
+      tgl_pengambilan: item.tgl_pengambilan
+    }))
+})
+
 async function fetchKendaraan() {
   const res = await api.get('/api/kendaraan')
   kendaraanList.value = res.data
@@ -331,7 +365,7 @@ async function submitLogbook() {
     return
   }
   
-  if (!form.tpsVisited.length) {
+  if (!form.tasksSelected.length) {
     alert("Pilih minimal satu TPS")
     return
   }
@@ -345,7 +379,7 @@ async function submitLogbook() {
     
     await api.put('/api/daftar-tugas/logbook', {
       id_kendaraan: form.id_kendaraan,
-      tpsVisited: form.tpsVisited
+      tasksSelected: form.tasksSelected
     })
 
     console.log('[DEBUG] submitLogbook: request success')
@@ -370,7 +404,7 @@ async function submitLogbook() {
 
 function resetForm() {
   form.id_kendaraan = ""
-  form.tpsVisited = []
+  form.tasksSelected = []
 }
 
 function formatDate(date) {
@@ -402,6 +436,15 @@ function formatDate(date) {
   })
 }
 
+function formatDateShort(date) {
+  if (!date) return '-'
+  const d = new Date(date)
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short'
+  })
+}
+
 onMounted(() => {
   fetchKendaraan()
   fetchTPS()
@@ -413,6 +456,20 @@ onMounted(() => {
 <style scoped src="@/assets/styles/petugas.css"></style>
 
 <style scoped>
+.task-date {
+  font-size: 0.8rem;
+  color: #757575;
+  margin-left: 4px;
+}
+
+.no-tasks-info {
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  color: #666;
+  font-size: 0.9rem;
+  text-align: center;
+}
 .history-header {
   display: flex;
   justify-content: space-between;
@@ -465,5 +522,9 @@ onMounted(() => {
   .search-box {
     max-width: none;
   }
+}
+
+.font-bold {
+  font-weight: 700;
 }
 </style>

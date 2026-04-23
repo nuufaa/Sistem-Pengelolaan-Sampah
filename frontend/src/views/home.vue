@@ -48,6 +48,7 @@
                     @openScheduleModal="openScheduleModal"
                     @openLaporanModal="openLaporanModal"
                     @openVolumeSampahStatModal="openVolumeSampahStatModal"
+                    @openTimbulanModal="isModalTimbulanOpen = true"
                     @statusChanged="updateMarkers"
                     @update:selectedStatus="selectedStatus = $event"
                 />
@@ -88,6 +89,7 @@
                 @openScheduleModal="openScheduleModal"
                 @openLaporanModal="openLaporanModal"
                 @openVolumeSampahStatModal="openVolumeSampahStatModal"
+                @openTimbulanModal="isModalTimbulanOpen = true"
                 @statusChanged="updateMarkers"
                 @update:selectedStatus="selectedStatus = $event"
             />
@@ -257,6 +259,12 @@
         @close="isModalVolumeSampahOpen = false"
     />
 
+    <!-- Modal Timbulan Per Kapita -->
+    <timbulanPerKapitaStat
+        :isModalOpen="isModalTimbulanOpen"
+        @close="isModalTimbulanOpen = false"
+    />
+
     <!-- Toast Notification -->
     <div class="toast"  
         :class="{ show: isToastVisible }" 
@@ -359,6 +367,7 @@ import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
 import sidebarContent from '@/components/sidebarContent.vue'
 import volumeSampahStat from '@/components/volumeSampahStat.vue'
+import timbulanPerKapitaStat from '@/components/timbulanPerKapitaStat.vue'
 import { useToast } from '@/services/useToast'
 import api from '@/services/api'
 import { useDesaLogo } from '@/services/useDesaLogo'
@@ -391,6 +400,7 @@ const loginRef = ref(null)
 const reportRef = ref(null)
 
 const isModalVolumeSampahOpen = ref(false)
+const isModalTimbulanOpen = ref(false)
 const volumeSampahHarian = ref([])
 const loading = ref(false)
 const error = ref(null)

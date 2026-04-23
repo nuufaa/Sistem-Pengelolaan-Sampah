@@ -130,72 +130,105 @@ async function getVolumeSampah() {
   return rows;
 }
 
-async function getRankingTPS() {
+async function getRankingTPS(filter = {}) {
+  const { month, year, start_date, end_date } = filter;
+  let timeCondition = "";
+  const params = [];
 
-  const [rows] = await db.query(`
+  if (start_date && end_date) {
+    timeCondition = `AND DATE(COALESCE(tgl_terakhir_diambil, tgl_pengambilan)) BETWEEN ? AND ?`;
+    params.push(start_date, end_date);
+  } else if (month && year) {
+    timeCondition = `AND MONTH(COALESCE(tgl_terakhir_diambil, tgl_pengambilan)) = ? AND YEAR(COALESCE(tgl_terakhir_diambil, tgl_pengambilan)) = ?`;
+    params.push(month, year);
+  } else if (month) {
+    timeCondition = `AND MONTH(COALESCE(tgl_terakhir_diambil, tgl_pengambilan)) = ? AND YEAR(COALESCE(tgl_terakhir_diambil, tgl_pengambilan)) = YEAR(CURDATE())`;
+    params.push(month);
+  } else if (year) {
+    timeCondition = `AND YEAR(COALESCE(tgl_terakhir_diambil, tgl_pengambilan)) = ?`;
+    params.push(year);
+  }
+
+  const query = `
     SELECT
       t.id_tps,
       t.nama_tps,
       d.nama_dusun,
       t.kapasitas,
-      COALESCE(SUM(dt.volume_sampah),0) AS total_volume,
-
+      COALESCE(dt_sum.total_volume, 0) AS total_volume,
       ROUND(
-        COALESCE(SUM(dt.volume_sampah),0) / t.kapasitas * 100
+        COALESCE(dt_sum.total_volume, 0) / t.kapasitas * 100
       ,1) AS score
-
     FROM tps t
-    LEFT JOIN daftar_tugas dt
-      ON t.id_tps = dt.id_tps
-      AND dt.status_angkut='selesai'
-    LEFT JOIN dusun d
-      ON t.id_dusun = d.id_dusun
+    LEFT JOIN (
+      SELECT id_tps, SUM(volume_sampah) as total_volume
+      FROM daftar_tugas
+      WHERE status_angkut = 'selesai'
+      ${timeCondition}
+      GROUP BY id_tps
+    ) dt_sum ON t.id_tps = dt_sum.id_tps
+    LEFT JOIN dusun d ON t.id_dusun = d.id_dusun
+    ORDER BY (score = 0) ASC, score ASC, total_volume ASC
+  `;
 
-    GROUP BY t.id_tps
-    HAVING COALESCE(SUM(dt.volume_sampah),0) > 0
-    
-    ORDER BY score ASC
-    LIMIT 5
-  `)
-
-  return rows
+  const [rows] = await db.query(query, params);
+  return rows;
 }
 
-async function getTimbulanPerKapita() {
+async function getTimbulanPerKapita(filter = {}) {
+  const { month, year, start_date, end_date } = filter;
+  let timeCondition = `AND tgl_terakhir_diambil >= CURDATE() - INTERVAL 7 DAY`;
+  let dayDivisor = 7;
+  const params = [];
+
+  if (start_date && end_date) {
+    timeCondition = `AND DATE(tgl_terakhir_diambil) BETWEEN ? AND ?`;
+    params.push(start_date, end_date);
     
-  const [rows] = await db.query(`
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    const diffTime = Math.abs(end - start);
+    dayDivisor = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  } else if (month && year) {
+    timeCondition = `AND MONTH(tgl_terakhir_diambil) = ? AND YEAR(tgl_terakhir_diambil) = ?`;
+    dayDivisor = new Date(year, month, 0).getDate(); // Get days in month
+    params.push(month, year);
+  } else if (month) {
+    timeCondition = `AND MONTH(tgl_terakhir_diambil) = ? AND YEAR(tgl_terakhir_diambil) = YEAR(CURDATE())`;
+    dayDivisor = new Date(new Date().getFullYear(), month, 0).getDate();
+    params.push(month);
+  } else if (year) {
+    timeCondition = `AND YEAR(tgl_terakhir_diambil) = ?`;
+    dayDivisor = 365;
+    params.push(year);
+  }
+
+  const query = `
     SELECT
       d.nama_dusun,
       d.jumlah_kk,
-
       COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
-
       CAST(ROUND(
         COALESCE(SUM(dt.volume_sampah), 0)
         / NULLIF(d.jumlah_kk, 0)
-        / 7,
+        / ${dayDivisor},
         2
       ) AS DOUBLE) AS timbulan_kg_per_kk_per_hari
-
     FROM dusun d
-
     LEFT JOIN tps t 
       ON d.id_dusun = t.id_dusun
-
     LEFT JOIN (
       SELECT id_tps, volume_sampah
       FROM daftar_tugas
       WHERE status_angkut = 'selesai'
-          AND tgl_terakhir_diambil >= CURDATE() - INTERVAL 7 DAY
-      ) dt
-    ON t.id_tps = dt.id_tps
+      ${timeCondition}
+    ) dt ON t.id_tps = dt.id_tps
+    GROUP BY d.id_dusun
+    ORDER BY timbulan_kg_per_kk_per_hari DESC;
+  `;
 
-      GROUP BY d.id_dusun
-
-      ORDER BY timbulan_kg_per_kk_per_hari DESC;
-    `)
-
-  return rows
+  const [rows] = await db.query(query, params);
+  return rows;
 }
 
 // Kepatuhan Petugas - untuk admin dashboard

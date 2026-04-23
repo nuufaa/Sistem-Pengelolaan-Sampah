@@ -46,12 +46,8 @@ async function getDashboard(req, res) {
 
 async function getDashboardMas(req, res) {
   try {
-      // const totalTPS = await dashboardModel.getTotalTPS()
-      // const totalTPSPenuh = await dashboardModel.getTotalTPSPenuh()
-      // const totalTPSHampirPenuh = await dashboardModel.getTotalTPSHampirPenuh()
-      // const volumeSampahHarian = await dashboardModel.getVolumeSampah()
-      // const rankingTPS = await dashboardModel.getRankingTPS()
-      // const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita()
+    const { month, year, start_date, end_date } = req.query;
+    const filter = { month, year, start_date, end_date };
 
     const [
       totalTPS,
@@ -65,8 +61,8 @@ async function getDashboardMas(req, res) {
       dashboardModel.getTotalTPSPenuh(),
       dashboardModel.getTotalTPSHampirPenuh(),
       dashboardModel.getVolumeSampah(),
-      dashboardModel.getRankingTPS(),
-      dashboardModel.getTimbulanPerKapita()
+      dashboardModel.getRankingTPS(filter),
+      dashboardModel.getTimbulanPerKapita(filter)
     ]);
       
     res.json({
@@ -118,9 +114,12 @@ async function getDashboardPetugas(req, res) {
 
 async function getDashboardStat(req, res) {
     try {
+        const { month, year, start_date, end_date } = req.query;
+        const filter = { month, year, start_date, end_date };
+
         const volumeSampahHarian = await dashboardModel.getVolumeSampah()
-        const rankingTPS = await dashboardModel.getRankingTPS()
-        const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita()
+        const rankingTPS = await dashboardModel.getRankingTPS(filter)
+        const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita(filter)
 
         res.json({
           volumeSampahHarian,

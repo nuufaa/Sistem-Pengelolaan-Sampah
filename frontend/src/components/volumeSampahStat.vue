@@ -297,6 +297,8 @@ const filteredTPSList = computed(() => {
 })
 </script>
 
+<style src="@/assets/styles/home.css"></style>
+
 <style scoped>
 /* ===== MODAL WRAPPER ===== */
 :deep(.modal) {
@@ -346,7 +348,7 @@ const filteredTPSList = computed(() => {
   justify-content: center;
 }
 
-.vol-header-icon .material-icons {
+.vol-header-icon {
   color: #fff;
   font-size: 20px;
 }

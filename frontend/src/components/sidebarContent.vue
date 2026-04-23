@@ -235,44 +235,12 @@
     </div>
 
     <div class="card-body">
-      <!-- LOADING -->
-      <div v-if="loading" class="loading-state">
-        <div
-          v-for="n in 2"
-          :key="n"
-          class="sidebar-timbulan-item skeleton"
-        >
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line tall"></div>
-          <div class="skeleton-line xshort"></div>
-        </div>
-    </div>
-    <!-- EMPTY -->
-    <div v-else-if="!hasTimbulanData" class="empty-text">
-        <span class="material-icons">info</span>
-        <p>Tidak ada data tersedia</p>
-    </div>
-    <!-- DATA -->
-    <div v-else>
-      <div
-        v-for="(item, index) in filterTimbulanData"
-        :key="item.nama_dusun"
-        class="sidebar-timbulan-item"
-        :style="{ animationDelay: `${index * 0.1}s` }"
-      >
-        <div class="sidebar-timbulan-desa">
-            {{ item.nama_dusun }}
-        </div>
-        <div class="sidebar-timbulan-value">
-            {{ item.timbulan_kg_per_kk_per_hari }}
-        </div>
-        <div class="sidebar-timbulan-unit">
-            kg/KK/hari
-        </div>
-      </div>
+      <button class="btn-lihat-jadwal laporan-btn mb-3" @click="$emit('openTimbulanModal')">
+        <span class="material-icons">visibility</span>
+        <span>Lihat Detail Timbulan</span>
+      </button>
     </div>
   </div>
-</div>
 </template>
 
 <script setup>
@@ -301,11 +269,22 @@ const error = ref(null)
 const totalTPS = ref(0)
 const totalTPSPenuh = ref(0)
 const totalTPSHampirPenuh = ref(0)
+const totalLaporan = ref(0)
 const rankingTPS = ref([])
 const timbulanPerKapita = ref([])
+const selectedMonth = ref(new Date().getMonth() + 1)
+const selectedYear = ref(new Date().getFullYear())
 
-const totalLaporan = ref(0)
-const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal', 'openVolumeSampahStatModal'])
+const monthNames = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+]
+const years = computed(() => {
+  const current = new Date().getFullYear()
+  return [current, current - 1, current - 2]
+})
+
+const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal', 'openVolumeSampahStatModal', 'openTimbulanModal'])
 const jadwal = ref({
   jam_buang_mulai: '',
   jam_buang_selesai: '',
@@ -415,6 +394,21 @@ async function fetchDashboard() {
 
   } catch (error) {
     console.error("Gagal ambil dashboard:", error)
+  }
+}
+
+async function fetchDashboardFiltered() {
+  try {
+    loading.value = true
+    const res = await api.get(`/api/dashboard?month=${selectedMonth.value}&year=${selectedYear.value}`)
+
+    rankingTPS.value = res.data.rankingTPS
+    timbulanPerKapita.value = res.data.timbulanPerKapita
+
+  } catch (error) {
+    console.error("Gagal ambil dashboard filter:", error)
+  } finally {
+    loading.value = false
   }
 }
 

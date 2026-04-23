@@ -113,6 +113,26 @@
             </router-link>
 
             <router-link
+              to="/admin/ranking-tps"
+              class="nav-item"
+              exact-active-class="active"
+              @click="sidebarOpen = false"
+            >
+              <span class="material-icons">emoji_events</span>
+              Ranking TPS
+            </router-link>
+
+            <router-link
+              to="/admin/timbulan-perkapita"
+              class="nav-item"
+              exact-active-class="active"
+              @click="sidebarOpen = false"
+            >
+              <span class="material-icons">people</span>
+              Timbulan Perkapita
+            </router-link>
+
+            <router-link
               to="/admin/riwayat-logbook"
               class="nav-item"
               exact-active-class="active"

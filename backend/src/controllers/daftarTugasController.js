@@ -23,17 +23,17 @@ async function updateStatus(req, res) {
 async function updateLogbook(req, res) {
   try {
     console.log('=== req.body ===', req.body)  // tambahkan ini
-    const { id_kendaraan, tpsVisited } = req.body
+    const { id_kendaraan, tasksSelected } = req.body
     const id_petugas = req.user.id
 
-    if (!id_kendaraan || !tpsVisited || !tpsVisited.length) {
+    if (!id_kendaraan || !tasksSelected || !tasksSelected.length) {
       return res.status(400).json({
         message: "TPS harus dipilih"
       })
     }
     await daftarTugasModel.addLogbook({
       id_kendaraan,
-      tpsVisited,
+      tasksSelected,
       id_petugas
     })
 
@@ -66,7 +66,7 @@ async function listCompleted(req, res) {
   try {
     const userId = req.user ? req.user.id : null;
     let data;
-    
+
     if (userId) {
       // Petugas melihat riwayat mereka sendiri
       data = await daftarTugasModel.getCompletedByPetugas(userId);
@@ -74,7 +74,7 @@ async function listCompleted(req, res) {
       // Admin melihat semua riwayat
       data = await daftarTugasModel.getAllCompleted();
     }
-    
+
     res.json(data);
   } catch (error) {
     console.error('Error in listCompleted:', error);
