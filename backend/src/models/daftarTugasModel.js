@@ -104,7 +104,7 @@ async function findById(id) {
 
 async function addLogbook(data) {
   const { id_kendaraan, tasksSelected, id_petugas } = data;
-  
+
   if (!tasksSelected || !tasksSelected.length) return;
 
   // Update secara langsung menggunakan ID Tugas yang unik
@@ -141,15 +141,10 @@ async function getByPetugas(id_petugas) {
        INNER JOIN tps t ON dt.id_tps = t.id_tps
        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
        LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
-       WHERE dt.id_petugas = ? 
-         AND dt.status_angkut IN ('belum_diangkut', 'diangkut')
-         AND (dt.id_jadwal IS NULL OR dt.tgl_pengambilan = (
-           SELECT MIN(tgl_pengambilan) 
-           FROM daftar_tugas
-           WHERE id_jadwal = dt.id_jadwal 
-             AND status_angkut IN ('belum_diangkut', 'diangkut')
-         ))
-       ORDER BY dt.tgl_pengambilan ASC
+        WHERE dt.id_petugas = ? 
+          AND dt.status_angkut IN ('belum_diangkut', 'diangkut')
+          AND dt.id_jadwal IN (SELECT id_jadwal FROM jadwal_pengambilan WHERE is_active = 1)
+        ORDER BY dt.tgl_pengambilan ASC
        LIMIT 100`,
       [id_petugas]
     );
@@ -196,10 +191,8 @@ async function getByPetugas(id_petugas) {
 async function getAll() {
   try {
     // Query 1: Main - hanya JOIN critical tables
-async function getAll() {
-  try {
     const [rows] = await db.query(
-      `SELECT dt.id_daftar_tugas AS id,
+          `SELECT dt.id_daftar_tugas AS id,
               dt.id_jadwal,
               dt.id_tps,
               dt.id_petugas,
@@ -214,55 +207,43 @@ async function getAll() {
        INNER JOIN tps t ON dt.id_tps = t.id_tps
        LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
-       WHERE dt.status_angkut IN ('belum_diangkut', 'diangkut')
-         AND (dt.id_jadwal IS NULL OR dt.tgl_pengambilan = (
-           SELECT MIN(tgl_pengambilan) 
-           FROM daftar_tugas
-           WHERE id_jadwal = dt.id_jadwal 
-             AND status_angkut IN ('belum_diangkut', 'diangkut')
-         ))
-       ORDER BY dt.tgl_pengambilan ASC
+        WHERE dt.status_angkut IN ('belum_diangkut', 'diangkut')
+          AND dt.id_jadwal IN (SELECT id_jadwal FROM jadwal_pengambilan WHERE is_active = 1)
+        ORDER BY dt.tgl_pengambilan ASC
        LIMIT 1000`
-    );
+        );
 
-    if (rows.length > 0) {
-      const validJadwalIds = [...new Set(rows.map(r => r.id_jadwal).filter(id => id !== null))];
-      if (validJadwalIds.length > 0) {
-        const [jadwalDetails] = await db.query(
-          `SELECT id_jadwal,
+        if (rows.length > 0) {
+          const validJadwalIds = [...new Set(rows.map(r => r.id_jadwal).filter(id => id !== null))];
+          if (validJadwalIds.length > 0) {
+            const [jadwalDetails] = await db.query(
+              `SELECT id_jadwal,
                   GROUP_CONCAT(DISTINCT hari_pengambilan ORDER BY hari_pengambilan SEPARATOR ',') AS hari_pengambilan
            FROM jadwal_pengambilan
            WHERE id_jadwal IN (?)
            GROUP BY id_jadwal`,
-          [validJadwalIds]
-        );
+              [validJadwalIds]
+            );
 
-        const jadwalMap = {};
-        jadwalDetails.forEach(jd => {
-          jadwalMap[jd.id_jadwal] = jd;
-        });
+            const jadwalMap = {};
+            jadwalDetails.forEach(jd => {
+              jadwalMap[jd.id_jadwal] = jd;
+            });
 
-        const daftarHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
-        rows.forEach(row => {
-          if (row.id_jadwal && jadwalMap[row.id_jadwal]) {
-            const hariStr = jadwalMap[row.id_jadwal].hari_pengambilan;
-            const hariArray = String(hariStr).split(',').map(Number);
-            row.hari_pengambilan = hariArray.map(h => daftarHari[h]).join(', ');
+            const daftarHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+            rows.forEach(row => {
+              if (row.id_jadwal && jadwalMap[row.id_jadwal]) {
+                const hariStr = jadwalMap[row.id_jadwal].hari_pengambilan;
+                const hariArray = String(hariStr).split(',').map(Number);
+                row.hari_pengambilan = hariArray.map(h => daftarHari[h]).join(', ');
+              } else {
+                row.hari_pengambilan = row.id_jadwal ? "Jadwal Aktif" : "Jadwal Dihapus";
+              }
+            });
           } else {
-            row.hari_pengambilan = row.id_jadwal ? "Jadwal Aktif" : "Jadwal Dihapus";
+            rows.forEach(row => row.hari_pengambilan = "Jadwal Dihapus");
           }
-        });
-      } else {
-        rows.forEach(row => row.hari_pengambilan = "Jadwal Dihapus");
-      }
-    }
-    return rows;
-  } catch (error) {
-    console.error("Error in getAll:", error);
-    throw error;
-  }
-}
-
+        }
     return rows;
   } catch (error) {
     console.error("Error in getAll:", error);
@@ -282,35 +263,54 @@ async function updatePetugasByTpsToday(id_tps, id_petugas, id_jadwal) {
 
 async function syncTugasByTps(id_tps) {
   try {
-
-    // ambil jadwal terbaru (aktif) untuk TPS ini
-    const [jadwalRows] = await db.query(
-      `SELECT j.id_jadwal, j.hari_pengambilan, j.id_petugas
-       FROM jadwal_pengambilan j
-       WHERE j.id_tps = ? AND j.is_active = 1`,
+    // 1. Ambil semua jadwal AKTIF untuk TPS ini
+    const [activeSchedules] = await db.query(
+      `SELECT id_jadwal, hari_pengambilan, id_petugas
+       FROM jadwal_pengambilan 
+       WHERE id_tps = ? AND is_active = 1`,
       [id_tps]
     );
 
-    if (jadwalRows.length === 0) {
-      // tidak ada jadwal, hapus semua tugas untuk TPS ini
-      await db.query(
-        `DELETE FROM daftar_tugas WHERE id_tps = ?`,
-        [id_tps]
-      );
-      return;
+    const scheduleMap = {};
+    activeSchedules.forEach(s => {
+      scheduleMap[s.hari_pengambilan] = s;
+    });
+
+    // 2. Ambil semua tugas BELUM SELESAI untuk TPS ini
+    const [tasks] = await db.query(
+      `SELECT id_daftar_tugas, tgl_pengambilan 
+       FROM daftar_tugas 
+       WHERE id_tps = ? AND status_angkut != 'selesai'`,
+      [id_tps]
+    );
+
+    // 3. Sinkronisasi tugas yang ada
+    for (const task of tasks) {
+      const date = new Date(task.tgl_pengambilan);
+      // Format hari: 0=Senin, ..., 6=Minggu
+      const dayOfWeek = (date.getDay() + 6) % 7;
+      
+      const currentSchedule = scheduleMap[dayOfWeek];
+      
+      if (currentSchedule) {
+        // HARI MASIH ADA: Pastikan ID Jadwal dan Petugas sinkron dengan yang terbaru
+        await db.query(
+          "UPDATE daftar_tugas SET id_jadwal = ?, id_petugas = ? WHERE id_daftar_tugas = ?",
+          [currentSchedule.id_jadwal, currentSchedule.id_petugas, task.id_daftar_tugas]
+        );
+      } else {
+        // HARI SUDAH DIHAPUS: Hapus tugas ini karena jadwalnya sudah tidak ada
+        await db.query(
+          "DELETE FROM daftar_tugas WHERE id_daftar_tugas = ?",
+          [task.id_daftar_tugas]
+        );
+      }
     }
 
-    // Ambil petugas dari jadwal (semuanya seharusnya sama untuk 1 TPS)
-    const id_petugas = jadwalRows[0].id_petugas;
+    // Jika tidak ada jadwal aktif sama sekali, berhenti di sini (tugas sudah didelete di loop atas)
+    if (activeSchedules.length === 0) return;
 
-    // 1. Update tugas yang sudah ada dan belum selesai
-    const [updateResult] = await db.query(
-      `UPDATE daftar_tugas
-       SET id_petugas = ?
-       WHERE id_tps = ?
-       AND status_angkut != 'selesai'`,
-      [id_petugas, id_tps]
-    );
+    const id_petugas = activeSchedules[0].id_petugas;
 
     // 2. Generate tugas untuk semua hari dalam jadwal (sampai 7 hari ke depan)
     const today = new Date();
@@ -323,7 +323,7 @@ async function syncTugasByTps(id_tps) {
       const dayOfWeek = (targetDate.getDay() + 6) % 7;
 
       // cari jadwal untuk hari ini
-      const jadwalForDay = jadwalRows.find(j => j.hari_pengambilan == dayOfWeek);
+      const jadwalForDay = activeSchedules.find(j => j.hari_pengambilan == dayOfWeek);
 
       if (jadwalForDay) {
         // check apakah tugas sudah ada untuk tanggal ini
@@ -375,7 +375,7 @@ async function getCompletedByPetugas(id_petugas) {
        LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
        WHERE dt.id_petugas = ? 
          AND dt.status_angkut = 'selesai'
-       ORDER BY dt.tgl_pengambilan DESC
+       ORDER BY dt.tgl_terakhir_diambil DESC
        LIMIT 50`,
       [id_petugas]
     );
@@ -426,12 +426,14 @@ async function getAllCompleted() {
               dt.volume_sampah,
               dt.tgl_terakhir_diambil,
               t.nama_tps,
-              p.nama AS nama_petugas
+              k.nomor_kendaraan,
+              p.nama AS nama
        FROM daftar_tugas dt
        INNER JOIN tps t ON dt.id_tps = t.id_tps
+       LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
        INNER JOIN petugas p ON dt.id_petugas = p.id_petugas
-       WHERE dt.status_angkut = 'selesai'
-       ORDER BY dt.tgl_pengambilan DESC
+        WHERE dt.status_angkut = 'selesai'
+        ORDER BY dt.tgl_terakhir_diambil DESC
        LIMIT 100`
     );
 

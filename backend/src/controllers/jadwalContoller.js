@@ -1,6 +1,6 @@
 const JadwalModel = require("../models/jadwalModel");
 const jadwalService = require("../services/jadwalService");
-const {db} = require("../config/db"); 
+const { db } = require("../config/db");
 const daftarTugasModel = require("../models/daftarTugasModel")
 
 async function createJadwal(req, res) {
@@ -44,8 +44,8 @@ async function getAllJadwal(req, res) {
 async function updateJadwal(req, res) {
   // prefer id_tps from params if route used it
   const id_tps = req.params.id || req.params.id_tps || req.body.id_tps;
-  const { 
-    id_petugas, 
+  const {
+    id_petugas,
     hari_pengambilan,
     jam_buang_mulai,
     jam_buang_selesai,
@@ -66,20 +66,20 @@ async function updateJadwal(req, res) {
       `SELECT DISTINCT id_petugas FROM jadwal_pengambilan WHERE id_tps = ? LIMIT 1`,
       [id_tps]
     );
-    
+
     const id_petugas_lama = jadwalLama.length > 0 ? jadwalLama[0].id_petugas : null;
     const petugasChanged = id_petugas_lama !== id_petugas;
-    
+
     console.log(`[updateJadwal] Petugas lama: ${id_petugas_lama}, Petugas baru: ${id_petugas}, Changed: ${petugasChanged}`);
     console.log('[updateJadwal] Hari pengambilan:', hari_pengambilan || []);
-    
+
     console.log('[updateJadwal] Step 1: Update jadwal...');
     // pass all jam parameters
     await JadwalModel.update(
-      db, 
-      id_tps, 
-      id_petugas, 
-      hari_pengambilan || [], 
+      db,
+      id_tps,
+      id_petugas,
+      hari_pengambilan || [],
       id_admin,
       jam_buang_mulai,
       jam_buang_selesai,
@@ -88,16 +88,12 @@ async function updateJadwal(req, res) {
     );
     console.log('[updateJadwal] ✅ Jadwal berhasil diupdate');
 
-    // 🔥 Step 2: Sync daftar tugas HANYA jika petugas berubah
-    if (petugasChanged) {
-      console.log('[updateJadwal] Step 2: Sync daftar tugas (petugas berubah)...');
-      await daftarTugasModel.syncTugasByTps(id_tps);
-      console.log('[updateJadwal] ✅ Daftar tugas berhasil di-sync');
-    } else {
-      console.log('[updateJadwal] Step 2: Skip sync daftar tugas (petugas tidak berubah)');
-    }
+    // 🔥 Step 2: Sync daftar tugas untuk memastikan konsistensi (hari atau petugas berubah)
+    console.log('[updateJadwal] Step 2: Sync daftar tugas...');
+    await daftarTugasModel.syncTugasByTps(id_tps);
+    console.log('[updateJadwal] ✅ Daftar tugas berhasil di-sync');
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: "Jadwal berhasil diperbarui" + (petugasChanged ? " dan daftar tugas ter-update" : ""),
       data: { id_tps, id_petugas, petugasChanged }
     });
@@ -112,14 +108,30 @@ async function updateJadwal(req, res) {
 
 async function deleteJadwal(req, res) {
   try {
+    const ids = req.params.id.split(",");
+    
+    // Ambil daftar id_tps yang terpengaruh sebelum jadwal dinonaktifkan
+    const [tpsRows] = await db.query(
+      "SELECT DISTINCT id_tps FROM jadwal_pengambilan WHERE id_jadwal IN (?)",
+      [ids]
+    );
 
+    // Soft delete jadwal
     await JadwalModel.remove(req.params.id);
 
+    // Sync daftar tugas untuk setiap TPS yang jadwalnya dihapus
+    if (tpsRows.length > 0) {
+      for (const row of tpsRows) {
+        await daftarTugasModel.syncTugasByTps(row.id_tps);
+      }
+    }
+
     return res.json({
-      message: "Jadwal berhasil dihapus"
+      message: "Jadwal berhasil dihapus dan daftar tugas diperbarui"
     });
 
   } catch (error) {
+    console.error('[deleteJadwal] Error:', error);
     return res.status(500).json({
       message: "Gagal hapus jadwal"
     });
@@ -129,7 +141,7 @@ async function deleteJadwal(req, res) {
 async function getUsedDaysByTPS(req, res) {
   try {
     const { id_tps } = req.params;
-    
+
     if (!id_tps) {
       return res.status(400).json({ error: "id_tps wajib diisi" });
     }

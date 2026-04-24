@@ -1,4 +1,4 @@
-const {db} = require("../config/db");
+const { db } = require("../config/db");
 const { toString } = require('../utils/hariJadwal');
 
 async function create(data) {
@@ -69,7 +69,7 @@ async function findAllJadwal() {
             SELECT id_tps, MAX(volume_sampah) as volume_sampah, MIN(status_angkut) as status_angkut
             FROM daftar_tugas
             WHERE DATE(tgl_terakhir_diambil) = CURDATE() 
-               OR (tgl_pengambilan <= CURDATE() AND status_angkut != 'selesai')
+               OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
             GROUP BY id_tps
         ) dt_today ON t.id_tps = dt_today.id_tps
 
@@ -137,10 +137,10 @@ async function findStatusTPS(statusList = []) {
 }
 
 async function updateStatusTPS(id_tps, status_tps) {
-  await db.query(
-    `UPDATE tps SET status_tps = ? WHERE id_tps = ?`,
-    [status_tps, id_tps]
-  );
+    await db.query(
+        `UPDATE tps SET status_tps = ? WHERE id_tps = ?`,
+        [status_tps, id_tps]
+    );
 }
 
 async function remove(id) {
@@ -151,27 +151,27 @@ async function remove(id) {
 }
 
 async function findForMap() {
-  const [rows] = await db.query(
-    "SELECT id_tps, nama_tps, latitude, longitude, status_tps FROM tps"
-  );
-  return rows;
+    const [rows] = await db.query(
+        "SELECT id_tps, nama_tps, latitude, longitude, status_tps FROM tps"
+    );
+    return rows;
 }
 
 async function getStatistics() {
-  const [rows] = await db.query(`
+    const [rows] = await db.query(`
     SELECT status_tps, COUNT(*) as total
     FROM tps
     GROUP BY status_tps
   `);
 
-  return rows;
+    return rows;
 }
 
 async function updateStatusTPS(id_tps, status_tps) {
-  await db.query(
-    `UPDATE tps SET status_tps = ? WHERE id_tps = ?`,
-    [status_tps, id_tps]
-  );
+    await db.query(
+        `UPDATE tps SET status_tps = ? WHERE id_tps = ?`,
+        [status_tps, id_tps]
+    );
 }
 
 module.exports = {

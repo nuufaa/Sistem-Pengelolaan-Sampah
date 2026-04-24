@@ -190,54 +190,42 @@ function getTodayDateString() {
   return todayStr
 }
 
+// Helper untuk mendapatkan string YYYY-MM-DD lokal dari input tanggal
+function getLocalDateString(dateInput) {
+  if (!dateInput) return ''
+  const d = new Date(dateInput)
+  if (isNaN(d.getTime())) return '' // Invalid date
+  
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const todayLogbook = computed(() => {
-  if (!daftarTugas.value.length) {
-    console.log('[DEBUG] todayLogbook: no data')
-    return []
-  }
+  if (!daftarTugas.value.length) return []
 
   const todayString = getTodayDateString()
-  
   const todayData = daftarTugas.value.filter(item => {
-    // 1. Jika tgl_pengambilan adalah HARI INI, tampilkan (agar jadwal muncul)
-    let pengambilanDateStr = ''
-    if (item.tgl_pengambilan) {
-      if (item.tgl_pengambilan.includes('T')) {
-        const date = new Date(item.tgl_pengambilan)
-        pengambilanDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-      } else {
-        pengambilanDateStr = item.tgl_pengambilan
-      }
-    }
-    
-    if (pengambilanDateStr === todayString) return true
+    const taskDate = getLocalDateString(item.tgl_pengambilan)
+    const finishDate = getLocalDateString(item.tgl_terakhir_diambil)
 
-    // 2. Jika bukan jadwal hari ini, hanya tampilkan yang KENDARAANNYA SUDAH DIPILIH (aktif)
-    if (!item.id_kendaraan) return false
-    
-    // Jika sudah selesai, pastikan selesainya hari ini
-    if (item.tgl_terakhir_diambil) {
-      let completedDateStr
-      if (item.tgl_terakhir_diambil.includes('T')) {
-        const date = new Date(item.tgl_terakhir_diambil)
-        completedDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-      } else {
-        completedDateStr = item.tgl_terakhir_diambil
-      }
-      return completedDateStr === todayString
-    }
-    
-    return true
+    // Tampilkan di 'Hari Ini' jika:
+    // 1. Jadwalnya Hari Ini (Meskipun belum ada kendaraan)
+    // 2. Baru saja diselesaikan Hari Ini
+    // 3. Sedang aktif dikerjakan (ada kendaraan tapi belum selesai)
+    return (taskDate === todayString) || 
+           (finishDate === todayString) || 
+           (item.id_kendaraan && item.status_angkut !== 'selesai')
   })
 
-  // Group by vehicle (id_kendaraan) AND date to separate same vehicle on different batches/days
   const grouped = {}
   todayData.forEach(item => {
     const dateKey = item.tgl_terakhir_diambil 
-      ? (item.tgl_terakhir_diambil.includes('T') ? item.tgl_terakhir_diambil.substring(0, 10) : item.tgl_terakhir_diambil.substring(0, 10))
+      ? getLocalDateString(item.tgl_terakhir_diambil)
       : 'active'
     
-    const vehicleId = (item.id_kendaraan || 'unassigned')
+    const vehicleId = item.id_kendaraan || 'unassigned'
     const groupKey = `${vehicleId}-${dateKey}`
     
     if (!grouped[groupKey]) {
@@ -250,7 +238,9 @@ const todayLogbook = computed(() => {
       }
     }
     
-    grouped[groupKey].tpsVisited.push(item.nama_tps)
+    if (!grouped[groupKey].tpsVisited.includes(item.nama_tps)) {
+      grouped[groupKey].tpsVisited.push(item.nama_tps)
+    }
   })
   
   return Object.values(grouped).sort((a, b) => {
@@ -263,45 +253,43 @@ const todayLogbook = computed(() => {
 const historyLogbook = computed(() => {
   if (!daftarTugas.value.length) return []
 
+  const todayStr = getTodayDateString()
   const grouped = {}
-  const todayStr = getTodayDateString() // tambahkan ini
 
   daftarTugas.value.forEach(item => {
-    // ONLY include items that have tgl_terakhir_diambil (completed tasks)
-    if (!item.tgl_terakhir_diambil) return
+    // Abaikan jika belum ada kendaraannya (belum masuk logbook)
+    if (!item.id_kendaraan) return
 
-    // FIX: Parse ISO string as Date object, then get LOCAL date components
-    let tglStr
-    if (item.tgl_terakhir_diambil && item.tgl_terakhir_diambil.includes('T')) {
-      const date = new Date(item.tgl_terakhir_diambil)
-      const localYear = date.getFullYear()
-      const localMonth = String(date.getMonth() + 1).padStart(2, '0')
-      const localDay = String(date.getDate()).padStart(2, '0')
-      tglStr = `${localYear}-${localMonth}-${localDay}`
-    } else {
-      tglStr = item.tgl_terakhir_diambil
-    }
+    const taskDate = item.tgl_pengambilan?.substring(0, 10)
+    const finishDate = item.tgl_terakhir_diambil?.substring(0, 10)
 
-    if (tglStr === todayStr) return // tambahkan ini — skip data hari ini
-    const key = tglStr + "-" + item.id_kendaraan
+    // Masuk Riwayat jika: 
+    // - SUDAH selesai (dan selesainya bukan hari ini)
+    // - BELUM selesai (tapi jadwalnya sudah lewat/kemarin)
+    const isPastTask = taskDate < todayStr
+    const isPastFinish = finishDate && finishDate !== todayStr
+    
+    if (isPastTask || isPastFinish) {
+      const tglStr = finishDate || taskDate
+      const key = `${tglStr}-${item.id_kendaraan}`
 
-    if (!grouped[key]) {
-      grouped[key] = {
-        id: key,
-        tanggal: tglStr,  // Simpan dalam format YYYY-MM-DD (local date dari tgl_terakhir_diambil)
-        kendaraan: item.nomor_kendaraan,
-        tpsVisited: [],
-        nama: item.nama
+      if (!grouped[key]) {
+        grouped[key] = {
+          id: key,
+          tanggal: tglStr,
+          kendaraan: item.nomor_kendaraan,
+          tpsVisited: [],
+          nama: item.nama
+        }
+      }
+
+      if (!grouped[key].tpsVisited.includes(item.nama_tps)) {
+        grouped[key].tpsVisited.push(item.nama_tps)
       }
     }
-
-    grouped[key].tpsVisited.push(item.nama_tps)
   })
 
-  // FIX: Sort menggunakan string comparison (lebih akurat untuk YYYY-MM-DD)
-  return Object.values(grouped).sort((a, b) => {
-    return b.tanggal.localeCompare(a.tanggal)
-  })
+  return Object.values(grouped).sort((a, b) => b.tanggal.localeCompare(a.tanggal))
 })
 
 const filteredHistoryLogbook = computed(() => {
