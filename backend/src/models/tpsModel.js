@@ -55,13 +55,14 @@ async function findAllJadwal() {
             COALESCE(dt_today.status_angkut, 'belum_diangkut') AS status_angkut
 
         FROM tps t
-
+        
         LEFT JOIN (
             SELECT 
                 id_tps,
                 GROUP_CONCAT(hari_pengambilan SEPARATOR ', ') AS hari_pengambilan,
                 MAX(tgl_terakhir_diambil) AS tgl_terakhir_diambil
             FROM jadwal_pengambilan
+            WHERE is_active = 1
             GROUP BY id_tps
         ) jadwal ON t.id_tps = jadwal.id_tps
 

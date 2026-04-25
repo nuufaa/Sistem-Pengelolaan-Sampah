@@ -3146,10 +3146,11 @@ textarea {
     font-size: 11px;
     color: #888;
     margin-top: 2px;
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
+    /* text-overflow: ellipsis; */
     max-width: 100px;
+    /* word-break: break-word; */
 }
 
 .schedule-empty {

@@ -1,4 +1,4 @@
-const {db} = require("../config/db")
+const { db } = require("../config/db")
 
 async function getTotalTPS() {
   const [rows] = await db.query(
@@ -110,7 +110,7 @@ async function getProgressTugas(id_petugas) {
 
 //statistik di home
 async function getVolumeSampah() {
-    
+
   const [rows] = await db.query(`
     SELECT
       t.nama_tps,
@@ -184,7 +184,7 @@ async function getTimbulanPerKapita(filter = {}) {
   if (start_date && end_date) {
     timeCondition = `AND DATE(tgl_terakhir_diambil) BETWEEN ? AND ?`;
     params.push(start_date, end_date);
-    
+
     const start = new Date(start_date);
     const end = new Date(end_date);
     const diffTime = Math.abs(end - start);
@@ -388,22 +388,22 @@ async function getLogbookSummary(filter = {}) {
 }
 
 module.exports = {
-    getTotalTPS,
-    getTotalPetugas,
-    getTotalLaporanBulanIni,
-    getTotalTPSPenuh,
-    getStatusTPS,
-    getLaporan7Hari,
-    getTotalTugas,
-    getPendingTugas,
-    getDoneTugas,
-    getProgressTugas,
-    getTotalTPSHampirPenuh,
-    getVolumeSampah,
-    getRankingTPS,
-    getTimbulanPerKapita,
-    getKepatuhanAllPetugas,
-    getDetailKepatuhanPetugas,
-    getLogbookHistory,
-    getLogbookSummary
+  getTotalTPS,
+  getTotalPetugas,
+  getTotalLaporanBulanIni,
+  getTotalTPSPenuh,
+  getStatusTPS,
+  getLaporan7Hari,
+  getTotalTugas,
+  getPendingTugas,
+  getDoneTugas,
+  getProgressTugas,
+  getTotalTPSHampirPenuh,
+  getVolumeSampah,
+  getRankingTPS,
+  getTimbulanPerKapita,
+  getKepatuhanAllPetugas,
+  getDetailKepatuhanPetugas,
+  getLogbookHistory,
+  getLogbookSummary
 }

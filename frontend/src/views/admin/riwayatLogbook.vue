@@ -302,8 +302,8 @@ async function lihatDetail(item) {
   try {
     const params = new URLSearchParams()
     const tanggal = new Date(item.tanggal)
-tanggal.setDate(tanggal.getDate() + 1)  // kompensasi offset UTC
-const tanggalStr = tanggal.toISOString().split('T')[0]
+  tanggal.setDate(tanggal.getDate() + 1)  // kompensasi offset UTC
+  const tanggalStr = tanggal.toISOString().split('T')[0]
 
     params.append('start_date', tanggalStr)
     params.append('end_date', tanggalStr)

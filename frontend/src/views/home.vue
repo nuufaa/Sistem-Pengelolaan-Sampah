@@ -689,14 +689,26 @@ onMounted(async () => {
     //Ambil data dulu
     const result = await fetchTitikTps()
     jadwalTPS.value = Array.isArray(result) ? result : []
+    // wastePoints.value = jadwalTPS.value
+
+    // Deduplikasi: 1 id_tps = 1 entry, prioritaskan yang hari_pengambilan-nya ada
+const tpsMap = new Map()
+    jadwalTPS.value.forEach(item => {
+        const existing = tpsMap.get(item.id_tps)
+        // Ambil entry baru jika belum ada, atau jika yang baru punya hari_pengambilan lebih lengkap
+        if (!existing || (!existing.hari_pengambilan && item.hari_pengambilan)) {
+            tpsMap.set(item.id_tps, item)
+        }
+    })
+    wastePoints.value = Array.from(tpsMap.values())
 
     // wastePoints deduplikasi — satu id_tps hanya satu marker
-    const seen = new Set()
-    wastePoints.value = jadwalTPS.value.filter(item => {
-        if (seen.has(item.id_tps)) return false
-            seen.add(item.id_tps)
-        return true
-    })
+    // const seen = new Set()
+    // wastePoints.value = jadwalTPS.value.filter(item => {
+    //     if (seen.has(item.id_tps)) return false
+    //         seen.add(item.id_tps)
+    //     return true
+    // })
 
     //Set tanggal & schedule
     initializeDateTime()
