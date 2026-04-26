@@ -6,8 +6,21 @@
         <span class="material-icons">menu</span>
       </button>
       <div class="header-title">
-        <span class="material-icons">admin_panel_settings</span>
-        <h1>Admin Dashboard</h1>
+        <div class="logo-container-admin">
+          <div class="logo-icon-wrapper">
+            <img 
+              v-if="logoSrc" 
+              :src="logoSrc" 
+              alt="Logo Desa"
+              class="logo-img-navbar"
+            />
+            <!-- <span v-else class="material-icons logo-icon">domain</span> -->
+          </div>
+          <div class="logo-text-admin">
+            <h1>Admin Dashboard</h1>
+            <!-- <p>Desa Sembalun Bumbung</p> -->
+          </div>
+        </div>
       </div>
 
       <div class="header-actions">
@@ -176,10 +189,16 @@
 
 <script setup>
 import { useRouter} from 'vue-router';
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useDesaLogo } from '@/services/useDesaLogo'
 
 const router = useRouter()
 const sidebarOpen = ref(false)
+const { logoSrc, fetchLogo } = useDesaLogo()
+
+onMounted(() => {
+  fetchLogo()
+})
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value

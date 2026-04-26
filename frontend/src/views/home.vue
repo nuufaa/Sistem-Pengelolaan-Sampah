@@ -9,7 +9,7 @@
                         alt="Logo Desa"
                         class="logo-img-navbar"
                     />
-                    <span v-else class="material-icons logo-icon">domain</span>
+                    <!-- <span v-else class="material-icons logo-icon">domain</span> -->
                 </div>
                 <div class="logo-text">
                     <h1>Sistem Pengelolaan Sampah</h1>

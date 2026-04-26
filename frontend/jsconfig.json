@@ -6,6 +6,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "exclude": ["node_modules", "dist", "src/views/admin/riwayatPengambilan.vue"],
+  "exclude": ["node_modules", "dist", "src/views/admin/riwayatPengambilan.vue", "src/components/timbulanPerKapitaStat.vue", "src/views/admin/rankingTPS.vue", "src/views/admin/timbulanPerKapita.vue"],
   "include": ["src/**/*"]
 }

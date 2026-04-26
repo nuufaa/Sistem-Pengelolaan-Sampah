@@ -6,8 +6,21 @@
         <span class="material-icons">menu</span>
       </button>
       <div class="header-title">
-        <span class="material-icons">local_shipping</span>
-        <h1>Dashboard Petugas</h1>
+        <div class="logo-container-petugas">
+          <div class="logo-icon-wrapper">
+            <img 
+              v-if="logoSrc" 
+              :src="logoSrc" 
+              alt="Logo Desa"
+              class="logo-img-navbar"
+            />
+            <!-- <span v-else class="material-icons logo-icon">local_shipping</span> -->
+          </div>
+          <div class="logo-text-petugas">
+            <h1>Dashboard Petugas</h1>
+            <!-- <p>Desa Sembalun Bumbung</p> -->
+          </div>
+        </div>
       </div>
 
       <div class="header-actions">
@@ -73,10 +86,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDesaLogo } from '@/services/useDesaLogo'
 
 const router = useRouter()
 const petugas = ref(null)
 const isSidebarOpen = ref(false)
+const { logoSrc, fetchLogo } = useDesaLogo()
 
 
 // Fungsi decode JWT manual
@@ -90,6 +105,8 @@ function parseJwt(token) {
 
 // Ambil nama petugas dari token saat mounted
 onMounted(() => {
+  fetchLogo()
+  
   const token = localStorage.getItem('token')
   if (!token) return
 
