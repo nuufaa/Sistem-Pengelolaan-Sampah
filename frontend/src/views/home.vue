@@ -9,7 +9,7 @@
                         alt="Logo Desa"
                         class="logo-img-navbar"
                     />
-                    <!-- <span v-else class="material-icons logo-icon">domain</span> -->
+                    <span v-else class="material-icons logo-icon">domain</span>
                 </div>
                 <div class="logo-text">
                     <h1>Sistem Pengelolaan Sampah</h1>
@@ -361,7 +361,7 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { ref, onMounted, watch, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
@@ -406,6 +406,10 @@ const loading = ref(false)
 const error = ref(null)
 const modalTPSList = ref([])
 const isBottomSheetOpen = ref(false)
+
+// Auto-refresh interval untuk update status marker
+let pollInterval = null
+const POLL_INTERVAL_MS = 5 * 60 * 1000 // 5 menit
 
 // variabel untuk jadwal lengkap tps
 const scheduleSearch  = ref('')
@@ -728,6 +732,25 @@ const tpsMap = new Map()
   } finally {
     loading.value = false
   }
+
+  // Mulai polling auto-refresh setiap 5 menit
+  pollInterval = setInterval(async () => {
+    try {
+      const result = await fetchTitikTps()
+      const tpsMap = new Map()
+      ;(Array.isArray(result) ? result : []).forEach(item => {
+        const existing = tpsMap.get(item.id_tps)
+        if (!existing || (!existing.hari_pengambilan && item.hari_pengambilan)) {
+          tpsMap.set(item.id_tps, item)
+        }
+      })
+      wastePoints.value = Array.from(tpsMap.values())
+      jadwalTPS.value = Array.isArray(result) ? result : []
+      console.log('[Poll] Data TPS diperbarui:', new Date().toLocaleTimeString())
+    } catch (err) {
+      console.warn('[Poll] Gagal refresh data TPS:', err.message)
+    }
+  }, POLL_INTERVAL_MS)
 })
 
 function initMap() {
@@ -871,6 +894,14 @@ watch(selectedStatus, () => {
     updateMarkers()
   }
 }, { deep: true })
+
+// Bersihkan polling interval saat komponen di-unmount
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+})
 
 </script>
 
