@@ -107,7 +107,7 @@ function parseJwt(token) {
 onMounted(() => {
   fetchLogo()
   
-  const token = localStorage.getItem('token')
+  const token = sessionStorage.getItem('token')
   if (!token) return
 
   const decoded = parseJwt(token)
@@ -121,7 +121,7 @@ onMounted(() => {
 
 // Logout
 function logout() {
-  localStorage.removeItem('token')
+  sessionStorage.removeItem('token')
   router.push('/')
 }
 </script>

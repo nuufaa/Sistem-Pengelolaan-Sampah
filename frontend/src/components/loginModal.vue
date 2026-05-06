@@ -186,7 +186,7 @@ async function submit() {
       throw new Error('Login gagal')
     }
 
-    localStorage.setItem('token', data.token)
+    sessionStorage.setItem('token', data.token)
 
     const payload = decodeJwtPayload(data.token)
     const dest =
