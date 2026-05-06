@@ -403,8 +403,15 @@ onMounted(() => {
 /* ================= HELPER ================= */
 function hariLabel(hariStr) {
   if (!hariStr) return '-'
+  
+  // Jika backend sudah mengirimkan teks hari (mengandung huruf), gunakan langsung
+  if (/[a-zA-Z]/.test(hariStr)) return hariStr
+  
   const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']
-  return hariStr.split(',').map(h => labels[parseInt(h)]).join(', ')
+  return hariStr.split(',').map(h => {
+    const idx = parseInt(h.trim())
+    return labels[idx] || h
+  }).join(', ')
 }
 
 function formatDate(date) {

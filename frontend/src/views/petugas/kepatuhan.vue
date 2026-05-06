@@ -84,17 +84,19 @@ async function fetchDaftarTugas() {
 
 onMounted(fetchDaftarTugas)
 
-const hariMap = {
-  0: "Senin",
-  1: "Selasa",
-  2: "Rabu",
-  3: "Kamis",
-  4: "Jumat",
-  5: "Sabtu",
-  6: "Minggu"
+const hariLabel = (hariStr) => {
+  if (!hariStr) return '-'
+  if (/[a-zA-Z]/.test(hariStr)) return hariStr
+  
+  const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']
+  return hariStr.split(',').map(h => {
+    const idx = parseInt(h.trim())
+    return labels[idx] || h
+  }).join(', ')
 }
 
 function normalizeDate(date) {
+  if (!date) return new Date()
   const d = new Date(date)
   d.setHours(0, 0, 0, 0)
   d.setMinutes(0, 0, 0, 0)
@@ -117,6 +119,13 @@ const kepatuhanList = computed(() => {
 
   return allTasks
     .map(item => {
+      // Abaikan jika jadwal tidak valid (dihapus atau tidak aktif)
+      if (!item.id_jadwal || 
+          item.hari_pengambilan === "Jadwal Dihapus" || 
+          item.hari_pengambilan === "Jadwal Aktif") {
+        return null
+      }
+
       const scheduledDate = normalizeDate(item.tgl_pengambilan)
       const completedDate = item.tgl_terakhir_diambil
         ? normalizeDate(item.tgl_terakhir_diambil)
@@ -154,7 +163,7 @@ const kepatuhanList = computed(() => {
       return {
         id: item.id,
         nama_tps: item.nama_tps,
-        hari_pengambilan: hariMap[item.hari_pengambilan],
+        hari_pengambilan: hariLabel(item.hari_pengambilan),
         tgl_terakhir_diambil: completedDate
           ? completedDate.toLocaleDateString('id-ID', {
               day: 'numeric',

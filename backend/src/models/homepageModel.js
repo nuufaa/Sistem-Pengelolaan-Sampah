@@ -5,10 +5,17 @@ async function getDashboardStats () {
     const [rows] = await db.query(`
       SELECT
         COUNT(*) AS totalTPS,
-        SUM(status_tps = 'penuh') AS totalTPSPenuh,
-        SUM(status_tps = 'hampir_penuh') AS totalTPSHampirPenuh,
-        SUM(status_tps = 'normal') AS totalTPSNormal
-      FROM tps
+        SUM(CASE WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80 THEN 1 ELSE 0 END) AS totalTPSPenuh,
+        SUM(CASE WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 50 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) < 80 THEN 1 ELSE 0 END) AS totalTPSHampirPenuh,
+        SUM(CASE WHEN t.kapasitas = 0 OR ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) < 50 THEN 1 ELSE 0 END) AS totalTPSNormal
+      FROM tps t
+      LEFT JOIN (
+        SELECT id_tps, MAX(volume_sampah) AS vol
+        FROM daftar_tugas
+        WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+           OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+        GROUP BY id_tps
+      ) dt_today ON t.id_tps = dt_today.id_tps
     `);
     return rows[0];
 }
@@ -52,12 +59,23 @@ async function getRankingTPS() {
       SELECT
         t.id_tps,
         t.nama_tps,
-        t.status_tps,
+        CASE 
+          WHEN ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) >= 80 THEN 'penuh'
+          WHEN ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) >= 50 THEN 'hampir_penuh'
+          ELSE 'normal'
+        END AS status_tps,
         COUNT(dt.id_daftar_tugas) AS jumlah_pengambilan,
         COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
         d.nama_dusun
       FROM tps t
       LEFT JOIN daftar_tugas dt ON t.id_tps = dt.id_tps AND dt.status_angkut = 'selesai'
+      LEFT JOIN (
+        SELECT id_tps, MAX(volume_sampah) as volume_sampah
+        FROM daftar_tugas
+        WHERE DATE(tgl_terakhir_diambil) = CURDATE() 
+           OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+        GROUP BY id_tps
+      ) dt_today ON t.id_tps = dt_today.id_tps
       LEFT JOIN dusun d ON t.id_dusun = d.id_dusun
       GROUP BY t.id_tps
       ORDER BY total_volume DESC

@@ -48,6 +48,7 @@
                     @openScheduleModal="openScheduleModal"
                     @openLaporanModal="openLaporanModal"
                     @openVolumeSampahStatModal="openVolumeSampahStatModal"
+                    @openTimbulanModal="isModalTimbulanOpen = true"
                     @statusChanged="updateMarkers"
                     @update:selectedStatus="selectedStatus = $event"
                 />
@@ -88,6 +89,7 @@
                 @openScheduleModal="openScheduleModal"
                 @openLaporanModal="openLaporanModal"
                 @openVolumeSampahStatModal="openVolumeSampahStatModal"
+                @openTimbulanModal="isModalTimbulanOpen = true"
                 @statusChanged="updateMarkers"
                 @update:selectedStatus="selectedStatus = $event"
             />
@@ -257,6 +259,12 @@
         @close="isModalVolumeSampahOpen = false"
     />
 
+    <!-- Modal Timbulan Per Kapita -->
+    <timbulanPerKapitaStat
+        :isModalOpen="isModalTimbulanOpen"
+        @close="isModalTimbulanOpen = false"
+    />
+
     <!-- Toast Notification -->
     <div class="toast"  
         :class="{ show: isToastVisible }" 
@@ -353,12 +361,13 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { ref, onMounted, watch, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import LoginModal from '@/components/loginModal.vue'
 import ReportModal from '@/components/reportModal.vue'
 import sidebarContent from '@/components/sidebarContent.vue'
 import volumeSampahStat from '@/components/volumeSampahStat.vue'
+import timbulanPerKapitaStat from '@/components/timbulanPerKapitaStat.vue'
 import { useToast } from '@/services/useToast'
 import api from '@/services/api'
 import { useDesaLogo } from '@/services/useDesaLogo'
@@ -391,11 +400,16 @@ const loginRef = ref(null)
 const reportRef = ref(null)
 
 const isModalVolumeSampahOpen = ref(false)
+const isModalTimbulanOpen = ref(false)
 const volumeSampahHarian = ref([])
 const loading = ref(false)
 const error = ref(null)
 const modalTPSList = ref([])
 const isBottomSheetOpen = ref(false)
+
+// Auto-refresh interval untuk update status marker
+let pollInterval = null
+const POLL_INTERVAL_MS = 5 * 60 * 1000 // 5 menit
 
 // variabel untuk jadwal lengkap tps
 const scheduleSearch  = ref('')
@@ -586,6 +600,9 @@ function openReport(id_tps = null) {
     alert('Modal laporan tidak tersedia (reportRef null). Periksa console untuk detail.')
 }
 
+// Expose ke global window agar bisa diakses dari atribut onclick di string HTML Leaflet popup
+window.openReport = openReport;
+
 function openScheduleModal(desa) { 
     selectedDesa.value = desa
     isModalScheduleOpen.value = true
@@ -679,14 +696,26 @@ onMounted(async () => {
     //Ambil data dulu
     const result = await fetchTitikTps()
     jadwalTPS.value = Array.isArray(result) ? result : []
+    // wastePoints.value = jadwalTPS.value
+
+    // Deduplikasi: 1 id_tps = 1 entry, prioritaskan yang hari_pengambilan-nya ada
+const tpsMap = new Map()
+    jadwalTPS.value.forEach(item => {
+        const existing = tpsMap.get(item.id_tps)
+        // Ambil entry baru jika belum ada, atau jika yang baru punya hari_pengambilan lebih lengkap
+        if (!existing || (!existing.hari_pengambilan && item.hari_pengambilan)) {
+            tpsMap.set(item.id_tps, item)
+        }
+    })
+    wastePoints.value = Array.from(tpsMap.values())
 
     // wastePoints deduplikasi — satu id_tps hanya satu marker
-    const seen = new Set()
-    wastePoints.value = jadwalTPS.value.filter(item => {
-        if (seen.has(item.id_tps)) return false
-            seen.add(item.id_tps)
-        return true
-    })
+    // const seen = new Set()
+    // wastePoints.value = jadwalTPS.value.filter(item => {
+    //     if (seen.has(item.id_tps)) return false
+    //         seen.add(item.id_tps)
+    //     return true
+    // })
 
     //Set tanggal & schedule
     initializeDateTime()
@@ -706,6 +735,25 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+
+  // Mulai polling auto-refresh setiap 5 menit
+  pollInterval = setInterval(async () => {
+    try {
+      const result = await fetchTitikTps()
+      const tpsMap = new Map()
+      ;(Array.isArray(result) ? result : []).forEach(item => {
+        const existing = tpsMap.get(item.id_tps)
+        if (!existing || (!existing.hari_pengambilan && item.hari_pengambilan)) {
+          tpsMap.set(item.id_tps, item)
+        }
+      })
+      wastePoints.value = Array.from(tpsMap.values())
+      jadwalTPS.value = Array.isArray(result) ? result : []
+      console.log('[Poll] Data TPS diperbarui:', new Date().toLocaleTimeString())
+    } catch (err) {
+      console.warn('[Poll] Gagal refresh data TPS:', err.message)
+    }
+  }, POLL_INTERVAL_MS)
 })
 
 function initMap() {
@@ -849,6 +897,14 @@ watch(selectedStatus, () => {
     updateMarkers()
   }
 }, { deep: true })
+
+// Bersihkan polling interval saat komponen di-unmount
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+})
 
 </script>
 

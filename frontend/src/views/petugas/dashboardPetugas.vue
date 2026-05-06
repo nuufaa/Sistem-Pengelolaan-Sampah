@@ -56,18 +56,25 @@
         Tidak ada tugas hari ini
       </div>
       <div v-else class="task-list">
-        <div v-for="task in todayTasks" :key="task.id_daftar_tugas" class="task-item">
+        <div v-for="task in todayTasks" :key="task.id" class="task-item" :class="{ 'task-done': task.status_angkut === 'selesai' }">
           <div class="task-info">
-            <h4>{{ task.nama_tps }}</h4>
+            <div class="task-title-row">
+              <h4>{{ task.nama_tps }}</h4>
+              <span v-if="task.status_angkut === 'selesai'" class="status-badge selesai">Selesai</span>
+              <span v-else class="status-badge belum">Belum Diangkut</span>
+            </div>
             <p>
               Terakhir diambil: {{ task.tgl_terakhir_diambil ? new Date(task.tgl_terakhir_diambil).toLocaleDateString('id-ID') : 'Belum diambil' }}
               • Jadwal: {{ new Date(task.tgl_pengambilan).toLocaleDateString('id-ID') }}
             </p>
           </div>
-            <button class="btn-update" @click="openUpdateModal(task)">
+            <button v-if="task.status_angkut !== 'selesai'" class="btn-update" @click="openUpdateModal(task)">
               <span class="material-icons">edit</span>
               <span>Update</span>
             </button>
+            <div v-else class="done-icon">
+              <span class="material-icons" style="color: #4CAF50">check_circle</span>
+            </div>
         </div>
       </div>
     </div>
@@ -153,8 +160,8 @@ const todayTasks = computed(() => {
     // Normalisasi taskDate ke tengah malam untuk perbandingan hari yang akurat
     const taskDateNormalized = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
     
-    // Tampilkan hanya tugas yang tanggalnya persis hari ini dan belum diambil
-    return taskDateNormalized.getTime() === today.getTime() && task.tgl_terakhir_diambil === null
+    // Tampilkan semua tugas hari ini (baik yang sudah diambil maupun belum)
+    return taskDateNormalized.getTime() === today.getTime()
   })
 })
 
@@ -190,3 +197,34 @@ onMounted(async () => {
 
 
 <style scoped src="@/assets/styles/petugas.css"></style>
+
+<style scoped>
+.task-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.status-badge.selesai {
+  background: #E8F5E9;
+  color: #4CAF50;
+}
+
+.status-badge.belum {
+  background: #FFF3E0;
+  color: #FF9800;
+}
+
+.task-item.task-done {
+  opacity: 0.8;
+  border-left: 4px solid #4CAF50;
+}
+</style>

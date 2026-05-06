@@ -51,16 +51,10 @@
         <div class="data-card-header">
           <div>
             <div class="data-card-title">
-              {{ jo.jam_buang_mulai }}
-            </div>
-            <div class="data-card-subtitle">
-              {{ jo.jam_buang_selesai }}
+              Jam buang: {{ jo.jam_buang_mulai }} - {{ jo.jam_buang_selesai }}
             </div>
             <div class="data-card-title">
-              {{ jo.jam_ambil_mulai }}
-            </div>
-            <div class="data-card-subtitle">
-              {{ jo.jam_ambil_selesai }}
+              Jam angkut: {{ jo.jam_ambil_mulai }} - {{ jo.jam_ambil_selesai }}
             </div>
           </div>
         </div>
@@ -182,7 +176,7 @@
         </button>
         <button
           v-if="logoSrc"
-          class="btn-danger"
+          class="btn-secondary"
           :disabled="saving"
           @click="handleDelete"
         >

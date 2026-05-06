@@ -36,8 +36,8 @@ async function generateTugasHarian() {
         const dateStr = formatDateLocal(targetDate);
         const [existing] = await db.query(
           `SELECT id_daftar_tugas FROM daftar_tugas
-           WHERE id_jadwal = ? AND tgl_pengambilan = ?`,
-          [jadwal.id_jadwal, dateStr]
+           WHERE id_tps = ? AND tgl_pengambilan = ?`,
+          [jadwal.id_tps, dateStr]
         );
 
         // Jika belum ada, buat baru
@@ -70,11 +70,27 @@ async function generateTugasHarian() {
   }
 }
 
-// Reset semua status_tps ke 'normal' setiap tengah malam (H+1)
+// Sinkronkan kolom status_tps di database berdasarkan volume sampah hari ini
+// - Jika tidak ada data hari ini → status = 'normal'
+// - Jika ada data → hitung persentase → tentukan status
 async function resetStatusTPS() {
   try {
-    await db.query(`UPDATE tps SET status_tps = 'normal'`);
-    console.log(`[${new Date().toISOString()}] status_tps semua TPS direset ke 'normal'`);
+    await db.query(`
+      UPDATE tps t
+      LEFT JOIN (
+        SELECT id_tps, MAX(volume_sampah) AS vol
+        FROM daftar_tugas
+        WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+           OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+        GROUP BY id_tps
+      ) dt_today ON t.id_tps = dt_today.id_tps
+      SET t.status_tps = CASE
+        WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80 THEN 'penuh'
+        WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 50 THEN 'hampir_penuh'
+        ELSE 'normal'
+      END
+    `);
+    console.log(`[${new Date().toISOString()}] status_tps semua TPS disinkronkan berdasarkan data hari ini`);
   } catch (error) {
     console.error("Error reset status TPS:", error);
   }
@@ -89,6 +105,7 @@ function startScheduler() {
 
   // Jalankan saat aplikasi start (catch-up)
   generateTugasHarian();
+  resetStatusTPS();
 }
 
 module.exports = {
