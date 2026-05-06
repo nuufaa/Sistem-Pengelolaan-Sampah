@@ -14,7 +14,7 @@
             <p class="vol-subtitle">Data pengangkutan TPS harian</p>
           </div>
         </div>
-        <button class="vol-close" @click="$emit('close')">
+        <button class="modal-close" @click="$emit('close')">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -367,7 +367,7 @@ const filteredTPSList = computed(() => {
   margin: 2px 0 0;
 }
 
-.vol-close {
+/* .vol-close {
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -381,7 +381,7 @@ const filteredTPSList = computed(() => {
   color: #757575;
 }
 .vol-close:hover { background: #F5F5F5; color: #212121; }
-.vol-close .material-icons { font-size: 18px; }
+.vol-close .material-icons { font-size: 18px; } */
 
 /* ===== BODY ===== */
 .vol-body {
@@ -589,7 +589,7 @@ const filteredTPSList = computed(() => {
   gap: 8px;
   color: #BDBDBD;
 }
-.vol-empty .material-icons { font-size: 40px; }
+.vol-empty { font-size: 40px; }
 .vol-empty p { font-size: 13px; }
 
 /* ===== LEGEND ===== */

@@ -27,8 +27,15 @@ async function getTotalLaporanBulanIni() {
 async function getTotalTPSPenuh() {
   const [rows] = await db.query(`
     SELECT COUNT(*) as total
-      FROM tps
-      WHERE status_tps = 'penuh'
+    FROM tps t
+    LEFT JOIN (
+      SELECT id_tps, MAX(volume_sampah) AS vol
+      FROM daftar_tugas
+      WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+         OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+      GROUP BY id_tps
+    ) dt_today ON t.id_tps = dt_today.id_tps
+    WHERE t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80
   `)
   return rows[0].total
 }
@@ -36,8 +43,17 @@ async function getTotalTPSPenuh() {
 async function getTotalTPSHampirPenuh() {
   const [rows] = await db.query(`
     SELECT COUNT(*) as total
-      FROM tps
-      WHERE status_tps = 'hampir_penuh'
+    FROM tps t
+    LEFT JOIN (
+      SELECT id_tps, MAX(volume_sampah) AS vol
+      FROM daftar_tugas
+      WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+         OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+      GROUP BY id_tps
+    ) dt_today ON t.id_tps = dt_today.id_tps
+    WHERE t.kapasitas > 0 
+      AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 50
+      AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) < 80
   `)
   return rows[0].total
 }
@@ -45,8 +61,26 @@ async function getTotalTPSHampirPenuh() {
 async function getStatusTPS() {
   const [rows] = await db.query(`
     SELECT status_tps, COUNT(*) AS total
-      FROM tps
-      GROUP BY status_tps
+      FROM (
+        SELECT 
+          t.id_tps,
+          CASE 
+            WHEN t.kapasitas > 0 
+              AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80 THEN 'penuh'
+            WHEN t.kapasitas > 0 
+              AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 50 THEN 'hampir_penuh'
+            ELSE 'normal'
+          END AS status_tps
+        FROM tps t
+        LEFT JOIN (
+          SELECT id_tps, MAX(volume_sampah) AS vol
+          FROM daftar_tugas
+          WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+            OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+          GROUP BY id_tps
+        ) dt_today ON t.id_tps = dt_today.id_tps
+      ) AS sub
+      GROUP BY status_tps;
   `)
   return rows
 }

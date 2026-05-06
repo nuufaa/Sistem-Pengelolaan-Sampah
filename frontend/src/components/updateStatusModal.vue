@@ -16,7 +16,7 @@
         <!-- INFO TPS -->
         <div class="tps-info">
           <h3>{{ data.nama_tps }}</h3>
-          <p>Hari Pengambilan: {{ hariLabel(data.hari_pengambilan) }}</p>
+          <p>Hari Pengambilan: {{ data.hari_pengambilan}}</p>
           <p>Kendaraan: 
             {{
               kendaraanList.find(k => k.id_kendaraan === form.id_kendaraan)?.nomor_kendaraan
@@ -117,12 +117,12 @@ const form = reactive({
   notes: ''
 })
 
-function hariLabel(hariStr) {
-  if (!hariStr) return '-'
-  const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']
-  const hariArray = hariStr.split(',').map(h => parseInt(h.trim()))
-  return hariArray.map(idx => labels[idx] || '-').join(', ')
-}
+// function hariLabel(hariStr) {
+//   if (!hariStr) return '-'
+//   const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']
+//   const hariArray = hariStr.split(',').map(h => parseInt(h.trim()))
+//   return hariArray.map(idx => labels[idx] || '-').join(', ')
+// }
 
 watch(() => props.data, (val) => {
     if (!val) return

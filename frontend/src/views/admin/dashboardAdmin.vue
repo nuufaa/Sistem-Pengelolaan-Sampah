@@ -87,15 +87,11 @@
           </template>
         </div>
 
-        <!-- Legend Kustom -->
         <div class="custom-legend" v-if="!loading">
           <div class="legend-item" v-for="item in statusLegend" :key="item.status">
             <span class="legend-dot" :style="{ background: item.color }"></span>
             <span class="legend-label">{{ item.label }}</span>
             <span class="legend-value">{{ item.value }}</span>
-            <!-- <span class="legend-pct">
-              ({{ statusTotal > 0 ? Math.round((item.value / statusTotal) * 100) : 0 }}%)
-            </span> -->
           </div>
         </div>
       </div>
@@ -110,7 +106,6 @@
             </p>
           </div>
           <div class="chart-controls">
-            <!-- Toggle Chart Type -->
             <div class="toggle-group">
               <button
                 class="toggle-btn"

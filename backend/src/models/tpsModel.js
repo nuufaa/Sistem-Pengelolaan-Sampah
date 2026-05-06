@@ -32,8 +32,24 @@ async function findById(id_tps) {
 
 async function findAll() {
     const [rows] = await db.query(
-        `SELECT id_tps, nama_tps, tps.id_dusun, alamat, dusun.nama_dusun, latitude, longitude, kapasitas, status_tps, foto_tps
-        FROM tps JOIN dusun ON tps.id_dusun = dusun.id_dusun ORDER BY id_tps DESC`
+        `SELECT 
+            t.id_tps, t.nama_tps, t.id_dusun, t.alamat, dusun.nama_dusun, 
+            t.latitude, t.longitude, t.kapasitas, t.foto_tps,
+            CASE 
+                WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) >= 80 THEN 'penuh'
+                WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) >= 50 THEN 'hampir_penuh'
+                ELSE 'normal'
+            END AS status_tps
+        FROM tps t
+        JOIN dusun ON t.id_dusun = dusun.id_dusun 
+        LEFT JOIN (
+            SELECT id_tps, MAX(volume_sampah) as volume_sampah
+            FROM daftar_tugas
+            WHERE DATE(tgl_terakhir_diambil) = CURDATE() 
+               OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+            GROUP BY id_tps
+        ) dt_today ON t.id_tps = dt_today.id_tps
+        ORDER BY t.id_tps DESC`
     );
     return rows;
 }
@@ -46,12 +62,16 @@ async function findAllJadwal() {
             t.alamat,
             t.latitude,
             t.longitude,
-            t.status_tps,
             t.kapasitas,
             COALESCE(dt_today.volume_sampah, 0) AS volume_sampah,
             jadwal.hari_pengambilan,
             jadwal.tgl_terakhir_diambil,
             ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) AS persentase_sampah,
+            CASE 
+                WHEN ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) >= 80 THEN 'penuh'
+                WHEN ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) >= 50 THEN 'hampir_penuh'
+                ELSE 'normal'
+            END AS status_tps,
             COALESCE(dt_today.status_angkut, 'belum_diangkut') AS status_angkut
 
         FROM tps t
@@ -67,7 +87,7 @@ async function findAllJadwal() {
         ) jadwal ON t.id_tps = jadwal.id_tps
 
         LEFT JOIN (
-            SELECT id_tps, MAX(volume_sampah) as volume_sampah, MIN(status_angkut) as status_angkut
+            SELECT id_tps, MAX(volume_sampah) as volume_sampah, MAX(status_angkut) as status_angkut
             FROM daftar_tugas
             WHERE DATE(tgl_terakhir_diambil) = CURDATE() 
                OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
@@ -118,20 +138,33 @@ async function update(id, data) {
 
 async function findStatusTPS(statusList = []) {
     let query = `
-        SELECT id_tps, nama_tps, tps.id_dusun, alamat, dusun.nama_dusun,
-        latitude, longitude, kapasitas, status_tps, foto_tps
-        FROM tps
-        JOIN dusun ON tps.id_dusun = dusun.id_dusun
+        SELECT t.id_tps, t.nama_tps, t.id_dusun, t.alamat, dusun.nama_dusun,
+        t.latitude, t.longitude, t.kapasitas, t.foto_tps,
+        CASE 
+            WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80 THEN 'penuh'
+            WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 50 THEN 'hampir_penuh'
+            ELSE 'normal'
+        END AS status_tps
+        FROM tps t
+        JOIN dusun ON t.id_dusun = dusun.id_dusun
+        LEFT JOIN (
+            SELECT id_tps, MAX(volume_sampah) AS vol
+            FROM daftar_tugas
+            WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+               OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+            GROUP BY id_tps
+        ) dt_today ON t.id_tps = dt_today.id_tps
     `;
 
     const params = [];
 
     if (statusList.length > 0) {
-        query += ` WHERE status_tps IN (${statusList.map(() => '?').join(',')})`;
+        const placeholders = statusList.map(() => '?').join(',');
+        query += ` HAVING status_tps IN (${placeholders})`;
         params.push(...statusList);
     }
 
-    query += ` ORDER BY id_tps DESC`;
+    query += ` ORDER BY t.id_tps DESC`;
 
     const [rows] = await db.query(query, params);
     return rows;
@@ -153,7 +186,20 @@ async function remove(id) {
 
 async function findForMap() {
     const [rows] = await db.query(
-        "SELECT id_tps, nama_tps, latitude, longitude, status_tps FROM tps"
+        `SELECT t.id_tps, t.nama_tps, t.latitude, t.longitude,
+        CASE 
+            WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80 THEN 'penuh'
+            WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 50 THEN 'hampir_penuh'
+            ELSE 'normal'
+        END AS status_tps
+        FROM tps t
+        LEFT JOIN (
+            SELECT id_tps, MAX(volume_sampah) AS vol
+            FROM daftar_tugas
+            WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+               OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+            GROUP BY id_tps
+        ) dt_today ON t.id_tps = dt_today.id_tps`
     );
     return rows;
 }

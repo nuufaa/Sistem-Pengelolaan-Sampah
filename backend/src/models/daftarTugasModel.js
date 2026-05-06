@@ -142,7 +142,8 @@ async function getByPetugas(id_petugas) {
        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
        LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
         WHERE dt.id_petugas = ? 
-          AND dt.status_angkut IN ('belum_diangkut', 'diangkut')
+          AND (dt.status_angkut IN ('belum_diangkut', 'diangkut') 
+               OR (dt.status_angkut = 'selesai' AND DATE(dt.tgl_pengambilan) = CURDATE()))
           AND dt.id_jadwal IN (SELECT id_jadwal FROM jadwal_pengambilan WHERE is_active = 1)
         ORDER BY dt.tgl_pengambilan ASC
        LIMIT 100`,
@@ -207,7 +208,8 @@ async function getAll() {
        INNER JOIN tps t ON dt.id_tps = t.id_tps
        LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
-        WHERE dt.status_angkut IN ('belum_diangkut', 'diangkut')
+        WHERE (dt.status_angkut IN ('belum_diangkut', 'diangkut')
+               OR (dt.status_angkut = 'selesai' AND DATE(dt.tgl_pengambilan) = CURDATE()))
           AND dt.id_jadwal IN (SELECT id_jadwal FROM jadwal_pengambilan WHERE is_active = 1)
         ORDER BY dt.tgl_pengambilan ASC
        LIMIT 1000`

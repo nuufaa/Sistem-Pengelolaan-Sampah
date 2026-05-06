@@ -600,6 +600,9 @@ function openReport(id_tps = null) {
     alert('Modal laporan tidak tersedia (reportRef null). Periksa console untuk detail.')
 }
 
+// Expose ke global window agar bisa diakses dari atribut onclick di string HTML Leaflet popup
+window.openReport = openReport;
+
 function openScheduleModal(desa) { 
     selectedDesa.value = desa
     isModalScheduleOpen.value = true

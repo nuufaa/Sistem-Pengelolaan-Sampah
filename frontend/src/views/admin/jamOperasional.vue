@@ -176,7 +176,7 @@
         </button>
         <button
           v-if="logoSrc"
-          class="btn-danger"
+          class="btn-secondary"
           :disabled="saving"
           @click="handleDelete"
         >

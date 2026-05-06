@@ -5,10 +5,17 @@ async function getDashboardStats () {
     const [rows] = await db.query(`
       SELECT
         COUNT(*) AS totalTPS,
-        SUM(status_tps = 'penuh') AS totalTPSPenuh,
-        SUM(status_tps = 'hampir_penuh') AS totalTPSHampirPenuh,
-        SUM(status_tps = 'normal') AS totalTPSNormal
-      FROM tps
+        SUM(CASE WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80 THEN 1 ELSE 0 END) AS totalTPSPenuh,
+        SUM(CASE WHEN t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 50 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) < 80 THEN 1 ELSE 0 END) AS totalTPSHampirPenuh,
+        SUM(CASE WHEN t.kapasitas = 0 OR ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) < 50 THEN 1 ELSE 0 END) AS totalTPSNormal
+      FROM tps t
+      LEFT JOIN (
+        SELECT id_tps, MAX(volume_sampah) AS vol
+        FROM daftar_tugas
+        WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+           OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+        GROUP BY id_tps
+      ) dt_today ON t.id_tps = dt_today.id_tps
     `);
     return rows[0];
 }
