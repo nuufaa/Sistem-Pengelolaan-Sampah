@@ -1,7 +1,5 @@
 const { daftarHari } = require("../utils/hariJadwal");
 
-// middleware/validateJadwal.js
-
 function validateCreateJadwal(req, res, next) {
   const { id_tps, id_petugas, hari_pengambilan } = req.body;
 

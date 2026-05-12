@@ -127,7 +127,7 @@ const props = defineProps({
   volumeSampahData: { type: Array, default: () => [] }
 })
 
-// Palette warna yang lebih soft dan mudah dibedakan
+// Palette warna
 const COLORS = [
   '#2E7D32', '#1565C0', '#E65100', '#6A1B9A', '#00838F',
   '#AD1457', '#558B2F', '#283593', '#BF360C', '#4527A0',

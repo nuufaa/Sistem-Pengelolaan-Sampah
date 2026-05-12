@@ -3,7 +3,6 @@ const router = express.Router()
 
 const kendaraan = require("../controllers/kendaraanController");
 const { auth, isAdmin } = require("../middlewares/authMiddleware");
-const validate = require("../middlewares/validateMiddleware");
 
 router.post("/", auth, isAdmin(["admin"]), kendaraan.createKendaraan);
 router.get("/", auth, isAdmin(["admin", "petugas"]), kendaraan.getAllKendaraan);

@@ -122,6 +122,7 @@ async function fetchTps() {
   }
 }
 
+// Preview image foto, nonaktif dlu
 function previewImage(e) {
   const file = e.target.files[0]
 

@@ -132,8 +132,8 @@
           </tr>
         </tbody>
       </table>
-
     </div>
+
     <!-- MOBILE CARD -->
     <div v-if="!loading" class="card-list mobile-only">
       <div 
@@ -223,7 +223,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch} from 'vue'
+import { ref, onMounted, computed} from 'vue'
 import api from '@/services/api'
 import kepatuhanDetailModal from '@/components/kepatuhanJadwal.vue'
 
@@ -295,15 +295,6 @@ async function lihatDetail(item) {
   } finally {
     detailLoading.value = false
   }
-}
-
-function formatDate(date) {
-  if (!date) return '-'
-  return new Date(date).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  })
 }
 
 onMounted(() => {

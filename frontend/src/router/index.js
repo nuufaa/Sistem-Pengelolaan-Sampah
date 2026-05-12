@@ -1,28 +1,27 @@
 import { createRouter, createWebHistory } from 'vue-router'
+
 import Home from '../views/home.vue'
-// import Petugas from '../views/petugas/petugas.vue'
 import LayoutPetugas from '../views/layoutPetugas.vue'
-
-import Dashboard from '../views/petugas/dashboardPetugas.vue'
-import PetugasPengambilan from '../views/petugas/pengambilan.vue'
-import PetugasKepatuhan from '../views/petugas/kepatuhan.vue'
-import PetugasLogbook from '../views/petugas/logbook.vue'
-
 import LayoutAdmin from '@/views/layoutAdmin.vue'
-import DashboardAdmin from '../views/admin/dashboardAdmin.vue'
-import AdminTPS from '../views/admin/kelolaTPS.vue'
-import AdminKendaraan from '../views/admin/kendaraan.vue'
-import AdminDusun from '../views/admin/dusun.vue'
-import AdminJadwal from '../views/admin/jadwal.vue'
-import AdminPetugas from '../views/admin/petugas.vue'
-import AdminLaporan from '../views/admin/laporan.vue'
-import AdminJamOperasional from '../views/admin/jamOperasional.vue'
-import AdminKepatuhan from '../views/admin/kepatuhan.vue'
-import AdminRiwayatLogbook from '../views/admin/riwayatLogbook.vue'
-import AdminRankingTPS from '../views/admin/rankingTPS.vue'
-import AdminTimbulanPerKapita from '../views/admin/timbulanPerKapita.vue'
-// import AdminRiwayatPengambilan from '../views/admin/riwayatPengambilan.vue'
 
+// Lazy loaded routes (Code Splitting)
+const Dashboard = () => import('../views/petugas/dashboardPetugas.vue')
+const PetugasPengambilan = () => import('../views/petugas/pengambilan.vue')
+const PetugasKepatuhan = () => import('../views/petugas/kepatuhan.vue')
+const PetugasLogbook = () => import('../views/petugas/logbook.vue')
+
+const DashboardAdmin = () => import('../views/admin/dashboardAdmin.vue')
+const AdminTPS = () => import('../views/admin/kelolaTPS.vue')
+const AdminKendaraan = () => import('../views/admin/kendaraan.vue')
+const AdminDusun = () => import('../views/admin/dusun.vue')
+const AdminJadwal = () => import('../views/admin/jadwal.vue')
+const AdminPetugas = () => import('../views/admin/petugas.vue')
+const AdminLaporan = () => import('../views/admin/laporan.vue')
+const AdminJamOperasional = () => import('../views/admin/jamOperasional.vue')
+const AdminKepatuhan = () => import('../views/admin/kepatuhan.vue')
+const AdminRiwayatLogbook = () => import('../views/admin/riwayatLogbook.vue')
+const AdminRankingTPS = () => import('../views/admin/rankingTPS.vue')
+const AdminTimbulanPerKapita = () => import('../views/admin/timbulanPerKapita.vue')
 
 const routes = [
   {
@@ -120,11 +119,6 @@ const routes = [
       name: 'admin-timbulan-perkapita',
       component: AdminTimbulanPerKapita
     }
-    // {
-    //   path: 'riwayat-pengambilan',
-    //   name: 'admin-riwayatPengambilan',
-    //   component: AdminRiwayatPengambilan
-    // }
   ]
 }
 ]
@@ -135,4 +129,3 @@ const router = createRouter({
 })
 
 export default router
-

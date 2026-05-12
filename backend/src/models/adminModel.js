@@ -1,15 +1,5 @@
 const {db} = require("../config/db");
 
-// const user = {
-//     findbyUsername: async (username) => {
-//         const[rows] = await db.query(
-//             "SELECT * FROM users WHERE username = ?", 
-//             [username]
-//         );
-//         return rows[0] || null;
-//     },
-// }
-
 async function findAdmin(username) {
     const [rows] = await db.query(
         'SELECT * FROM admin WHERE username = ?',

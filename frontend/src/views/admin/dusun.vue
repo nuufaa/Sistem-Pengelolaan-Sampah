@@ -184,7 +184,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onActivated, watch } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import api from '@/services/api'
 import dusunModal from '@/components/dusunModal.vue'
 
@@ -197,22 +197,6 @@ const itemsPerPage = ref(5)
 const searchQuery = ref('')
 const filterKK = ref('')
 
-// COMPUTED: Filter Logic
-// const filteredDusun = computed(() => {
-//   return dusunList.value.filter(k => {
-//     const q = searchQuery.value.toLowerCase()
-//     const matchSearch = !q || k.nama_dusun.toLowerCase().includes(q)
-
-//     const jumlah = Number(k.jumlah_kk)
-//     const matchKK =
-//       !filterKK.value ||
-//       (filterKK.value === 'sedikit' && jumlah < 100) ||
-//       (filterKK.value === 'sedang' && jumlah >= 100 && jumlah <= 300) ||
-//       (filterKK.value === 'banyak' && jumlah > 300)
-
-//     return matchSearch && matchKK
-//   })
-// })
 const filteredDusun = computed(() => {
   return dusunList.value.filter(k => {
     const q = searchQuery.value.toLowerCase().trim()

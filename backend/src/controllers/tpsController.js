@@ -1,66 +1,52 @@
 const TpsModel = require("../models/tpsModel");
 
 async function createTps(req, res) {
-    try {
-        const data = {
-            ...req.body,
-            foto_tps: req.file ? req.file.filename : null
-        };
+  try {
+    const data = {
+      ...req.body,
+      foto_tps: req.file ? req.file.filename : null
+    };
 
-        const id = await TpsModel.create(data);
+    const id = await TpsModel.create(data);
 
-        return res.status(201).json({
-            message: "TPS berhasil dibuat",
-            id_tps: id
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Gagal membuat TPS"
-        });
-    }
+    return res.status(201).json({
+      message: "TPS berhasil dibuat",
+      id_tps: id
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Gagal membuat TPS"
+    });
+  }
 }
 
 async function getAllTps(req, res) {
-    try {
-        const data = await TpsModel.findAll();
+  try {
+    const data = await TpsModel.findAll();
 
-        return res.json(data);
-    } catch (error) {
-        console.error("ERROR TPS:", error)
-        return res.status(500).json({
-            message: "Gagal mengambil data TPS"
-        });
-    }
+    return res.json(data);
+  } catch (error) {
+    console.error("ERROR TPS:", error)
+    return res.status(500).json({
+      message: "Gagal mengambil data TPS"
+    });
+  }
 }
 
 async function getAllTpsJadwal(req, res) {
-    try {
-        const data = await TpsModel.findAllJadwal();
+  try {
+    const data = await TpsModel.findAllJadwal();
 
-        return res.json(data);
-    } catch (error) {
-        console.error("ERROR TPS:", error)
-        return res.status(500).json({
-            message: "Gagal mengambil data jadwal TPS"
-        });
-    }
+    return res.json(data);
+  } catch (error) {
+    console.error("ERROR TPS:", error)
+    return res.status(500).json({
+      message: "Gagal mengambil data jadwal TPS"
+    });
+  }
 }
-
-// async function getAllTps(req, res) {
-//   try {
-//     const { status } = req.query;
-
-//     const data = await TpsModel.findAll(status);
-
-//     return res.json(data);
-
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Gagal mengambil data TPS"
-//     });
-//   }
-// }
 
 async function getStatusTPS(req, res) {
   try {
@@ -68,7 +54,8 @@ async function getStatusTPS(req, res) {
     // let statusList = [];
 
     const ALLOWED_STATUS = ['normal', 'hampir_penuh', 'penuh'];
-
+    const { status } = req.query;
+    
     let statusList = [];
     if (status) {
       statusList = status
@@ -92,22 +79,22 @@ async function getStatusTPS(req, res) {
 }
 
 async function getTpsById(req, res) {
-    try {
-        const data = await TpsModel.findById();
+  try {
+    const data = await TpsModel.findById();
 
-        if (!data) {
-            return res.status(404).json({
-                message: "TPS tidak ditemukan"
-            });
-        }
-
-        return res.json(data);
-
-    } catch (error) {
-        return res.status(500).json({
-            message: "Gagal mengambil data TPS"
-        });
+    if (!data) {
+      return res.status(404).json({
+        message: "TPS tidak ditemukan"
+      });
     }
+
+    return res.json(data);
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Gagal mengambil data TPS"
+    });
+  }
 }
 
 async function updateTps(req, res) {

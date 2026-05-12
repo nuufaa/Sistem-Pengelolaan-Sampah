@@ -3,7 +3,6 @@ const router = express.Router();
 
 const jadwal = require("../controllers/jadwalContoller");
 const {auth, isAdmin} = require("../middlewares/authMiddleware");
-const role = require("../middlewares/roleMiddleware");
 const { validateCreateJadwal } = require("../middlewares/validateJadwalMiddleware");
 
 router.post("/", auth, isAdmin(["admin"]), validateCreateJadwal, jadwal.createJadwal);

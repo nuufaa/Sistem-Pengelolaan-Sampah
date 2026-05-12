@@ -11,6 +11,7 @@ function formatDateLocal(date) {
 }
 
 async function create(data) {
+
   // DEPRECATED: Gunakan sync() atau createForDate() untuk generate tugas
   // Method ini tetap ada untuk backward compatibility
   const { id_jadwal, id_petugas, id_tps, tgl_pengambilan } = data;
@@ -87,20 +88,6 @@ async function findById(id) {
   );
   return rows[0];
 }
-
-// async function addLogbook(data) {
-//     const { id_kendaraan, tpsVisited } = data
-
-//     // IMPORTANT: Update HANYA untuk hari ini, jangan pengaruhi jadwal masa depan
-//     // FIX: Gunakan DATE(NOW()) untuk konsistensi timezone
-//     await db.query(
-//       `UPDATE daftar_tugas
-//        SET id_kendaraan = ?
-//        WHERE id_tps IN (${tpsVisited.map(() => '?').join(',')})
-//        AND DATE(tgl_pengambilan) = DATE(NOW())`,
-//       [id_kendaraan, ...tpsVisited]
-//     );
-// }
 
 async function addLogbook(data) {
   const { id_kendaraan, tasksSelected, id_petugas } = data;
@@ -219,12 +206,12 @@ async function getAll() {
           const validJadwalIds = [...new Set(rows.map(r => r.id_jadwal).filter(id => id !== null))];
           if (validJadwalIds.length > 0) {
             const [jadwalDetails] = await db.query(
-              `SELECT id_jadwal,
-                  GROUP_CONCAT(DISTINCT hari_pengambilan ORDER BY hari_pengambilan SEPARATOR ',') AS hari_pengambilan
-           FROM jadwal_pengambilan
-           WHERE id_jadwal IN (?)
-           GROUP BY id_jadwal`,
-              [validJadwalIds]
+                `SELECT id_jadwal,
+                    GROUP_CONCAT(DISTINCT hari_pengambilan ORDER BY hari_pengambilan SEPARATOR ',') AS hari_pengambilan
+                  FROM jadwal_pengambilan
+                  WHERE id_jadwal IN (?)
+                  GROUP BY id_jadwal`,
+                [validJadwalIds]
             );
 
             const jadwalMap = {};
@@ -340,8 +327,8 @@ async function syncTugasByTps(id_tps) {
           // insert tugas baru
           await db.query(
             `INSERT INTO daftar_tugas 
-            (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
-            VALUES (?, ?, ?, ?, 'belum_diangkut')`,
+              (id_jadwal, id_petugas, id_tps, tgl_pengambilan, status_angkut)
+              VALUES (?, ?, ?, ?, 'belum_diangkut')`,
             [jadwalForDay.id_jadwal, id_petugas, id_tps, dateStr]
           );
         }
@@ -389,9 +376,9 @@ async function getCompletedByPetugas(id_petugas) {
       const [jadwalDetails] = await db.query(
         `SELECT DISTINCT j.id_jadwal,
                 GROUP_CONCAT(j.hari_pengambilan ORDER BY j.hari_pengambilan) AS hari_pengambilan
-         FROM jadwal_pengambilan j
-         WHERE j.id_jadwal IN (${jadwalIds.map(() => '?').join(',')})
-         GROUP BY j.id_jadwal`,
+          FROM jadwal_pengambilan j
+          WHERE j.id_jadwal IN (${jadwalIds.map(() => '?').join(',')})
+          GROUP BY j.id_jadwal`,
         jadwalIds
       );
 

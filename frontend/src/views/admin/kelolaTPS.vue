@@ -24,13 +24,6 @@
       </div>
 
       <div class="filter-group">
-        <!-- <select v-model="filterDusun" class="filter-select">
-          <option value="">Semua Dusun</option>
-          <option v-for="d in dusunList" :key="d.id_dusun" :value="d.id_dusun">
-            {{ d.nama_dusun }}
-          </option>
-        </select> -->
-
         <select v-model="filterStatus" class="filter-select">
           <option value="">Semua Status</option>
           <option value="normal">Normal</option>
@@ -212,7 +205,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onActivated, watch } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { apiFetch } from '../../services/api'
 import TPSModal from '@/components/TPSModal.vue'
 
@@ -225,35 +218,18 @@ const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
 const searchQuery = ref('')
-// const filterDusun = ref('')
 const filterStatus = ref('')
-
-// COMPUTED: Filter Logic
-// const filteredTPS = computed(() => {
-//   return tpsList.value.filter(tps => {
-//     const q = searchQuery.value.toLowerCase()
-//     const matchSearch = !q || 
-//       tps.nama_tps.toLowerCase().includes(q) || 
-//       tps.alamat.toLowerCase().includes(q)
-
-//     const matchDusun = !filterDusun.value || tps.id_dusun == filterDusun.value
-
-//     const matchStatus = !filterStatus.value || tps.status_tps === filterStatus.value
-
-//     return matchSearch && matchDusun && matchStatus
-//   })
-// })
 
 const filteredTPS = computed(() => {
   return tpsList.value.filter(tps => {
     const q = searchQuery.value.toLowerCase()
 
-    // 🔥 GLOBAL SEARCH
+    // GLOBAL SEARCH
     const matchSearch = !q || Object.values(tps).some(val =>
       val && String(val).toLowerCase().includes(q)
     )
 
-    // ✅ FILTER STATUS tetap ada
+    // FILTER STATUS tetap ada
     const matchStatus = !filterStatus.value || tps.status_tps === filterStatus.value
 
     return matchSearch && matchStatus
@@ -281,17 +257,6 @@ function resetFilter() {
 watch([searchQuery, filterStatus], () => {
   currentPage.value = 1
 })
-
-// COMPUTED: Pagination Logic
-// const totalPages = computed(() => {
-//   return Math.ceil(tpsList.value.length / itemsPerPage.value)
-// })
-
-// const paginatedTPS = computed(() => {
-//   const start = (currentPage.value - 1) * itemsPerPage.value
-//   const end = start + itemsPerPage.value
-//   return tpsList.value.slice(start, end)
-// })
 
 async function fetchTPS() {
   try {
