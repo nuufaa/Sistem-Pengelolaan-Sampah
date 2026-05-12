@@ -51,7 +51,26 @@ async function findAllJadwal() {
             COALESCE(dt_today.volume_sampah, 0) AS volume_sampah,
             jadwal.hari_pengambilan,
             jadwal.tgl_terakhir_diambil,
-            ROUND(COALESCE(dt_today.volume_sampah, 0) / t.kapasitas * 100, 1) AS persentase_sampah,
+            -- Hitung status dinamis: jika lebih dari 24 jam sejak pengambilan terakhir, status = 'normal'
+            CASE 
+                WHEN dt_last.tgl_terakhir_diambil IS NULL THEN 'normal'
+                WHEN TIMESTAMPDIFF(HOUR, dt_last.tgl_terakhir_diambil, NOW()) > 24 THEN 'normal'
+                ELSE t.status_tps
+            END AS status_tps_dinamis,
+            -- Hitung volume dinamis: jika lebih dari 24 jam, volume = 0
+            CASE 
+                WHEN dt_last.tgl_terakhir_diambil IS NULL THEN 0
+                WHEN TIMESTAMPDIFF(HOUR, dt_last.tgl_terakhir_diambil, NOW()) > 24 THEN 0
+                ELSE COALESCE(dt_today.volume_sampah, 0)
+            END AS volume_sampah_dinamis,
+            -- Hitung persentase berdasarkan volume dinamis
+            ROUND(
+                CASE 
+                    WHEN dt_last.tgl_terakhir_diambil IS NULL THEN 0
+                    WHEN TIMESTAMPDIFF(HOUR, dt_last.tgl_terakhir_diambil, NOW()) > 24 THEN 0
+                    ELSE COALESCE(dt_today.volume_sampah, 0)
+                END / t.kapasitas * 100, 1
+            ) AS persentase_sampah,
             COALESCE(dt_today.status_angkut, 'belum_diangkut') AS status_angkut
 
         FROM tps t
@@ -73,6 +92,13 @@ async function findAllJadwal() {
                OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
             GROUP BY id_tps
         ) dt_today ON t.id_tps = dt_today.id_tps
+
+        LEFT JOIN (
+            SELECT id_tps, MAX(tgl_terakhir_diambil) as tgl_terakhir_diambil
+            FROM daftar_tugas
+            WHERE status_angkut = 'selesai'
+            GROUP BY id_tps
+        ) dt_last ON t.id_tps = dt_last.id_tps
 
         ORDER BY t.id_tps DESC
     `);

@@ -813,7 +813,7 @@ function formatTgl(date) {
 
 // pop up titik tps
 function createPopupContent(point) {
-    const statusClass = point.status_tps;
+    const statusClass = point.status_tps_dinamis || point.status_tps;
     const statusText = {
         normal: 'Normal',
         hampir_penuh: 'Hampir Penuh',
@@ -822,7 +822,7 @@ function createPopupContent(point) {
 
     //hitung persentase sampah utk kondisi tps
     const persen = point.persentase_sampah || 
-        (point.kapasitas ? Math.round((point.volume_sampah / point.kapasitas) * 100) : 0)
+        (point.kapasitas ? Math.round((point.volume_sampah_dinamis / point.kapasitas) * 100) : 0)
 
     return `
         <div class="popup-content">
@@ -870,7 +870,7 @@ function updateMarkers() {
     filtered.forEach(point => {
     const marker = L.marker(
         [parseFloat(point.latitude), parseFloat(point.longitude)],
-        { icon: getMarkerIcon(point.status_tps) }
+        { icon: getMarkerIcon(point.status_tps_dinamis || point.status_tps) }
     );
 
     // Use popup for both desktop and mobile

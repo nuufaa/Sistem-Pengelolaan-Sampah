@@ -74,7 +74,7 @@
 
           <tbody>
             <tr v-for="(item, index) in paginatedData" :key="item.id">
-              <td>{{ index + 1 }}</td>
+              <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
               <td>{{ item.nama_tps }}</td>
               <td>{{ hariLabel(item.hari_pengambilan) }}</td>
               <td>{{ formatDate(item.tgl_pengambilan) }}</td>

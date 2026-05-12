@@ -27,8 +27,18 @@ async function getTotalLaporanBulanIni() {
 async function getTotalTPSPenuh() {
   const [rows] = await db.query(`
     SELECT COUNT(*) as total
-      FROM tps
-      WHERE status_tps = 'penuh'
+      FROM tps t
+      LEFT JOIN (
+        SELECT id_tps, MAX(tgl_terakhir_diambil) as tgl_terakhir_diambil
+        FROM daftar_tugas
+        WHERE status_angkut = 'selesai'
+        GROUP BY id_tps
+      ) dt ON t.id_tps = dt.id_tps
+      WHERE CASE 
+        WHEN dt.tgl_terakhir_diambil IS NULL THEN 'normal'
+        WHEN TIMESTAMPDIFF(HOUR, dt.tgl_terakhir_diambil, NOW()) > 24 THEN 'normal'
+        ELSE t.status_tps
+      END = 'penuh'
   `)
   return rows[0].total
 }
@@ -36,17 +46,44 @@ async function getTotalTPSPenuh() {
 async function getTotalTPSHampirPenuh() {
   const [rows] = await db.query(`
     SELECT COUNT(*) as total
-      FROM tps
-      WHERE status_tps = 'hampir_penuh'
+      FROM tps t
+      LEFT JOIN (
+        SELECT id_tps, MAX(tgl_terakhir_diambil) as tgl_terakhir_diambil
+        FROM daftar_tugas
+        WHERE status_angkut = 'selesai'
+        GROUP BY id_tps
+      ) dt ON t.id_tps = dt.id_tps
+      WHERE CASE 
+        WHEN dt.tgl_terakhir_diambil IS NULL THEN 'normal'
+        WHEN TIMESTAMPDIFF(HOUR, dt.tgl_terakhir_diambil, NOW()) > 24 THEN 'normal'
+        ELSE t.status_tps
+      END = 'hampir_penuh'
   `)
   return rows[0].total
 }
 
 async function getStatusTPS() {
   const [rows] = await db.query(`
-    SELECT status_tps, COUNT(*) AS total
-      FROM tps
-      GROUP BY status_tps
+    SELECT 
+      CASE 
+        WHEN dt.tgl_terakhir_diambil IS NULL THEN 'normal'
+        WHEN TIMESTAMPDIFF(HOUR, dt.tgl_terakhir_diambil, NOW()) > 24 THEN 'normal'
+        ELSE t.status_tps
+      END AS status_tps,
+      COUNT(*) AS total
+      FROM tps t
+      LEFT JOIN (
+        SELECT id_tps, MAX(tgl_terakhir_diambil) as tgl_terakhir_diambil
+        FROM daftar_tugas
+        WHERE status_angkut = 'selesai'
+        GROUP BY id_tps
+      ) dt ON t.id_tps = dt.id_tps
+      GROUP BY 
+        CASE 
+          WHEN dt.tgl_terakhir_diambil IS NULL THEN 'normal'
+          WHEN TIMESTAMPDIFF(HOUR, dt.tgl_terakhir_diambil, NOW()) > 24 THEN 'normal'
+          ELSE t.status_tps
+        END
   `)
   return rows
 }

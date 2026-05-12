@@ -107,12 +107,12 @@ async function addLogbook(data) {
 
   if (!tasksSelected || !tasksSelected.length) return;
 
-  // Update secara langsung menggunakan ID Tugas yang unik
+  // Hanya perbarui kendaraan untuk logbook, jangan set tgl_terakhir_diambil
+  // karena tugas baru selesai setelah petugas menandai status 'selesai'.
   await db.query(
     `UPDATE daftar_tugas
      SET 
-       id_kendaraan = ?,
-       tgl_terakhir_diambil = CURDATE()
+       id_kendaraan = ?
      WHERE id_daftar_tugas IN (?)
      AND id_petugas = ?`,
     [id_kendaraan, tasksSelected, id_petugas]

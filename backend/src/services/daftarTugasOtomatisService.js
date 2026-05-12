@@ -84,8 +84,7 @@ function startScheduler() {
   // Generate tugas setiap hari tengah malam
   cron.schedule("0 0 * * *", generateTugasHarian);
 
-  // Reset status_tps ke 'normal' setiap tengah malam (H+1)
-  cron.schedule("0 0 * * *", resetStatusTPS);
+  // Reset status_tps dihapus karena sekarang menggunakan status dinamis berdasarkan waktu
 
   // Jalankan saat aplikasi start (catch-up)
   generateTugasHarian();
