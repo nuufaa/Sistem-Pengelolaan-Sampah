@@ -1,6 +1,6 @@
+// routes/dusunRoutes.js
 const express = require("express");
 const router = express.Router()
-
 const dusun = require("../controllers/dusunController");
 const { auth, isAdmin } = require("../middlewares/authMiddleware");
 

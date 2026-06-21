@@ -2,7 +2,7 @@
   <section class="content-section active">
     <div class="section-header">
       <h2>Jam Operasional</h2>
-      <button class="btn-primary" @click="openAdd">
+      <button v-if="userRole === 'admin'" class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Jam
       </button>
@@ -17,7 +17,7 @@
             <th>Jam Buang Selesai</th>
             <th>Jam Pengambilan Mulai</th>
             <th>Jam Pengambilan Selesai</th>
-            <th>Aksi</th>
+            <th v-if="userRole === 'admin'">Aksi</th>
           </tr>
         </thead>
 
@@ -28,7 +28,7 @@
             <td>{{ jo.jam_buang_selesai }}</td>
             <td>{{ jo.jam_ambil_mulai }}</td>
             <td>{{ jo.jam_ambil_selesai }}</td>
-            <td class="action-buttons">
+            <td v-if="userRole === 'admin'" class="action-buttons">
               <button class="btn-action edit" @click="openEdit(jo)">
                 <span class="material-icons">edit</span>
               </button>
@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <div class="data-card-footer">
+        <div v-if="userRole === 'admin'" class="data-card-footer">
           <button class="btn-card-action edit" @click="openEdit(jo)">
             <span class="material-icons">edit</span>
             Edit
@@ -83,7 +83,7 @@
   </section>
   <br><br>
 
-  <div class="card">
+  <div v-if="userRole === 'admin'" class="card">
     <div class="card-header">
       <span class="material-icons">image</span>
       <h2>Logo Desa</h2>
@@ -191,14 +191,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import api from '@/services/api'
 import jamOperasionalModal from '@/components/jamOperasionalModal.vue'
 import { useDesaLogo } from '@/services/useDesaLogo'
+import { TabSync } from '@/services/tabSync'
 
 const jamOperasionalList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
+const userRole = computed(() => sessionStorage.getItem('role') || 'kadus')
+let unsubscribeSync = null
 
 const { logoSrc, lastUpdated, loading, saving, error, fetchLogo, saveLogo, deleteLogo } = useDesaLogo()
 
@@ -212,7 +215,21 @@ const isOverLimit = computed(() =>
   selectedFile.value ? selectedFile.value.size > MAX_SIZE : false
 )
 
-onMounted(fetchLogo)
+onMounted(() => {
+  fetchLogo()
+  fetchjamOperasional()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    if (event === 'settings_updated') {
+      fetchLogo()
+      fetchjamOperasional()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribeSync) unsubscribeSync()
+})
 
 function onFileChange(e) {
   processFile(e.target.files[0])
@@ -239,6 +256,7 @@ async function handleSave() {
     if (ok) {
       selectedFile.value = null
       previewUrl.value = null
+      TabSync.emit('settings_updated')
     }
   }
   reader.readAsDataURL(selectedFile.value)
@@ -247,6 +265,7 @@ async function handleSave() {
 async function handleDelete() {
   if (!confirm('Hapus logo desa?')) return
   await deleteLogo()
+  TabSync.emit('settings_updated')
 }
 async function fetchjamOperasional() {
   try {
@@ -257,7 +276,8 @@ async function fetchjamOperasional() {
   }
 }
 
-onMounted(fetchjamOperasional)
+// fetchjamOperasional called in onMounted
+
 
 function openAdd() {
   selected.value = {
@@ -286,6 +306,7 @@ async function save(data) {
       await api.post('/api/jam-operasional', data)
     }
     await fetchjamOperasional()
+    TabSync.emit('settings_updated')
     showModal.value = false
   } catch (err) {
     console.error('Gagal simpan data', err)
@@ -299,6 +320,7 @@ async function remove(id) {
 
   try {
     await api.delete(`/api/jam-operasional/${id}`)
+    TabSync.emit('settings_updated')
     await fetchjamOperasional()
   } catch (err) {
     console.error('Gagal hapus', err)

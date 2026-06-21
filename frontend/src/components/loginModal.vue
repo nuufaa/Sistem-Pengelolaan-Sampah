@@ -33,6 +33,15 @@
 
       <button
         class="login-role-tab"
+        :class="{ active: role === 'kadus' }"
+        @click="switchRole('kadus')"
+      >
+        <span class="material-icons">supervisor_account</span>
+        <span>Kadus</span>
+      </button>
+
+      <button
+        class="login-role-tab"
         :class="{ active: role === 'admin' }"
         @click="switchRole('admin')"
       >
@@ -186,12 +195,18 @@ async function submit() {
       throw new Error('Login gagal')
     }
 
-    sessionStorage.setItem('token', data.token)
-
     const payload = decodeJwtPayload(data.token)
+    const normalizedRole = payload?.role ? payload.role.toLowerCase() : 'petugas'
+
+    sessionStorage.setItem('token', data.token)
+    sessionStorage.setItem('role', normalizedRole)
+    sessionStorage.setItem('userName', payload?.name || 'Kadus/Kades')
+
     const dest =
-      payload?.role === 'admin'
+      normalizedRole === 'admin'
         ? '/admin'
+        : normalizedRole === 'kadus' || normalizedRole === 'kades'
+        ? '/kadus'
         : '/petugas'
 
     router.push(dest)

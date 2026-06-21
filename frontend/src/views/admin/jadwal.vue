@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="section-header">
       <h2>Data Jadwal Pengambilan</h2>
-      <button class="btn-primary" @click="openAdd">
+      <button v-if="userRole === 'admin'" class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Jadwal
       </button>
@@ -120,7 +120,7 @@
             <th>Petugas</th>
             <th>Hari Pengambilan</th>
             <th>Terakhir Diambil</th>
-            <th>Aksi</th>
+            <th v-if="userRole === 'admin'">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -130,7 +130,7 @@
             <td>{{ j.nama}}</td>
             <td>Setiap {{ j.hari_label }}</td>
             <td>{{ formatDate(j.tgl_terakhir_diambil) }}</td>
-            <td class="action-buttons">
+            <td v-if="userRole === 'admin'" class="action-buttons">
               <button class="btn-action edit" @click="openEdit(j)">
                 <span class="material-icons">edit</span>
               </button>
@@ -188,7 +188,7 @@
         </div>
 
         <!-- FOOTER -->
-        <div class="data-card-footer">
+        <div v-if="userRole === 'admin'" class="data-card-footer">
           <button class="btn-card-action edit" @click="openEdit(j)">
             <span class="material-icons">edit</span>
             Edit
@@ -255,6 +255,7 @@ import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import JadwalModal from '@/components/jadwalModal.vue'
 import { toIndex } from '@/services/hariJadwal'
+import { TabSync } from '@/services/tabSync'
 
 const jadwalList = ref([])
 const tpsList = ref([])
@@ -263,6 +264,8 @@ const form = ref(null)
 const petugasList = ref([])
 const usedDays = ref([])
 const abortController = ref(null)
+let unsubscribeSync = null
+const userRole = computed(() => sessionStorage.getItem('role') || 'kadus')
 
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
@@ -451,12 +454,21 @@ onMounted(() => {
   fetchPetugas()
   fetchJadwal()
   fetchTPS()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    if (event === 'jadwal_updated' || event === 'tps_updated' || event === 'petugas_updated') {
+      fetchJadwal()
+      if (event === 'tps_updated') fetchTPS()
+      if (event === 'petugas_updated') fetchPetugas()
+    }
+  })
 })
 
 onBeforeUnmount(() => {
   if (abortController.value) {
     abortController.value.abort()
   }
+  if (unsubscribeSync) unsubscribeSync()
 })
 
 function openAdd() {
@@ -511,6 +523,7 @@ async function save(data) {
     showModal.value = false
     usedDays.value = []
     
+    TabSync.emit('jadwal_updated')
     await fetchJadwal()
   } catch (error) {
     if (error.name !== 'CanceledError') {
@@ -524,6 +537,7 @@ async function remove(id) {
   if (confirm('Hapus jadwal ini?')) {
     try {
       await api.delete(`/api/jadwal/${id}`)
+      TabSync.emit('jadwal_updated')
       await fetchJadwal()
     } catch (error) {
       if (error.name !== 'CanceledError') {

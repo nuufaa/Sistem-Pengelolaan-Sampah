@@ -15,6 +15,7 @@ const { startScheduler } = require("./services/daftarTugasOtomatisService");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const jamOperasionalRoutes = require("./routes/jamOperasionalRoutes");
 const desaSettingsRoutes = require('./routes/desaSettingsRoutes')
+const kadusRoutes = require("./routes/kadusRoutes");
 
 app.use(express.json({ limit: '2mb' }));
 const allowedOrigins = [
@@ -62,6 +63,7 @@ app.use("/api/daftar-tugas", daftarTugasRoutes);
 app.use("/api/petugas", petugasRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/jam-operasional", jamOperasionalRoutes);
+app.use("/api/kadus", kadusRoutes);
 app.use('/api', desaSettingsRoutes)
 
 if (process.env.NODE_ENV !== 'test') {

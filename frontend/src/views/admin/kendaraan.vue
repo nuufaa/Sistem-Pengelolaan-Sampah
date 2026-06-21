@@ -2,7 +2,7 @@
   <section class="content-section active">
     <div class="section-header">
       <h2>Data Kendaraan</h2>
-      <button class="btn-primary" @click="openAdd">
+      <button v-if="userRole === 'admin'" class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Kendaraan
       </button>
@@ -68,7 +68,7 @@
             <th>Plat</th>
             <th>Kapasitas</th>
             <th>Status</th>
-            <th>Aksi</th>
+            <th v-if="userRole === 'admin'">Aksi</th>
           </tr>
         </thead>
 
@@ -83,7 +83,7 @@
                 {{ statusText(k.status_kendaraan) }}
               </span>
             </td>
-            <td class="action-buttons">
+            <td v-if="userRole === 'admin'" class="action-buttons">
               <button class="btn-action edit" @click="openEdit(k)">
                 <span class="material-icons">edit</span>
               </button>
@@ -132,7 +132,7 @@
           </div>
         </div>
 
-        <div class="data-card-footer">
+        <div v-if="userRole === 'admin'" class="data-card-footer">
           <button class="btn-card-action edit" @click="openEdit(k)">
             <span class="material-icons">edit</span>
             Edit
@@ -190,13 +190,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import api from '@/services/api'
 import KendaraanModal from '@/components/kendaraanModal.vue'
+import { TabSync } from '@/services/tabSync'
 
 const kendaraanList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
+let unsubscribeSync = null
+const userRole = computed(() => sessionStorage.getItem('role') || 'kadus')
 
 const searchQuery = ref('')
 const filterStatus = ref('')
@@ -263,7 +266,19 @@ async function fetchKendaraan() {
   }
 }
 
-onMounted(fetchKendaraan)
+onMounted(() => {
+  fetchKendaraan()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    if (event === 'kendaraan_updated') {
+      fetchKendaraan()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribeSync) unsubscribeSync()
+})
 
 function openAdd() {
   selected.value = {
@@ -291,6 +306,7 @@ async function save(data) {
       await api.post('/api/kendaraan', data)
     }
     await fetchKendaraan()
+    TabSync.emit('kendaraan_updated')
     showModal.value = false
   } catch (err) {
     console.error('Gagal simpan kendaraan', err)
@@ -302,6 +318,7 @@ async function remove(id) {
 
   try {
     await api.delete(`/api/kendaraan/${id}`)
+    TabSync.emit('kendaraan_updated')
     await fetchKendaraan()
   } catch (err) {
     console.error('Gagal hapus kendaraan', err)

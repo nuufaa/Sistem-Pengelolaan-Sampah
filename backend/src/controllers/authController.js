@@ -6,13 +6,17 @@ const petugas = require("../models/petugasModel");
 async function loginUser(req, res){
     const { username, password} = req.body
 
-    let user = await admin.findAdmin(username);
-    let role = "admin";
+        let user = await admin.findAdmin(username);
+        let role = "admin";
 
-    if(!user){
-        user = await petugas.findPetugas(username);
-        role = "petugas";
-    }
+        if (user) {
+            // Jika kolom role ada di tabel admin, gunakan itu
+            role = user.role || 'admin';
+        } else {
+            user = await petugas.findPetugas(username);
+            // Jika ditemukan di tabel petugas, gunakan role yang tersimpan (mis. 'petugas' atau 'kadus')
+            role = user && user.role ? user.role : 'petugas';
+        }
 
     if(!user){
         return res.status(401).json({

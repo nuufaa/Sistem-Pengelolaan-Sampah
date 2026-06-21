@@ -23,6 +23,7 @@ const AdminRiwayatLogbook = () => import('../views/admin/riwayatLogbook.vue')
 const AdminRankingTPS = () => import('../views/admin/rankingTPS.vue')
 const AdminTimbulanPerKapita = () => import('../views/admin/timbulanPerKapita.vue')
 
+
 const routes = [
   {
     path: '/',
@@ -120,12 +121,105 @@ const routes = [
       component: AdminTimbulanPerKapita
     }
   ]
-}
+  },
+  {
+    path: '/kadus',
+    component: () => import('../views/layoutKadus.vue'),
+    meta: { requiresAuth: true, roles: ['kadus', 'kades'] },
+    children: [
+      {
+        path: '',
+        name: 'kadus-dashboard',
+        component: DashboardAdmin
+      },
+      {
+        path: 'laporan',
+        name: 'kadus-laporan',
+        component: AdminLaporan
+      },
+      {
+        path: 'jam-operasional',
+        name: 'kadus-jam-operasional',
+        component: AdminJamOperasional
+      },
+      {
+        path: 'dusun',
+        name: 'kadus-dusun',
+        component: AdminDusun
+      },
+      {
+        path: 'tps',
+        name: 'kadus-tps',
+        component: AdminTPS
+      },
+      {
+        path: 'jadwal',
+        name: 'kadus-jadwal',
+        component: AdminJadwal
+      },
+      {
+        path: 'kendaraan',
+        name: 'kadus-kendaraan',
+        component: AdminKendaraan
+      },
+      {
+        path: 'petugas',
+        name: 'kadus-petugas',
+        component: AdminPetugas
+      },
+      {
+        path: 'kepatuhan',
+        name: 'kadus-kepatuhan',
+        component: AdminKepatuhan
+      },
+      {
+        path: 'ranking-tps',
+        name: 'kadus-ranking-tps',
+        component: AdminRankingTPS
+      },
+      {
+        path: 'timbulan-perkapita',
+        name: 'kadus-timbulan-perkapita',
+        component: AdminTimbulanPerKapita
+      },
+      {
+        path: 'riwayat-logbook',
+        name: 'kadus-riwayat-logbook',
+        component: AdminRiwayatLogbook
+      }
+    ]
+  },
+  {
+    path: '/dashboard',
+    redirect: () => {
+      const role = sessionStorage.getItem('role')
+      if (role === 'admin') return '/admin'
+      if (role === 'kadus' || role === 'kades') return '/kadus'
+      return '/petugas'
+    }
+  }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = !!sessionStorage.getItem('token')
+  const userRole = sessionStorage.getItem('role')
+
+  if (to.meta?.requiresAuth && !isAuthenticated) {
+    return next('/')
+  }
+
+  if (to.meta?.roles && !to.meta.roles.includes(userRole)) {
+    if (userRole === 'admin') return next('/admin')
+    if (userRole === 'kadus' || userRole === 'kades') return next('/kadus')
+    return next('/petugas')
+  }
+
+  next()
 })
 
 export default router

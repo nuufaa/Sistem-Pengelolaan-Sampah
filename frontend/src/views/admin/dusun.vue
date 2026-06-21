@@ -2,7 +2,7 @@
   <section class="content-section active">
     <div class="section-header">
       <h2>Data Dusun</h2>
-      <button class="btn-primary" @click="openAdd">
+      <button v-if="userRole === 'admin'" class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Dusun
       </button>
@@ -73,7 +73,7 @@
             <th>No</th>
             <th>Dusun</th>
             <th>Jumlah KK</th>
-            <th>Aksi</th>
+            <th v-if="userRole === 'admin'">Aksi</th>
           </tr>
         </thead>
 
@@ -82,7 +82,7 @@
             <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
             <td>{{ k.nama_dusun }}</td>
             <td>{{ k.jumlah_kk }}</td>
-            <td class="action-buttons">
+            <td v-if="userRole === 'admin'" class="action-buttons">
               <button class="btn-action edit" @click="openEdit(k)">
                 <span class="material-icons">edit</span>
               </button>
@@ -123,7 +123,7 @@
           </div>
         </div>
 
-        <div class="data-card-footer">
+        <div v-if="userRole === 'admin'" class="data-card-footer">
           <button class="btn-card-action edit" @click="openEdit(k)">
             <span class="material-icons">edit</span>
             Edit
@@ -184,13 +184,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import api from '@/services/api'
 import dusunModal from '@/components/dusunModal.vue'
+import { TabSync } from '@/services/tabSync'
 
 const dusunList = ref([])
 const showModal = ref(false)
 const selected = ref(null)
+let unsubscribeSync = null
+const userRole = computed(() => sessionStorage.getItem('role') || 'kadus')
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
@@ -241,16 +244,36 @@ function resetFilter() {
   currentPage.value = 1
 }
 
+//Memanggil API /api/dusun
 async function fetchDusun() {
   try {
+
+    //Penggunaan Axios untuk mengambil data Dusun
     const res = await api.get('/api/dusun')
+
+    //Simpan ke dusunList
     dusunList.value = res.data
+
   } catch (err) {
+
+    //Error log
     console.error('Gagal ambil data dusun', err)
   }
 }
 
-onMounted(fetchDusun)
+onMounted(() => {
+  fetchDusun()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    if (event === 'dusun_updated') {
+      fetchDusun()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribeSync) unsubscribeSync()
+})
 
 function openAdd() {
   selected.value = {
@@ -276,6 +299,7 @@ async function save(data) {
       await api.post('/api/dusun', data)
     }
     await fetchDusun()
+    TabSync.emit('dusun_updated')
     showModal.value = false
   } catch (err) {
     console.error('Gagal simpan dusun', err)
@@ -287,6 +311,7 @@ async function remove(id) {
 
   try {
     await api.delete(`/api/dusun/${id}`)
+    TabSync.emit('dusun_updated')
     await fetchDusun()
   } catch (err) {
     console.error('Gagal hapus kendaraan', err)

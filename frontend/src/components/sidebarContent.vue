@@ -249,12 +249,14 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { ref, onMounted, watch, nextTick, computed} from 'vue'
+import { ref, onMounted, watch, nextTick, computed, onUnmounted } from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import api from '@/services/api'
 import { useDesaLogo } from '@/services/useDesaLogo'
+import { TabSync } from '@/services/tabSync'
 
 const { fetchLogo } = useDesaLogo()
+let unsubscribeSync = null
 onMounted(fetchLogo)
 
 // Date and Schedule
@@ -272,8 +274,8 @@ const totalTPSHampirPenuh = ref(0)
 const totalLaporan = ref(0)
 const rankingTPS = ref([])
 const timbulanPerKapita = ref([])
-const selectedMonth = ref(new Date().getMonth() + 1)
-const selectedYear = ref(new Date().getFullYear())
+// const selectedMonth = ref(new Date().getMonth() + 1)
+// const selectedYear = ref(new Date().getFullYear())
 
 const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal', 'openVolumeSampahStatModal', 'openTimbulanModal'])
 const jadwal = ref({
@@ -488,6 +490,24 @@ onMounted(async () => {
   }
 
   fetchDashboard()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    console.log('Sidebar TabSync event:', event)
+    if (event === 'tps_updated' || event === 'jadwal_updated') {
+      fetchDashboard()
+    }
+    if (event === 'settings_updated') {
+      fetchLogo()
+      fetchjamOperasional()
+    }
+    if (event === 'laporan_updated') {
+      fetchTotalLaporan()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribeSync) unsubscribeSync()
 })
 
 watch(() => props.selectedStatus, () => {

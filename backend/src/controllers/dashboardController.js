@@ -5,7 +5,8 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 menit dalam milidetik
 
 async function getDashboard(req, res) {
   try {
-    const cacheKey = 'dashboard_main';
+    const { month, year } = req.query;
+    const cacheKey = `dashboard_main_${month}_${year}`;
     if (dashboardCache[cacheKey] && Date.now() - dashboardCache[cacheKey].timestamp < CACHE_TTL) {
       return res.json(dashboardCache[cacheKey].data);
     }
@@ -17,6 +18,7 @@ async function getDashboard(req, res) {
       totalTPSPenuh,
       statusTPS,
       laporan7Hari,
+      laporanBulanIni,
       totalTPSHampirPenuh
     ] = await Promise.all([
       dashboardModel.getTotalTPS(),
@@ -25,6 +27,7 @@ async function getDashboard(req, res) {
       dashboardModel.getTotalTPSPenuh(),
       dashboardModel.getStatusTPS(),
       dashboardModel.getLaporan7Hari(),
+      dashboardModel.getLaporanBulanIni(month, year),
       dashboardModel.getTotalTPSHampirPenuh()
     ]);
 
@@ -35,6 +38,7 @@ async function getDashboard(req, res) {
       totalTPSPenuh,
       statusTPS,
       laporan7Hari,
+      laporanBulanIni,
       totalTPSHampirPenuh,
     }
 

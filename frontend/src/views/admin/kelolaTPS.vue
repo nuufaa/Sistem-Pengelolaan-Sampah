@@ -2,7 +2,7 @@
   <section class="content-section active">
     <div class="section-header">
       <h2>Data Titik Pengambilan Sampah (TPS)</h2>
-      <button class="btn-primary" @click="openAdd">
+      <button v-if="userRole === 'admin'" class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah TPS
       </button>
@@ -72,7 +72,7 @@
             <th>Lokasi</th>
             <th>Kapasitas TPS (Kg)</th>
             <th>Status TPS</th>
-            <th>Aksi</th>
+            <th v-if="userRole === 'admin'">Aksi</th>
           </tr>
         </thead>
 
@@ -89,7 +89,7 @@
                 {{ statusText(tps.status_tps) }}
               </span>
             </td>
-            <td class="action-buttons">
+            <td v-if="userRole === 'admin'" class="action-buttons">
               <button class="btn-action edit" @click="openEdit(tps)">
                 <span class="material-icons">edit</span>
               </button>
@@ -143,7 +143,7 @@
           </div>
         </div>
 
-        <div class="data-card-footer">
+        <div v-if="userRole === 'admin'" class="data-card-footer">
           <button class="btn-card-action edit" @click="openEdit(tps)">
             <span class="material-icons">edit</span>
             Edit
@@ -205,14 +205,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { apiFetch } from '../../services/api'
 import TPSModal from '@/components/TPSModal.vue'
+import { TabSync } from '@/services/tabSync'
 
 const showModal = ref(false)
 const selectedTPS = ref(null)
 const dusunList = ref([])
 const tpsList = ref([])
+let unsubscribeSync = null
+
+const userRole = computed(() => sessionStorage.getItem('role') || 'kadus')
 
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
@@ -280,6 +284,17 @@ async function fetchDusun() {
 onMounted(async () => {
   fetchTPS()
   fetchDusun()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    if (event === 'tps_updated' || event === 'dusun_updated') {
+      fetchTPS()
+      if (event === 'dusun_updated') fetchDusun()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribeSync) unsubscribeSync()
 })
 
 function openAdd() {
@@ -326,6 +341,7 @@ async function saveTPS(data) {
       })
     }
 
+    TabSync.emit('tps_updated')
     fetchTPS()
     closeModal()
 
@@ -343,6 +359,7 @@ async function remove(id) {
       auth: true
     })
     alert(data.message)
+    TabSync.emit('tps_updated')
     fetchTPS()
   } catch (err) {
     alert(err?.message || 'Gagal hapus lapangan')

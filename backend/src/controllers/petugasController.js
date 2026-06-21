@@ -4,8 +4,10 @@ const bcrypt = require('bcrypt')
 async function createPetugas(req, res) {
   try {
     const id_admin = req.user.id
+    const { role = 'petugas' } = req.body; // Default role 'petugas' jika tidak disediakan
     const data = await petugasModel.create({
       ...req.body,
+      role,
       id_admin
     })
 
@@ -54,7 +56,7 @@ async function getPetugasById(req, res) {
 
 async function updatePetugas(req, res) {
   try {
-    const { nama, no_telp, username, password, status_petugas } = req.body
+    const { nama, no_telp, username, password, status_petugas, role } = req.body
     const id = req.params.id
 
     const status = Number(status_petugas)
@@ -72,7 +74,8 @@ async function updatePetugas(req, res) {
       no_telp,
       username,
       password: hashedPassword ,
-      status_petugas: status
+      status_petugas: status,
+      role: role || 'petugas' // Default 'petugas' jika tidak disediakan
     })
 
     res.json({ message: 'Petugas berhasil diupdate' })

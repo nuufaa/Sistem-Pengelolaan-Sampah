@@ -96,6 +96,21 @@ async function getLaporan7Hari() {
   return rows
 }
 
+async function getLaporanBulanIni(month, year) {
+  const m = month || new Date().getMonth() + 1;
+  const y = year || new Date().getFullYear();
+  
+  const [rows] = await db.query(`
+    SELECT DATE(tgl_laporan) as tanggal, COUNT(*) as total
+      FROM lapor
+      WHERE MONTH(tgl_laporan) = ?
+      AND YEAR(tgl_laporan) = ?
+      GROUP BY DATE(tgl_laporan)
+      ORDER BY tanggal ASC
+    `, [m, y])
+  return rows
+}
+
 async function getTotalTugas(id_petugas) {
   const [rows] = await db.query(`
     SELECT COUNT(*) as total
@@ -143,8 +158,28 @@ async function getProgressTugas(id_petugas) {
 }
 
 //statistik di home
-async function getVolumeSampah() {
+// async function getVolumeSampah() {
 
+//   const [rows] = await db.query(`
+//     SELECT
+//       t.nama_tps,
+//       COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
+//       t.kapasitas,
+//       DATE(COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan)) AS tanggal,
+//       ROUND(COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100, 1) AS persentase
+//     FROM tps t
+//     LEFT JOIN daftar_tugas dt 
+//       ON t.id_tps = dt.id_tps 
+//       AND dt.status_angkut = 'selesai'
+//       AND dt.tgl_terakhir_diambil >= CURDATE() - INTERVAL 6 DAY
+          
+//       GROUP BY tanggal, t.id_tps
+//       ORDER BY tanggal ASC;
+//     `);
+//   return rows;
+// }
+
+async function getVolumeSampah() {
   const [rows] = await db.query(`
     SELECT
       t.nama_tps,
@@ -156,11 +191,11 @@ async function getVolumeSampah() {
     LEFT JOIN daftar_tugas dt 
       ON t.id_tps = dt.id_tps 
       AND dt.status_angkut = 'selesai'
-      AND dt.tgl_terakhir_diambil >= CURDATE() - INTERVAL 6 DAY
-          
-      GROUP BY tanggal, t.id_tps
-      ORDER BY tanggal ASC;
-    `);
+      AND dt.tgl_terakhir_diambil >= CURDATE() - INTERVAL 1 YEAR
+      
+    GROUP BY tanggal, t.id_tps
+    ORDER BY tanggal ASC;
+  `);
   return rows;
 }
 
@@ -428,6 +463,7 @@ module.exports = {
   getTotalTPSPenuh,
   getStatusTPS,
   getLaporan7Hari,
+  getLaporanBulanIni,
   getTotalTugas,
   getPendingTugas,
   getDoneTugas,

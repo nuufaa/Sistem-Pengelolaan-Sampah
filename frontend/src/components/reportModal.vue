@@ -155,7 +155,6 @@ async function submit() {
       body: formData,
       auth: false
     })
-    // alert("Laporan berhasil dikirim")
     showToast('Laporan berhasil dikirim! Terima kasih atas partisipasi Anda.');
 
     resetForm()
