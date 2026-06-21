@@ -371,6 +371,7 @@ import timbulanPerKapitaStat from '@/components/timbulanPerKapitaStat.vue'
 import { useToast } from '@/services/useToast'
 import api from '@/services/api'
 import { useDesaLogo } from '@/services/useDesaLogo'
+import { TabSync } from '@/services/tabSync'
 
 const { logoSrc, fetchLogo } = useDesaLogo()
 onMounted(fetchLogo)
@@ -406,10 +407,11 @@ const loading = ref(false)
 const error = ref(null)
 const modalTPSList = ref([])
 const isBottomSheetOpen = ref(false)
+let unsubscribeSync = null
 
 // Auto-refresh interval untuk update status marker
 let pollInterval = null
-const POLL_INTERVAL_MS = 5 * 60 * 1000 // 5 menit
+const POLL_INTERVAL_MS = 30 * 1000 // 30 detik (sebelumnya 5 menit)
 
 // variabel untuk jadwal lengkap tps
 const scheduleSearch  = ref('')
@@ -754,6 +756,40 @@ const tpsMap = new Map()
       console.warn('[Poll] Gagal refresh data TPS:', err.message)
     }
   }, POLL_INTERVAL_MS)
+
+  // Listen to updates from other tabs
+  unsubscribeSync = TabSync.listen(async (event) => {
+    console.log('Home TabSync event:', event)
+    if (event === 'tps_updated' || event === 'laporan_updated' || event === 'jadwal_updated') {
+      try {
+        const result = await fetchTitikTps()
+        const tpsMap = new Map()
+        ;(Array.isArray(result) ? result : []).forEach(item => {
+          const existing = tpsMap.get(item.id_tps)
+          if (!existing || (!existing.hari_pengambilan && item.hari_pengambilan)) {
+            tpsMap.set(item.id_tps, item)
+          }
+        })
+        wastePoints.value = Array.from(tpsMap.values())
+        jadwalTPS.value = Array.isArray(result) ? result : []
+        
+        // If modal schedule is open, update its data too
+        if (isModalScheduleOpen.value && selectedDesa.value) {
+            openScheduleModal(selectedDesa.value)
+        }
+      } catch (err) {
+        console.warn('TabSync refresh failed:', err)
+      }
+    }
+    if (event === 'settings_updated') {
+      fetchLogo()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (pollInterval) clearInterval(pollInterval)
+  if (unsubscribeSync) unsubscribeSync()
 })
 
 function initMap() {

@@ -11,7 +11,7 @@
           </div>
           <div>
             <h2 class="vol-title">Statistik Volume Sampah</h2>
-            <p class="vol-subtitle">Data pengangkutan TPS harian</p>
+            <p class="vol-subtitle">Data pengangkutan TPS · {{ currentMonthLabel }}</p>
           </div>
         </div>
         <button class="modal-close" @click="$emit('close')">
@@ -24,7 +24,39 @@
 
         <!-- FILTERS -->
         <div class="vol-filters">
+
+          <!-- Filter Tanggal -->
           <div class="vol-filter-item">
+            <span class="vol-filter-label">Tanggal</span>
+            <div class="vol-date-wrap" :class="{ 'filter-active': filterMode === 'tanggal' }">
+              <span class="material-icons vol-date-icon">calendar_today</span>
+              <input type="date" class="vol-date-input" v-model="filterTanggal" @change="onTanggalChange" />
+            </div>
+          </div>
+
+          <!-- Separator -->
+          <div class="vol-filter-sep">
+            <span class="vol-filter-sep-line"></span>
+            <span class="vol-filter-sep-text">atau</span>
+            <span class="vol-filter-sep-line"></span>
+          </div>
+
+          <!-- Filter Bulan -->
+          <div class="vol-filter-item">
+            <span class="vol-filter-label">Bulan</span>
+            <div class="vol-date-wrap" :class="{ 'filter-active': filterMode === 'bulan' }">
+              <span class="material-icons vol-date-icon">date_range</span>
+              <input type="month" class="vol-date-input" v-model="filterBulan" @change="onBulanChange" />
+            </div>
+          </div>
+
+          <!-- Tombol Reset -->
+          <button v-if="filterMode !== null" class="vol-reset-btn" @click="resetFilter" title="Reset filter">
+            <span class="material-icons">restart_alt</span>
+          </button>
+
+          <!-- Periode -->
+          <!-- <div class="vol-filter-item">
             <span class="vol-filter-label">Periode</span>
             <div class="vol-period-tabs">
               <button
@@ -38,8 +70,9 @@
                 @click="filterChart = 'bulanan'"
               >Bulanan</button>
             </div>
-          </div>
+          </div> -->
 
+          <!-- TPS dipilih -->
           <div class="vol-filter-item">
             <span class="vol-filter-label">TPS dipilih</span>
             <div class="vol-dropdown-wrap">
@@ -81,6 +114,7 @@
               </div>
             </div>
           </div>
+
         </div>
 
         <!-- CHART AREA -->
@@ -116,18 +150,24 @@ import { ref, watch, nextTick, computed } from 'vue'
 const volumeSampahHarian = ref([])
 let volumeSampahChart = null
 const volumeSampahChartRef = ref(null)
-const filterChart = ref('mingguan')
+const filterChart = ref('bulanan')
 const tpsList = ref([])
 const selectedTPS = ref([])
 const isDropdownOpen = ref(false)
 const searchTPS = ref('')
+
+// Filter tanggal & bulan
+const filterMode = ref(null) // null | 'tanggal' | 'bulan'
+const filterTanggal = ref('')
+const filterBulan = ref('')
+
 
 const props = defineProps({
   isModalOpen: { type: Boolean, default: false },
   volumeSampahData: { type: Array, default: () => [] }
 })
 
-// Palette warna yang lebih soft dan mudah dibedakan
+// Palette warna
 const COLORS = [
   '#2E7D32', '#1565C0', '#E65100', '#6A1B9A', '#00838F',
   '#AD1457', '#558B2F', '#283593', '#BF360C', '#4527A0',
@@ -139,16 +179,64 @@ function getTpsColor(tps) {
   return COLORS[idx % COLORS.length]
 }
 
+function onTanggalChange() {
+  if (!filterTanggal.value) return
+  filterMode.value = 'tanggal'
+  filterBulan.value = ''
+  nextTick(() => renderVolumeSampahChart(volumeSampahHarian.value, filterChart.value, selectedTPS.value))
+}
+
+function onBulanChange() {
+  if (!filterBulan.value) return
+  filterMode.value = 'bulan'
+  filterTanggal.value = ''
+  nextTick(() => renderVolumeSampahChart(volumeSampahHarian.value, filterChart.value, selectedTPS.value))
+}
+
+function resetFilter() {
+  filterMode.value = null
+  filterTanggal.value = ''
+  filterBulan.value = ''
+  nextTick(() => renderVolumeSampahChart(volumeSampahHarian.value, filterChart.value, selectedTPS.value))
+}
+
+const MONTHS_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+
+const currentMonthLabel = computed(() => {
+  const now = new Date()
+  return `${MONTHS_FULL[now.getMonth()]} ${now.getFullYear()}`
+})
+
 watch(() => props.volumeSampahData, (newData) => {
   if (newData && newData.length > 0) {
     volumeSampahHarian.value = newData
     tpsList.value = [...new Set(newData.map(item => item.nama_tps))]
-    selectedTPS.value = [...tpsList.value]
-    nextTick(() => {
-      renderVolumeSampahChart(volumeSampahHarian.value, filterChart.value, selectedTPS.value)
-    })
+    if (selectedTPS.value.length === 0) {
+      selectedTPS.value = [...tpsList.value]
+    }
+    if (props.isModalOpen) {
+      nextTick(() => {
+        renderVolumeSampahChart(volumeSampahHarian.value, filterChart.value, selectedTPS.value)
+      })
+    }
   }
-}, { deep: true })
+}, { deep: true, immediate: true })
+
+watch(() => props.isModalOpen, (isOpen) => {
+  if (isOpen) {
+    // Set default bulan sekarang jika belum ada filter aktif
+    if (!filterBulan.value && filterMode.value !== 'tanggal') {
+      const now = new Date()
+      filterBulan.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      filterMode.value = 'bulan'
+    }
+    if (volumeSampahHarian.value.length > 0) {
+      nextTick(() => {
+        renderVolumeSampahChart(volumeSampahHarian.value, filterChart.value, selectedTPS.value)
+      })
+    }
+  }
+})
 
 async function renderVolumeSampahChart(data, filter = 'mingguan', selectedTPSList = []) {
   if (!volumeSampahChartRef.value) await nextTick()
@@ -159,31 +247,107 @@ async function renderVolumeSampahChart(data, filter = 'mingguan', selectedTPSLis
     volumeSampahChart = null
   }
 
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+  
+  // Format tanggal stabil untuk label (Contoh: 12 Mei)
+  const formatTglLabel = (d) => {
+    if (!d) return ''
+    return `${d.getDate()} ${MONTHS[d.getMonth()]}`
   }
 
+  // Parser tanggal — mendukung string ('2026-05-12' atau ISO) dan JS Date object (dari MySQL2)
+  const parseDate = (input) => {
+    if (!input) return null
+    // Jika sudah berupa Date object (MySQL2 mengembalikan DATE column sebagai Date)
+    if (input instanceof Date) {
+      if (isNaN(input.getTime())) return null
+      return new Date(input.getFullYear(), input.getMonth(), input.getDate())
+    }
+    // Jika string
+    try {
+      const str = String(input)
+      const [year, month, day] = str.split('T')[0].split('-').map(Number)
+      if (isNaN(year) || isNaN(month) || isNaN(day)) return null
+      return new Date(year, month - 1, day)
+    } catch (e) {
+      return null
+    }
+  }
+
+  // Ambil bagian tanggal (YYYY, MM, DD) dari Date object atau string secara aman
+  const getDateParts = (input) => {
+    const d = parseDate(input)
+    if (!d) return null
+    return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() }
+  }
+
+  // Format tanggal untuk key mapping dataMap
+  const formatDateKey = (input) => {
+    const d = parseDate(input)
+    return formatTglLabel(d)
+  }
+
+  // Tentukan labels — filter aktif didahulukan
   let labels = []
-  if (filter === 'mingguan') {
+  if (filterMode.value === 'tanggal' && filterTanggal.value) {
+    const d = parseDate(filterTanggal.value)
+    if (d) labels = [formatTglLabel(d)]
+  } else if (filterMode.value === 'bulan' && filterBulan.value) {
+    const [y, m] = filterBulan.value.split('-').map(Number)
+    const daysInMonth = new Date(y, m, 0).getDate()
+    labels = [...Array(daysInMonth)].map((_, i) =>
+      formatTglLabel(new Date(y, m - 1, i + 1))
+    )
+  } else if (filter === 'mingguan') {
     labels = [...Array(7)].map((_, i) => {
       const d = new Date()
+      d.setHours(0, 0, 0, 0)
       d.setDate(d.getDate() - (6 - i))
-      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
+      return formatTglLabel(d)
     })
   } else if (filter === 'bulanan') {
-    const now = new Date()
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-    labels = [...Array(daysInMonth)].map((_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth(), i + 1)
-      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
-    })
+    // Jika tidak ada filter bulan aktif, gunakan bulan dari data terbaru atau bulan sekarang
+    let refDate = new Date()
+    if (data && data.length > 0) {
+      const lastDataDate = parseDate(data[data.length - 1].tanggal)
+      if (lastDataDate) refDate = lastDataDate
+    }
+    const y = refDate.getFullYear()
+    const m = refDate.getMonth() + 1
+    const daysInMonth = new Date(y, m, 0).getDate()
+    labels = [...Array(daysInMonth)].map((_, i) =>
+      formatTglLabel(new Date(y, m - 1, i + 1))
+    )
   }
 
+  // Filter data sesuai mode aktif — getDateParts() menangani Date object & string
+  const filteredData = (() => {
+    if (!data) return []
+    if (filterMode.value === 'tanggal' && filterTanggal.value) {
+      const [ty, tm, td] = filterTanggal.value.split('-').map(Number)
+      return data.filter(d => {
+        const p = getDateParts(d.tanggal)
+        if (!p) return false
+        return ty === p.y && tm === p.m && td === p.d
+      })
+    }
+    if (filterMode.value === 'bulan' && filterBulan.value) {
+      const [year, month] = filterBulan.value.split('-').map(Number)
+      return data.filter(d => {
+        const p = getDateParts(d.tanggal)
+        if (!p) return false
+        return p.y === year && p.m === month
+      })
+    }
+    return data
+  })()
+
   const dataMap = {}
-  data.forEach(d => {
-    const key = `${formatDate(d.tanggal)}-${d.nama_tps}`
-    dataMap[key] = (dataMap[key] || 0) + d.total_volume
+  filteredData.forEach(d => {
+    const labelKey = formatDateKey(d.tanggal)
+    if (!labelKey) return
+    const key = `${labelKey}-${d.nama_tps}`
+    dataMap[key] = (dataMap[key] || 0) + Number(d.total_volume || 0)
   })
 
   const filteredList = selectedTPSList.length > 0
@@ -191,81 +355,149 @@ async function renderVolumeSampahChart(data, filter = 'mingguan', selectedTPSLis
     : [...new Set(data.map(item => item.nama_tps))]
 
   const datasets = filteredList.map((tps) => {
-    const color = getTpsColor(tps)
-    const hasData = labels.some(label => (dataMap[`${label}-${tps}`] || 0) > 0)
-    return {
-      label: tps,
-      data: labels.map(label => dataMap[`${label}-${tps}`] || 0),
-      borderColor: color,
-      backgroundColor: color + '15',
-      borderWidth: hasData ? 2 : 1.5,
-      fill: false,
-      tension: 0.35,
-      pointRadius: labels.map(label => (dataMap[`${label}-${tps}`] || 0) > 0 ? 5 : 3),
-      pointHoverRadius: 7,
-      pointBackgroundColor: labels.map(label =>
-        (dataMap[`${label}-${tps}`] || 0) > 0 ? color : '#fff'
-      ),
-      pointBorderColor: color,
-      pointBorderWidth: 2,
-    }
-  })
+  const color = getTpsColor(tps)
+  const hasData = labels.some(label => (dataMap[`${label}-${tps}`] || 0) > 0)
+  return {
+    label: tps,
+    data: labels.map(label => dataMap[`${label}-${tps}`] || 0),
+    borderColor: color,
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    fill: false,
+    tension: 0.3,
+    pointRadius: labels.map(label => (dataMap[`${label}-${tps}`] || 0) > 0 ? 3 : 0),
+    pointHoverRadius: labels.map(label => (dataMap[`${label}-${tps}`] || 0) > 0 ? 5 : 0),
+    pointBackgroundColor: '#fff',
+    pointBorderColor: color,
+    pointBorderWidth: 1.5,
+    spanGaps: false,
+    borderDash: hasData ? [] : [4, 4],  // garis putus jika TPS tidak ada data
+  }
+})
 
   volumeSampahChart = new Chart(volumeSampahChartRef.value, {
     type: 'line',
     data: { labels, datasets },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      layout: { padding: { top: 8, right: 8, bottom: 0, left: 0 } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          border: { display: false },
-          grid: { color: '#F0F0F0', drawTicks: false },
-          ticks: {
-            callback: v => v === 0 ? '0' : v + ' kg',
-            font: { size: 11, family: 'DM Sans, sans-serif' },
-            color: '#9E9E9E',
-            padding: 8,
-            maxTicksLimit: 6,
-          }
-        },
-        x: {
-          border: { display: false },
-          grid: { display: false },
-          ticks: {
-            font: { size: 11, family: 'DM Sans, sans-serif' },
-            color: '#9E9E9E',
-            maxRotation: 0,
-            padding: 4,
-          }
-        }
-      },
+  maintainAspectRatio: false,
+  clip: false,
+  interaction: { mode: 'index', intersect: false },
+  layout: { padding: { top: 60, right: 16, bottom: 0, left: 0 } },
+  elements: {
+    line: { capBezierPoints: true }
+  },
+  scales: {
+  y: {
+    beginAtZero: true,
+    border: { display: false, color: '#BDBDBD', dash: [4, 4] },  // garis Y putus-putus seperti GA
+    grid: {
+      color: '#BDBDBD',
+      drawTicks: false,
+      lineWidth: 1,
+    },
+    ticks: {
+      callback: v => v === 0 ? '0' : v + ' kg',
+      font: { size: 11, family: 'DM Sans, sans-serif' },
+      color: '#9AA0A6',  // warna label GA
+      padding: 12,
+      maxTicksLimit: 5,
+    }
+  },
+  x: {
+    border: { display: false },
+    grid: {
+      color: '#F1F3F4',   // GA menampilkan grid vertikal tipis
+      drawTicks: false,
+      lineWidth: 1,
+    },
+    ticks: {
+      font: { size: 11, family: 'DM Sans, sans-serif' },
+      color: '#9AA0A6',
+      maxRotation: 0,
+      autoSkip: true,
+      maxTicksLimit: 10,
+      padding: 8,
+    }
+  }
+},
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1A1A2E',
-          titleColor: '#fff',
-          bodyColor: '#ccc',
-          borderColor: 'rgba(255,255,255,0.08)',
-          borderWidth: 1,
-          padding: { top: 10, bottom: 10, left: 14, right: 14 },
-          cornerRadius: 10,
-          displayColors: true,
-          boxWidth: 8,
-          boxHeight: 8,
-          usePointStyle: true,
-          callbacks: {
-            title: (items) => items[0]?.label || '',
-            label: (ctx) => {
-              const val = ctx.raw
-              return ` ${ctx.dataset.label}: ${val > 0 ? val + ' kg' : '-'}`
-            },
-            filter: (item) => item.raw > 0
-          }
-        }
+  enabled: false,
+  external: (context) => {
+    const { chart, tooltip } = context
+
+    let el = document.getElementById('vol-custom-tooltip')
+    if (!el) {
+      el = document.createElement('div')
+      el.id = 'vol-custom-tooltip'
+      el.style.cssText = `
+        position: absolute;
+        background: #1A1A2E;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        padding: 10px 14px;
+        pointer-events: none;
+        z-index: 9999;
+        min-width: 200px;
+        font-family: DM Sans, sans-serif;
+        font-size: 12px;
+        color: #D0D0D0;
+        transition: opacity 0.15s;
+      `
+      chart.canvas.parentNode.style.position = 'relative'
+      chart.canvas.parentNode.appendChild(el)
+    }
+
+    if (tooltip.opacity === 0) {
+      el.style.opacity = '0'
+      return
+    }
+
+    const items = tooltip.dataPoints?.filter(p => p.raw > 0) || []
+    items.sort((a, b) => b.raw - a.raw)
+
+    const title = `
+      <div style="color:#fff;font-weight:600;font-size:13px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1)">
+        ${tooltip.title?.[0] || ''}
+      </div>`
+
+    const rows = items.map(p => {
+      const color = p.dataset.borderColor
+      const name = p.dataset.label
+      const val = p.raw
+      return `
+        <div style="display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:6px;padding:3px 0">
+          <span style="width:7px;height:7px;border-radius:50%;background:${color};justify-self:center"></span>
+          <span style="font-size:12px;color:#D0D0D0">${name}</span>
+          <span style="font-size:12px;color:#fff;font-weight:500;font-variant-numeric:tabular-nums;text-align:right">${val} kg</span>
+        </div>`
+    }).join('')
+
+    const total = items.reduce((s, p) => s + p.raw, 0)
+    const footer = `
+      <div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1);display:grid;grid-template-columns:1fr auto;gap:6px">
+        <span style="color:#9E9E9E;font-size:12px">Total</span>
+        <span style="color:#fff;font-weight:600;font-size:12px;font-variant-numeric:tabular-nums;text-align:right">${total} kg</span>
+      </div>`
+
+    el.innerHTML = title + rows + footer
+
+    const { offsetLeft, offsetTop } = chart.canvas
+    let left = offsetLeft + tooltip.caretX + 12
+    let top = offsetTop + tooltip.caretY - el.offsetHeight / 2
+
+    if (left + 220 > chart.canvas.parentNode.offsetWidth) {
+      left = offsetLeft + tooltip.caretX - el.offsetWidth - 12
+    }
+    if (top < 0) top = 8
+
+    el.style.left = left + 'px'
+    el.style.top = top + 'px'
+    el.style.opacity = '1'
+  }
+}
       }
     }
   })
@@ -367,22 +599,6 @@ const filteredTPSList = computed(() => {
   margin: 2px 0 0;
 }
 
-/* .vol-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid #E0E0E0;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #757575;
-}
-.vol-close:hover { background: #F5F5F5; color: #212121; }
-.vol-close .material-icons { font-size: 18px; } */
-
 /* ===== BODY ===== */
 .vol-body {
   padding: 16px 20px 20px;
@@ -398,6 +614,7 @@ const filteredTPSList = computed(() => {
   display: flex;
   align-items: flex-end;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .vol-filter-item {
@@ -413,6 +630,70 @@ const filteredTPSList = computed(() => {
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
+
+/* Filter tanggal & bulan */
+.vol-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid #E0E0E0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.vol-date-wrap:hover { border-color: #4CAF50; }
+.vol-date-wrap.filter-active {
+  border-color: #2E7D32;
+  box-shadow: 0 0 0 3px rgba(46,125,50,0.10);
+}
+.vol-date-icon { font-size: 16px !important; color: #4CAF50; flex-shrink: 0; }
+.vol-date-input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #424242;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Separator */
+.vol-filter-sep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 8px;
+  gap: 3px;
+}
+.vol-filter-sep-line { width: 1px; height: 14px; background: #E0E0E0; }
+.vol-filter-sep-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: #BDBDBD;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* Reset button */
+.vol-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px solid #FFCDD2;
+  background: #FFEBEE;
+  color: #C62828;
+  cursor: pointer;
+  align-self: flex-end;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.vol-reset-btn:hover { background: #C62828; color: #fff; border-color: #C62828; }
+.vol-reset-btn .material-icons { font-size: 18px !important; }
 
 /* Period tabs */
 .vol-period-tabs {
@@ -566,13 +847,22 @@ const filteredTPSList = computed(() => {
 
 /* ===== CHART ===== */
 .vol-chart-wrap {
-  background: #FAFAFA;
+  /* background: #FAFAFA;
   border-radius: 12px;
   border: 1px solid #F0F0F0;
   padding: 16px 12px 12px;
   height: 280px;
   position: relative;
   flex-shrink: 0;
+   overflow: visible; */
+   background: #fff;
+  border-radius: 12px;
+  border: 1px solid #EEEEEE;
+  padding: 16px 12px 12px;
+  height: 280px;
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .vol-canvas {
@@ -634,6 +924,16 @@ const filteredTPSList = computed(() => {
   .vol-filters {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .vol-filter-sep {
+    flex-direction: row;
+    gap: 6px;
+  }
+  .vol-filter-sep-line {
+    flex: 1;
+    width: auto;
+    height: 1px;
   }
 
   .vol-dropdown-wrap {

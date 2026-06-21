@@ -48,21 +48,6 @@ async function update(id, data) {
     );
 }
 
-// async function findAll(status) {
-//   let query = "SELECT * FROM tps";
-//   const params = [];
-
-//   if (status) {
-//     query += " WHERE status_tps = ?";
-//     params.push(status);
-//   }
-
-//   query += " ORDER BY id_tps DESC";
-
-//   const [rows] = await db.query(query, params);
-//   return rows;
-// }
-
 async function remove(id) {
     await db.query(
         "DELETE FROM kendaraan WHERE id_kendaraan = ?",

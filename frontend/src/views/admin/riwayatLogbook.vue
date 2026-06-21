@@ -292,10 +292,10 @@ function todayStr() {
   return new Date().toISOString().split('T')[0]
 }
 
-const todayVehicles = computed(() => {
-  const today = todayStr()
-  return logbookSummary.value.filter(item => item.tanggal === today)
-})
+// const todayVehicles = computed(() => {
+//   const today = todayStr()
+//   return logbookSummary.value.filter(item => item.tanggal === today)
+// })
 
 const filteredLogbook = computed(() => {
   const q = filter.search.toLowerCase()

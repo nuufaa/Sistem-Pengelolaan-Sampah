@@ -1,8 +1,3 @@
-/**
- * TPS Status Service
- * Menghitung status TPS berdasarkan persentase volume sampah
- */
-
 function calculateStatusTPSRealtime(tps) {
     // Jika kapasitas 0, status default normal
     if (!tps.kapasitas || tps.kapasitas === 0) {

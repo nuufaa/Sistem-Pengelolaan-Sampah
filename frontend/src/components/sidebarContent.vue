@@ -1,10 +1,10 @@
 <template>
   <div class="card schedule-card">
-      <div class="card-header">
-          <span class="material-icons">event</span>
-          <h2>Jadwal Pengambilan Sampah</h2>
-      </div>
-      <div class="card-body">
+    <div class="card-header">
+      <span class="material-icons">event</span>
+      <h2>Jadwal Pengambilan Sampah</h2>
+    </div>
+    <div class="card-body">
           <!-- Current Date Info -->
           <div class="schedule-info">
               <div class="info-item">
@@ -52,157 +52,157 @@
               </button>
           </div>
       </div>
-  </div>
-
-  <!-- CARD RIWAYAT LAPORAN -->
-  <div class="desa-card laporan-card">
-    <div class="desa-header">
-      <span class="material-icons">report</span>
-      <h3>Riwayat Laporan</h3>
     </div>
 
-    <div class="desa-tps-info">
-      <span class="material-icons">description</span>
-      <span>{{ totalLaporan }} Laporan Masuk</span>
-    </div>
-
-    <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openLaporanModal')">
-      <span class="material-icons">visibility</span>
-      <span>Lihat Riwayat Laporan</span>
-    </button>
-  </div>  
-
-  <!-- Filter Card -->
-  <div class="card filter-card">
-      <div class="card-header">
-          <span class="material-icons">filter_list</span>
-          <h2>Filter Tampilan</h2>
+    <!-- CARD RIWAYAT LAPORAN -->
+    <div class="desa-card laporan-card">
+      <div class="desa-header">
+        <span class="material-icons">report</span>
+        <h3>Riwayat Laporan</h3>
       </div>
-      <div class="card-body">
-        <label class="filter-label">Status Titik Sampah:</label>
-        <div class="filter-group">
-            <label class="checkbox-label status-normal">
-                <input 
-                type="checkbox"
-                value="normal"
-                :checked="props.selectedStatus.includes('normal')"
-                @change="handleStatusChange('normal', $event)"
-                >
-                <span class="status-icon">●</span>
-                <span>Normal <span class="count">({{ totalTPS - totalTPSHampirPenuh - totalTPSPenuh }})</span></span>
-            </label>
 
-            <label class="checkbox-label status-warning">
-                <input 
-                type="checkbox"
-                value="hampir_penuh"
-                :checked="props.selectedStatus.includes('hampir_penuh')"
-                @change="handleStatusChange('hampir_penuh', $event)"
-                >
-                <span class="status-icon">●</span>
-                <span>Hampir Penuh <span class="count">({{ totalTPSHampirPenuh }})</span></span>
-            </label>
+      <div class="desa-tps-info">
+        <span class="material-icons">description</span>
+        <span>{{ totalLaporan }} Laporan Masuk</span>
+      </div>
 
-            <label class="checkbox-label status-danger">
-                <input 
-                type="checkbox"
-                value="penuh"
-                :checked="props.selectedStatus.includes('penuh')"
-                @change="handleStatusChange('penuh', $event)"
-                >
-                <span class="status-icon">●</span>
-                <span>Penuh <span class="count">({{ totalTPSPenuh }})</span></span>
-            </label>
-          </div>
+      <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openLaporanModal')">
+        <span class="material-icons">visibility</span>
+        <span>Lihat Riwayat Laporan</span>
+      </button>
+    </div>  
 
-          <div class="legend">
-              <h3>Informasi Peta:</h3>
-              <div class="legend-item">
-                <span class="legend-dot normal"></span>
-                <span>Normal (&lt; 50%)</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot warning"></span>
-                <span>Hampir Penuh (50% - 79%)</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot danger"></span>
-                <span>Penuh (≥ 80%)</span>
-              </div>
+    <!-- Filter Card -->
+    <div class="card filter-card">
+      <div class="card-header">
+        <span class="material-icons">filter_list</span>
+        <h2>Filter Tampilan</h2>
+      </div>
+    <div class="card-body">
+      <label class="filter-label">Status Titik Sampah:</label>
+      <div class="filter-group">
+        <label class="checkbox-label status-normal">
+          <input 
+          type="checkbox"
+          value="normal"
+          :checked="props.selectedStatus.includes('normal')"
+          @change="handleStatusChange('normal', $event)"
+          >
+          <span class="status-icon">●</span>
+          <span>Normal <span class="count">({{ totalTPS - totalTPSHampirPenuh - totalTPSPenuh }})</span></span>
+        </label>
+
+        <label class="checkbox-label status-warning">
+          <input 
+          type="checkbox"
+          value="hampir_penuh"
+          :checked="props.selectedStatus.includes('hampir_penuh')"
+          @change="handleStatusChange('hampir_penuh', $event)"
+          >
+          <span class="status-icon">●</span>
+          <span>Hampir Penuh <span class="count">({{ totalTPSHampirPenuh }})</span></span>
+        </label>
+
+        <label class="checkbox-label status-danger">
+          <input 
+          type="checkbox"
+          value="penuh"
+          :checked="props.selectedStatus.includes('penuh')"
+          @change="handleStatusChange('penuh', $event)"
+          >
+          <span class="status-icon">●</span>
+          <span>Penuh <span class="count">({{ totalTPSPenuh }})</span></span>
+        </label>
+      </div>
+
+        <div class="legend">
+            <h3>Informasi Peta:</h3>
+            <div class="legend-item">
+              <span class="legend-dot normal"></span>
+              <span>Normal (&lt; 50%)</span>
             </div>
+            <div class="legend-item">
+              <span class="legend-dot warning"></span>
+              <span>Hampir Penuh (50% - 79%)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot danger"></span>
+              <span>Penuh (≥ 80%)</span>
+            </div>
+          </div>
         </div>
     </div>
 
-  <!-- Statistics Card -->
-  <div class="card stats-card">
-    <div class="card-header">
+    <!-- Statistics Card -->
+    <div class="card stats-card">
+      <div class="card-header">
         <span class="material-icons">bar_chart</span>
         <h2>Statistik Hari Ini</h2>
-    </div>
-    <div class="card-body">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-number">{{ totalTPS }}</div>
-          <div class="stat-label">Total Titik</div>
-        </div>
-        <div class="stat-item warning">
-          <div class="stat-number">{{ totalTPSHampirPenuh }}</div>
-          <div class="stat-label">Perlu Perhatian</div>
-        </div>
-        <div class="stat-item danger">
-          <div class="stat-number">{{ totalTPSPenuh }}</div>
-          <div class="stat-label">Penuh</div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number">{{ totalTPS }}</div>
+            <div class="stat-label">Total Titik</div>
+          </div>
+          <div class="stat-item warning">
+            <div class="stat-number">{{ totalTPSHampirPenuh }}</div>
+            <div class="stat-label">Perlu Perhatian</div>
+          </div>
+          <div class="stat-item danger">
+            <div class="stat-number">{{ totalTPSPenuh }}</div>
+            <div class="stat-label">Penuh</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Volume Sampah Card -->
-  <div class="card">
-    <div class="card-header">
-      <span class="material-icons">assessment</span>
-      <h2>Volume Sampah TPS</h2>
-    </div>
-    <div class="card-body">
-      <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openVolumeSampahStatModal')">
-        <span class="material-icons">visibility</span>
-        <span>Lihat Statistik Volume Sampah</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Ranking TPS Card -->
-  <div class="card">
-    <div class="card-header">
-      <span class="material-icons">emoji_events</span>
-      <h2>Ranking TPS Terbaik</h2>
+    <!-- Volume Sampah Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="material-icons">assessment</span>
+        <h2>Volume Sampah TPS</h2>
+      </div>
+      <div class="card-body">
+        <button class="btn-lihat-jadwal laporan-btn" @click="$emit('openVolumeSampahStatModal')">
+          <span class="material-icons">visibility</span>
+          <span>Lihat Statistik Volume Sampah</span>
+        </button>
+      </div>
     </div>
 
-    <div class="card-body">
-      <!-- LOADING -->
-      <div v-if="loading" class="loading-state">
-        <div
-            v-for="n in 2"
-            :key="n"
-            class="sidebar-ranking-item skeleton"
-        >
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line tall"></div>
-          <div class="skeleton-line xshort"></div>
+    <!-- Ranking TPS Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="material-icons">emoji_events</span>
+        <h2>Ranking TPS Terbaik</h2>
+      </div>
+
+      <div class="card-body">
+        <!-- LOADING -->
+        <div v-if="loading" class="loading-state">
+          <div
+              v-for="n in 2"
+              :key="n"
+              class="sidebar-ranking-item skeleton"
+          >
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line tall"></div>
+            <div class="skeleton-line xshort"></div>
+          </div>
         </div>
-      </div>
-      <!-- EMPTY -->
-      <div v-else-if="rankingTPS.length === 0" class="empty-text">
-        <span class="material-icons">info</span>
-        <p>Tidak ada data tersedia</p>
-      </div>
-      <!-- DATA -->
-      <div v-else class="ranking-list">
-        <div
+        <!-- EMPTY -->
+        <div v-else-if="rankingTPS.length === 0" class="empty-text">
+          <span class="material-icons">info</span>
+          <p>Tidak ada data tersedia</p>
+        </div>
+        <!-- DATA -->
+        <div v-else class="ranking-list">
+          <div
             v-for="(item, index) in rankingTPS.slice(0, 3)"
             :key="item.id_tps"
             class="sidebar-ranking-item"
-        >
+          >
           <div class="sidebar-ranking-medal">
             <span v-if="index===0">🥇</span>
             <span v-else-if="index===1">🥈</span>
@@ -211,16 +211,16 @@
           </div>
 
           <div class="sidebar-ranking-info">
-              <div class="sidebar-ranking-name">
-                  {{ item.nama_tps }}
-              </div>
-              <div class="sidebar-ranking-desa">
-                  {{ item.nama_dusun }}
-              </div>
+            <div class="sidebar-ranking-name">
+              {{ item.nama_tps }}
+            </div>
+            <div class="sidebar-ranking-desa">
+              {{ item.nama_dusun }}
+            </div>
           </div>
 
           <div class="sidebar-ranking-score">
-              {{ item.score }}
+            {{ item.score }}
           </div>
         </div>
       </div>
@@ -249,12 +249,14 @@ import 'leaflet.markercluster/dist/leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import { ref, onMounted, watch, nextTick, computed} from 'vue'
+import { ref, onMounted, watch, nextTick, computed, onUnmounted } from 'vue'
 import { fetchTitikTps } from '@/services/wasteService.js'
 import api from '@/services/api'
 import { useDesaLogo } from '@/services/useDesaLogo'
+import { TabSync } from '@/services/tabSync'
 
-const { logoSrc, fetchLogo } = useDesaLogo()
+const { fetchLogo } = useDesaLogo()
+let unsubscribeSync = null
 onMounted(fetchLogo)
 
 // Date and Schedule
@@ -272,17 +274,8 @@ const totalTPSHampirPenuh = ref(0)
 const totalLaporan = ref(0)
 const rankingTPS = ref([])
 const timbulanPerKapita = ref([])
-const selectedMonth = ref(new Date().getMonth() + 1)
-const selectedYear = ref(new Date().getFullYear())
-
-const monthNames = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-]
-const years = computed(() => {
-  const current = new Date().getFullYear()
-  return [current, current - 1, current - 2]
-})
+// const selectedMonth = ref(new Date().getMonth() + 1)
+// const selectedYear = ref(new Date().getFullYear())
 
 const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal', 'openVolumeSampahStatModal', 'openTimbulanModal'])
 const jadwal = ref({
@@ -308,14 +301,6 @@ function formatJam(val) {
   if (!val) return '--:--'
   return String(val).slice(0, 5)
 }
-
-const filterTimbulanData = computed(() =>
-timbulanPerKapita.value.filter(item => parseFloat(item.timbulan_kg_per_kk_per_hari) > 0)
-)
-
-const hasTimbulanData = computed(() =>
-  filterTimbulanData.value.length > 0
-)
 
 function handleStatusChange(status, event) {
   const newStatus = [...props.selectedStatus]
@@ -390,25 +375,9 @@ async function fetchDashboard() {
     timbulanPerKapita.value = res.data.timbulanPerKapita
 
     await nextTick()
-    // renderVolumeSampahChart(res.data.volumeSampahHarian)
 
   } catch (error) {
     console.error("Gagal ambil dashboard:", error)
-  }
-}
-
-async function fetchDashboardFiltered() {
-  try {
-    loading.value = true
-    const res = await api.get(`/api/dashboard?month=${selectedMonth.value}&year=${selectedYear.value}`)
-
-    rankingTPS.value = res.data.rankingTPS
-    timbulanPerKapita.value = res.data.timbulanPerKapita
-
-  } catch (error) {
-    console.error("Gagal ambil dashboard filter:", error)
-  } finally {
-    loading.value = false
   }
 }
 
@@ -431,37 +400,35 @@ function getCurrentDayName(date = new Date()) {
 }
 
 function getTodaySchedules() {
-    if (!Array.isArray(wastePoints.value)) return []
+  if (!Array.isArray(wastePoints.value)) return []
 
-    const today = new Date()
-    const todayName = getCurrentDayName(today)
+  const today = new Date()
+  const todayName = getCurrentDayName(today)
+
+  const schedules = wastePoints.value.filter(point => {
+    // Cek apakah jadwal mengandung hari ini
+    return point.hari_pengambilan?.includes(todayName)
+  }).map(point => {
+    // Ekstrak waktu dari schedule (format: "Hari1 & Hari2, HH.MM WIB")
+    const timeMatch = point.hari_pengambilan.match(/(\d{2}\.\d{2})/)
+    const time = timeMatch ? timeMatch[1] : '-'
     
-    const schedules = wastePoints.value
-        .filter(point => {
-            // Cek apakah jadwal mengandung hari ini
-            return point.hari_pengambilan?.includes(todayName)
-        })
-        .map(point => {
-            // Ekstrak waktu dari schedule (format: "Hari1 & Hari2, HH.MM WIB")
-            const timeMatch = point.hari_pengambilan.match(/(\d{2}\.\d{2})/)
-            const time = timeMatch ? timeMatch[1] : '-'
-            
-            return {
-                id: point.id,
-                nama_tps: point.nama_tps,
-                time: time + ' WIB',
-                alamat: point.alamat
-            }
-        })
+    return {
+      id: point.id,
+      nama_tps: point.nama_tps,
+      time: time + ' WIB',
+      alamat: point.alamat
+    }
+  })
     
-    // Sort by time
-    schedules.sort((a, b) => {
-        const timeA = a.time.replace('.', ':').replace(' WIB', '')
-        const timeB = b.time.replace('.', ':').replace(' WIB', '')
-        return timeA.localeCompare(timeB)
-    })
+  // Sort by time
+  schedules.sort((a, b) => {
+    const timeA = a.time.replace('.', ':').replace(' WIB', '')
+    const timeB = b.time.replace('.', ':').replace(' WIB', '')
+    return timeA.localeCompare(timeB)
+  })
     
-    return schedules
+  return schedules
 }
 
 // ===== Desa and TPS Functions =====
@@ -469,9 +436,7 @@ function getTpsCountByDesa(desaCode) {
   if (!Array.isArray(jadwalTPS.value)) return 0
 
   const uniqueTps = new Set(
-    jadwalTPS.value
-      .filter(tps => tps.nama_dusun === desaCode)
-      .map(tps => tps.id_tps) 
+    jadwalTPS.value.filter(tps => tps.nama_dusun === desaCode).map(tps => tps.id_tps) 
   )
 
   return uniqueTps.size
@@ -494,13 +459,13 @@ const dusunList = computed(() => {
 })
 
 function openScheduleModal(desa) {
-    // Emit event to parent (home.vue) so the central modal and backdrop class are used
-    emit('openScheduleModal', desa)
+  // Emit event to parent (home.vue) so the central modal and backdrop class are used
+  emit('openScheduleModal', desa)
 }
 
 function initializeDateTime() {
-    currentDate.value = formatDate()
-    todaySchedules.value = getTodaySchedules()
+  currentDate.value = formatDate()
+  todaySchedules.value = getTodaySchedules()
 }
 
 onMounted(async () => {
@@ -525,6 +490,24 @@ onMounted(async () => {
   }
 
   fetchDashboard()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    console.log('Sidebar TabSync event:', event)
+    if (event === 'tps_updated' || event === 'jadwal_updated') {
+      fetchDashboard()
+    }
+    if (event === 'settings_updated') {
+      fetchLogo()
+      fetchjamOperasional()
+    }
+    if (event === 'laporan_updated') {
+      fetchTotalLaporan()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribeSync) unsubscribeSync()
 })
 
 watch(() => props.selectedStatus, () => {

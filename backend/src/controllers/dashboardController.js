@@ -1,14 +1,15 @@
 const dashboardModel = require("../models/dashboardModel")
 
+const dashboardCache = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 menit dalam milidetik
+
 async function getDashboard(req, res) {
   try {
-      // const totalTPS = await dashboardModel.getTotalTPS()
-      // const totalPetugas = await dashboardModel.getTotalPetugas()
-      // const totalLaporan = await dashboardModel.getTotalLaporanBulanIni()
-      // const totalTPSPenuh = await dashboardModel.getTotalTPSPenuh()
-      // const statusTPS = await dashboardModel.getStatusTPS()
-      // const laporan7Hari = await dashboardModel.getLaporan7Hari()
-      // const totalTPSHampirPenuh = await dashboardModel.getTotalTPSHampirPenuh()
+    const { month, year } = req.query;
+    const cacheKey = `dashboard_main_${month}_${year}`;
+    if (dashboardCache[cacheKey] && Date.now() - dashboardCache[cacheKey].timestamp < CACHE_TTL) {
+      return res.json(dashboardCache[cacheKey].data);
+    }
 
     const [
       totalTPS,
@@ -17,6 +18,7 @@ async function getDashboard(req, res) {
       totalTPSPenuh,
       statusTPS,
       laporan7Hari,
+      laporanBulanIni,
       totalTPSHampirPenuh
     ] = await Promise.all([
       dashboardModel.getTotalTPS(),
@@ -25,22 +27,27 @@ async function getDashboard(req, res) {
       dashboardModel.getTotalTPSPenuh(),
       dashboardModel.getStatusTPS(),
       dashboardModel.getLaporan7Hari(),
+      dashboardModel.getLaporanBulanIni(month, year),
       dashboardModel.getTotalTPSHampirPenuh()
     ]);
 
-    res.json({
+    const responseData = {
       totalTPS,
       totalPetugas,
       totalLaporan,
       totalTPSPenuh,
       statusTPS,
       laporan7Hari,
+      laporanBulanIni,
       totalTPSHampirPenuh,
-    })
+    }
+
+    dashboardCache[cacheKey] = { data: responseData, timestamp: Date.now() };
+    res.json(responseData);
 
   } catch (error) {
-      console.error(error)
-      res.status(500).json({ message: "Terjadi kesalahan server" })   
+    console.error(error)
+    res.status(500).json({ message: "Terjadi kesalahan server" })
   }
 }
 
@@ -48,6 +55,11 @@ async function getDashboardMas(req, res) {
   try {
     const { month, year, start_date, end_date } = req.query;
     const filter = { month, year, start_date, end_date };
+
+    const cacheKey = `dashboard_mas_${JSON.stringify(filter)}`;
+    if (dashboardCache[cacheKey] && Date.now() - dashboardCache[cacheKey].timestamp < CACHE_TTL) {
+      return res.json(dashboardCache[cacheKey].data);
+    }
 
     const [
       totalTPS,
@@ -64,24 +76,28 @@ async function getDashboardMas(req, res) {
       dashboardModel.getRankingTPS(filter),
       dashboardModel.getTimbulanPerKapita(filter)
     ]);
-      
-    res.json({
+
+    const responseData = {
       totalTPS,
       totalTPSPenuh,
       totalTPSHampirPenuh,
       volumeSampahHarian,
       rankingTPS,
       timbulanPerKapita
-    })
-      
+    }
+
+    dashboardCache[cacheKey] = { data: responseData, timestamp: Date.now() };
+    res.json(responseData);
+
   } catch (error) {
-      console.error(error)
-      res.status(500).json({ message: "Terjadi kesalahan server" })   
+    console.error(error)
+    res.status(500).json({ message: "Terjadi kesalahan server" })
   }
 }
 
 async function getDashboardPetugas(req, res) {
   try {
+
     // petugas ID comes from token payload (auth middleware)
     const id_petugas = req.user ? req.user.id : null;
 
@@ -113,24 +129,24 @@ async function getDashboardPetugas(req, res) {
 }
 
 async function getDashboardStat(req, res) {
-    try {
-        const { month, year, start_date, end_date } = req.query;
-        const filter = { month, year, start_date, end_date };
+  try {
+    const { month, year, start_date, end_date } = req.query;
+    const filter = { month, year, start_date, end_date };
 
-        const volumeSampahHarian = await dashboardModel.getVolumeSampah()
-        const rankingTPS = await dashboardModel.getRankingTPS(filter)
-        const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita(filter)
+    const volumeSampahHarian = await dashboardModel.getVolumeSampah()
+    const rankingTPS = await dashboardModel.getRankingTPS(filter)
+    const timbulanPerKapita = await dashboardModel.getTimbulanPerKapita(filter)
 
-        res.json({
-          volumeSampahHarian,
-          rankingTPS,
-          timbulanPerKapita
-        })
+    res.json({
+      volumeSampahHarian,
+      rankingTPS,
+      timbulanPerKapita
+    })
 
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({ message: "Terjadi kesalahan server" })   
-    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: "Terjadi kesalahan server" })
+  }
 }
 
 // Kepatuhan semua petugas - untuk admin dashboard
@@ -197,7 +213,7 @@ async function getLogbookHistory(req, res) {
   }
 }
 
-// Summary Logbook - untuk admin dashboard
+// Logbook - untuk admin dashboard
 async function getLogbookSummary(req, res) {
   try {
     const { start_date, end_date } = req.query;

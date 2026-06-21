@@ -1,13 +1,9 @@
 const JadwalModel = require("../models/jadwalModel");
 
 async function createJadwalHari(data) {
-  // const hariIndex = toIndex(data.hari_pengambilan);
+  
   return await JadwalModel.create(data);
 
-  // return await JadwalModel.create({
-  //   ...data,
-  //   hari_pengambilan: hariIndex
-  // });
 }
 
 module.exports = {

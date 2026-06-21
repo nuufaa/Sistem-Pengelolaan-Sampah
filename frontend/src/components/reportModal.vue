@@ -122,6 +122,7 @@ async function fetchTps() {
   }
 }
 
+// Preview image foto, nonaktif dlu
 function previewImage(e) {
   const file = e.target.files[0]
 
@@ -154,7 +155,6 @@ async function submit() {
       body: formData,
       auth: false
     })
-    // alert("Laporan berhasil dikirim")
     showToast('Laporan berhasil dikirim! Terima kasih atas partisipasi Anda.');
 
     resetForm()

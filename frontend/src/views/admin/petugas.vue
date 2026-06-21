@@ -3,7 +3,7 @@
     <!-- HEADER -->
     <div class="section-header">
       <h2>Data Petugas</h2>
-      <button class="btn-primary" @click="openAdd">
+      <button v-if="userRole === 'admin'" class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah Petugas
       </button>
@@ -68,7 +68,7 @@
             <th>No. HP</th>
             <th>Username</th>
             <th>Status</th>
-            <th>Aksi</th>
+            <th v-if="userRole === 'admin'">Aksi</th>
           </tr>
         </thead>
 
@@ -83,7 +83,7 @@
                 {{ p.status_petugas === 1 ? 'Aktif' : 'Non-Aktif' }}
               </span>
             </td>
-            <td class="action-buttons">
+            <td v-if="userRole === 'admin'" class="action-buttons">
               <button class="btn-action edit" @click="openEdit(p)">
                 <span class="material-icons">edit</span>
               </button>
@@ -139,7 +139,7 @@
         </div>
 
         <!-- FOOTER -->
-        <div class="data-card-footer">
+        <div v-if="userRole === 'admin'" class="data-card-footer">
           <button class="btn-card-action edit" @click="openEdit(p)">
             <span class="material-icons">edit</span>
             Edit
@@ -200,11 +200,14 @@
 import { onMounted, ref, onBeforeUnmount, computed, watch  } from 'vue'
 import api from '@/services/api'
 import PetugasModal from '@/components/petugasModal.vue'
+import { TabSync } from '@/services/tabSync'
 
 const petugasList = ref([])
 const showModal = ref(false)
 const form = ref(null)
 const abortController = ref(null)
+let unsubscribeSync = null
+const userRole = computed(() => sessionStorage.getItem('role') || 'kadus')
 
 const searchQuery = ref('')
 const filterStatus = ref('')
@@ -286,13 +289,22 @@ async function fetchPetugas() {
   }
 }
 
-onMounted(fetchPetugas)
+onMounted(() => {
+  fetchPetugas()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    if (event === 'petugas_updated') {
+      fetchPetugas()
+    }
+  })
+})
 
 onBeforeUnmount(() => {
   // Cancel semua pending request ketika component di-unmount
   if (abortController.value) {
     abortController.value.abort()
   }
+  if (unsubscribeSync) unsubscribeSync()
 })
 
 function openAdd() {
@@ -337,6 +349,7 @@ async function save(data) {
     }
   
     showModal.value = false
+    TabSync.emit('petugas_updated')
     await fetchPetugas()
     
   } catch (error) {
@@ -351,6 +364,7 @@ async function remove(id) {
 
   try {
     await api.delete(`/api/petugas/${id}`)
+    TabSync.emit('petugas_updated')
     await fetchPetugas()
   } catch (err) {
     if (err.name !== 'CanceledError') {

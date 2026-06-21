@@ -2,7 +2,7 @@
   <section class="content-section active">
     <div class="section-header">
       <h2>Data Titik Pengambilan Sampah (TPS)</h2>
-      <button class="btn-primary" @click="openAdd">
+      <button v-if="userRole === 'admin'" class="btn-primary" @click="openAdd">
         <span class="material-icons">add</span>
         Tambah TPS
       </button>
@@ -24,13 +24,6 @@
       </div>
 
       <div class="filter-group">
-        <!-- <select v-model="filterDusun" class="filter-select">
-          <option value="">Semua Dusun</option>
-          <option v-for="d in dusunList" :key="d.id_dusun" :value="d.id_dusun">
-            {{ d.nama_dusun }}
-          </option>
-        </select> -->
-
         <select v-model="filterStatus" class="filter-select">
           <option value="">Semua Status</option>
           <option value="normal">Normal</option>
@@ -79,7 +72,7 @@
             <th>Lokasi</th>
             <th>Kapasitas TPS (Kg)</th>
             <th>Status TPS</th>
-            <th>Aksi</th>
+            <th v-if="userRole === 'admin'">Aksi</th>
           </tr>
         </thead>
 
@@ -96,7 +89,7 @@
                 {{ statusText(tps.status_tps) }}
               </span>
             </td>
-            <td class="action-buttons">
+            <td v-if="userRole === 'admin'" class="action-buttons">
               <button class="btn-action edit" @click="openEdit(tps)">
                 <span class="material-icons">edit</span>
               </button>
@@ -150,7 +143,7 @@
           </div>
         </div>
 
-        <div class="data-card-footer">
+        <div v-if="userRole === 'admin'" class="data-card-footer">
           <button class="btn-card-action edit" @click="openEdit(tps)">
             <span class="material-icons">edit</span>
             Edit
@@ -212,48 +205,35 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onActivated, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { apiFetch } from '../../services/api'
 import TPSModal from '@/components/TPSModal.vue'
+import { TabSync } from '@/services/tabSync'
 
 const showModal = ref(false)
 const selectedTPS = ref(null)
 const dusunList = ref([])
 const tpsList = ref([])
+let unsubscribeSync = null
+
+const userRole = computed(() => sessionStorage.getItem('role') || 'kadus')
 
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
 const searchQuery = ref('')
-// const filterDusun = ref('')
 const filterStatus = ref('')
-
-// COMPUTED: Filter Logic
-// const filteredTPS = computed(() => {
-//   return tpsList.value.filter(tps => {
-//     const q = searchQuery.value.toLowerCase()
-//     const matchSearch = !q || 
-//       tps.nama_tps.toLowerCase().includes(q) || 
-//       tps.alamat.toLowerCase().includes(q)
-
-//     const matchDusun = !filterDusun.value || tps.id_dusun == filterDusun.value
-
-//     const matchStatus = !filterStatus.value || tps.status_tps === filterStatus.value
-
-//     return matchSearch && matchDusun && matchStatus
-//   })
-// })
 
 const filteredTPS = computed(() => {
   return tpsList.value.filter(tps => {
     const q = searchQuery.value.toLowerCase()
 
-    // 🔥 GLOBAL SEARCH
+    // GLOBAL SEARCH
     const matchSearch = !q || Object.values(tps).some(val =>
       val && String(val).toLowerCase().includes(q)
     )
 
-    // ✅ FILTER STATUS tetap ada
+    // FILTER STATUS tetap ada
     const matchStatus = !filterStatus.value || tps.status_tps === filterStatus.value
 
     return matchSearch && matchStatus
@@ -282,17 +262,6 @@ watch([searchQuery, filterStatus], () => {
   currentPage.value = 1
 })
 
-// COMPUTED: Pagination Logic
-// const totalPages = computed(() => {
-//   return Math.ceil(tpsList.value.length / itemsPerPage.value)
-// })
-
-// const paginatedTPS = computed(() => {
-//   const start = (currentPage.value - 1) * itemsPerPage.value
-//   const end = start + itemsPerPage.value
-//   return tpsList.value.slice(start, end)
-// })
-
 async function fetchTPS() {
   try {
     const data = await apiFetch("/api/tps")
@@ -315,6 +284,17 @@ async function fetchDusun() {
 onMounted(async () => {
   fetchTPS()
   fetchDusun()
+
+  unsubscribeSync = TabSync.listen((event) => {
+    if (event === 'tps_updated' || event === 'dusun_updated') {
+      fetchTPS()
+      if (event === 'dusun_updated') fetchDusun()
+    }
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribeSync) unsubscribeSync()
 })
 
 function openAdd() {
@@ -361,6 +341,7 @@ async function saveTPS(data) {
       })
     }
 
+    TabSync.emit('tps_updated')
     fetchTPS()
     closeModal()
 
@@ -378,6 +359,7 @@ async function remove(id) {
       auth: true
     })
     alert(data.message)
+    TabSync.emit('tps_updated')
     fetchTPS()
   } catch (err) {
     alert(err?.message || 'Gagal hapus lapangan')

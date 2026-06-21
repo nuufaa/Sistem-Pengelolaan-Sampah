@@ -1,9 +1,8 @@
+// routes/dusunRoutes.js
 const express = require("express");
 const router = express.Router()
-
 const dusun = require("../controllers/dusunController");
 const { auth, isAdmin } = require("../middlewares/authMiddleware");
-// const role = require("../middlewares/validateMiddleware");
 
 router.post("/", auth, isAdmin(["admin"]), dusun.createDusun);
 router.get("/", dusun.getAllDusun);

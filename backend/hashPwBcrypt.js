@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 
 async function generateHash() {
-    const hash = await bcrypt.hash("petugas123", 10);
+    const hash = await bcrypt.hash("kadus123", 10);
     console.log(hash);
 }
 

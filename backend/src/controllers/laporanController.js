@@ -56,32 +56,3 @@ module.exports = {
     getLaporanById
 }
 
-// async function updateLaporan(req, res) {
-//   try {
-//     await LaporanModel.update(req.params.id, req.body);
-
-//     return res.json({
-//       message: "Laporan berhasil diperbarui"
-//     });
-
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Gagal update"
-//     });
-//   }
-// }
-
-// async function deleteLaporan(req, res) {
-//   try {
-//     await LaporanModel.remove(req.params.id);
-
-//     return res.json({
-//       message: "Laporan berhasil dihapus"
-//     });
-
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Gagal hapus"
-//     });
-//   }
-// }

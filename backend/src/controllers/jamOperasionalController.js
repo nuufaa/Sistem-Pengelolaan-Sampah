@@ -1,32 +1,34 @@
 const jamOperasionalModel = require("../models/jamOperasionalModel");
 
 async function createJamOperasional(req, res) {
-    try {
-        const id = await jamOperasionalModel.create(req.body);
+  try {
+    const id = await jamOperasionalModel.create(req.body);
 
-        return res.status(201).json({
-            message: "Jam operasional berhasil dibuat",
-            id_operasional: id
-        });
+    return res.status(201).json({
+        message: "Jam operasional berhasil dibuat",
+        id_operasional: id
+    });
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Gagal membuat data"
-        });
-    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Gagal membuat data"
+    });
+  }
 }
 
 async function getAllJamOperasional(req, res) {
-    try {
-        const data = await jamOperasionalModel.findAll();
+  try {
+    const data = await jamOperasionalModel.findAll();
 
-        return res.json(data);
-    } catch (error) {
-        return res.status(500).json({
-            message: "Gagal mengambil data data"
-        });
-    }
+    return res.json(data);
+  } catch (error) {
+    console.error(error);
+    
+    return res.status(500).json({
+      message: "Gagal mengambil data data"
+    });
+  }
 }
 
 async function updateJamOperasional(req, res) {

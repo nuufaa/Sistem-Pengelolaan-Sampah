@@ -142,6 +142,20 @@
                 Bulanan
               </button>
             </div>
+
+            <!-- Month/Year Picker (Only if Bulanan) -->
+            <div v-if="periode === 'bulanan'" class="date-pickers">
+              <select v-model="selectedMonth" class="date-select">
+                <option v-for="(m, i) in months" :key="i" :value="i + 1">
+                  {{ m }}
+                </option>
+              </select>
+              <select v-model="selectedYear" class="date-select">
+                <option v-for="y in years" :key="y" :value="y">
+                  {{ y }}
+                </option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -181,6 +195,7 @@
 import { ref, computed, onMounted, onActivated, onUnmounted, watch, nextTick } from 'vue'
 import api from '@/services/api'
 import Chart from 'chart.js/auto'
+import { TabSync } from '@/services/tabSync'
 
 // ── State ──────────────────────────────────────────────
 const loading = ref(true)
@@ -201,16 +216,35 @@ const laporanChartRef = ref(null)
 
 let statusChart = null
 let laporanChart = null
-const abortController = ref(null)
 let resizeObserver = null
+
+// Auto-refresh interval
+let pollInterval = null
+const POLL_INTERVAL_MS = 30 * 1000 // 30 detik
+let unsubscribeSync = null
 
 // Chart config
 const periode = ref('mingguan')   // 'mingguan' | 'bulanan'
 const chartType = ref('line')     // 'line' | 'bar'
 
+const selectedMonth = ref(new Date().getMonth() + 1)
+const selectedYear = ref(new Date().getFullYear())
+
+const months = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+]
+const years = computed(() => {
+  const current = new Date().getFullYear()
+  const start = 2024
+  const res = []
+  for (let y = current; y >= start; y--) res.push(y)
+  return res
+})
+
 // Raw data simpan untuk re-render saat filter/type berubah
 const rawLaporan7Hari = ref([])
-const rawLaporan30Hari = ref([])
+const rawLaporanBulanIni = ref([])
 const rawStatusTPS = ref([])
 
 // ── Legend & Summary ────────────────────────────────────
@@ -232,8 +266,8 @@ const statusLegend = computed(() =>
 const statusTotal = computed(() => statusLegend.value.reduce((a, b) => a + b.value, 0))
 
 const laporanValues = computed(() => {
-  const data = periode.value === 'mingguan' ? rawLaporan7Hari.value : rawLaporan30Hari.value
-  return buildLaporanValues(data, periode.value === 'mingguan' ? 7 : 30)
+  const data = periode.value === 'mingguan' ? rawLaporan7Hari.value : rawLaporanBulanIni.value
+  return buildLaporanValues(data, periode.value)
 })
 
 const laporanTotal = computed(() => laporanValues.value.values.reduce((a, b) => a + b, 0))
@@ -283,7 +317,13 @@ function animateCount(target, animated, duration = 800) {
 async function fetchDashboard() {
   loading.value = true
   try {
-    const res = await api.get('/api/dashboard/admin')
+    const params = {}
+    if (periode.value === 'bulanan') {
+      params.month = selectedMonth.value
+      params.year = selectedYear.value
+    }
+    
+    const res = await api.get('/api/dashboard/admin', { params })
     const d = res.data
 
     totalTPS.value      = d.totalTPS
@@ -298,7 +338,7 @@ async function fetchDashboard() {
 
     rawStatusTPS.value      = d.statusTPS      ?? []
     rawLaporan7Hari.value   = d.laporan7Hari   ?? []
-    rawLaporan30Hari.value  = d.laporan30Hari  ?? d.laporan7Hari ?? []
+    rawLaporanBulanIni.value = d.laporanBulanIni ?? []
 
     loading.value = false
 
@@ -337,16 +377,40 @@ onMounted(() => {
   fetchDashboard()
   setupResizeObserver()
   setupWindowResizeListener()
+
+  // Start polling
+  pollInterval = setInterval(fetchDashboard, POLL_INTERVAL_MS)
+
+  // Listen to updates from other tabs
+  unsubscribeSync = TabSync.listen((event) => {
+    console.log('TabSync event received:', event)
+    fetchDashboard() // Refresh whenever any data changes in other tabs
+  })
 })
 
 onActivated(() => {
   fetchDashboard()
   setupResizeObserver()
   setupWindowResizeListener()
+  
+  if (!pollInterval) {
+    pollInterval = setInterval(fetchDashboard, POLL_INTERVAL_MS)
+  }
+  if (!unsubscribeSync) {
+    unsubscribeSync = TabSync.listen(() => fetchDashboard())
+  }
 })
 
 onUnmounted(() => {
   removeWindowResizeListener()
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+  if (unsubscribeSync) {
+    unsubscribeSync()
+    unsubscribeSync = null
+  }
   if (resizeObserver) {
     resizeObserver.disconnect()
     resizeObserver = null
@@ -366,20 +430,38 @@ watch([periode, chartType], () => {
   if (!loading.value) renderLaporanChart()
 })
 
+watch([selectedMonth, selectedYear], () => {
+  if (periode.value === 'bulanan') fetchDashboard()
+})
+
 // ── Helpers ─────────────────────────────────────────────
-function buildLaporanValues(data, days) {
+function buildLaporanValues(data, mode) {
   const labels = []
   const values = []
 
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const tanggal = d.toLocaleDateString('en-CA')
+  const today = new Date()
+  let startDate, endDate
 
-    if (days <= 7) {
-      labels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }))
+  if (mode === 'mingguan') {
+    // 7 hari ke belakang dari hari ini
+    startDate = new Date()
+    startDate.setDate(today.getDate() - 6)
+    endDate = today
+  } else {
+    // Full 1 Bulan (dari tanggal 1 sampai akhir bulan yang dipilih)
+    startDate = new Date(selectedYear.value, selectedMonth.value - 1, 1)
+    endDate = new Date(selectedYear.value, selectedMonth.value, 0)
+  }
+
+  let current = new Date(startDate)
+  while (current <= endDate) {
+    const tanggal = current.toLocaleDateString('en-CA')
+
+    if (mode === 'mingguan') {
+      labels.push(current.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }))
     } else {
-      labels.push(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }))
+      // Untuk bulanan hanya tampilkan angka tanggalnya agar tidak terlalu rapat
+      labels.push(current.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }))
     }
 
     const found = (data ?? []).find(item => {
@@ -387,7 +469,10 @@ function buildLaporanValues(data, days) {
       return dbDate === tanggal
     })
     values.push(found ? found.total : 0)
+
+    current.setDate(current.getDate() + 1)
   }
+
   return { labels, values }
 }
 
@@ -512,3 +597,25 @@ function setChartType(val) {
 </script>
 
 <style scoped src="@/assets/styles/admin.css"></style>
+<style scoped>
+.date-pickers {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.date-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.date-select:focus {
+  border-color: var(--primary);
+}
+</style>
