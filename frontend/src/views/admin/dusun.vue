@@ -244,19 +244,11 @@ function resetFilter() {
   currentPage.value = 1
 }
 
-//Memanggil API /api/dusun
 async function fetchDusun() {
   try {
-
-    //Penggunaan Axios untuk mengambil data Dusun
     const res = await api.get('/api/dusun')
-
-    //Simpan ke dusunList
     dusunList.value = res.data
-
   } catch (err) {
-
-    //Error log
     console.error('Gagal ambil data dusun', err)
   }
 }

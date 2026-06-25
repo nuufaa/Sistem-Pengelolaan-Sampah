@@ -8,7 +8,6 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    // Random + hash untuk mencegah predictable filenames
     const hash = crypto.randomBytes(16).toString('hex');
     cb(null, `${hash}${path.extname(file.originalname)}`);
   }

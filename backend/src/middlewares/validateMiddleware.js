@@ -16,7 +16,7 @@ function validate(requiredFields) {
 
 module.exports = validate;
 
-// sanitasi
+// sanitasi apabila mau nambah login/registrasi
 // const { body, validationResult } = require('express-validator');
 
 // const validatePetugas = [

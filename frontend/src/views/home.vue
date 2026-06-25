@@ -711,14 +711,6 @@ const tpsMap = new Map()
     })
     wastePoints.value = Array.from(tpsMap.values())
 
-    // wastePoints deduplikasi — satu id_tps hanya satu marker
-    // const seen = new Set()
-    // wastePoints.value = jadwalTPS.value.filter(item => {
-    //     if (seen.has(item.id_tps)) return false
-    //         seen.add(item.id_tps)
-    //     return true
-    // })
-
     //Set tanggal & schedule
     initializeDateTime()
 

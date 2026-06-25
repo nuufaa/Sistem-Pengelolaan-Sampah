@@ -11,16 +11,14 @@ function formatDateLocal(date) {
 }
 
 async function create(data) {
-
   // DEPRECATED: Gunakan sync() atau createForDate() untuk generate tugas
-  // Method ini tetap ada untuk backward compatibility
   const { id_jadwal, id_petugas, id_tps, tgl_pengambilan } = data;
   const targetDate = tgl_pengambilan || formatDateLocal(new Date());
 
   try {
     const [rows] = await db.query(
       `SELECT id_daftar_tugas FROM daftar_tugas
-         WHERE id_jadwal = ? AND tgl_pengambilan = ?`,
+        WHERE id_jadwal = ? AND tgl_pengambilan = ?`,
       [id_jadwal, targetDate]
     );
 
@@ -75,7 +73,6 @@ async function updateStatus(id, data) {
         else if (persentase >= 50) status_tps = 'hampir_penuh';
 
         await tpsModel.updateStatusTPS(tugas.id_tps, status_tps);
-        console.log(`[TPS ${tugas.id_tps}] Persentase: ${persentase.toFixed(1)}% → status_tps: ${status_tps}`);
       }
     }
   }
@@ -106,7 +103,6 @@ async function addLogbook(data) {
   );
 }
 
-// OPTIMIZED: Split query untuk mengurangi beban
 // Query 1: Ambil daftar_tugas (fast, minimal JOINs)
 // Query 2: Ambil detail kendaraan/petugas (lazy load)
 async function getByPetugas(id_petugas) {
@@ -130,7 +126,7 @@ async function getByPetugas(id_petugas) {
        LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
         WHERE dt.id_petugas = ? 
           AND (dt.status_angkut IN ('belum_diangkut', 'diangkut') 
-               OR (dt.status_angkut = 'selesai' AND DATE(dt.tgl_pengambilan) = CURDATE()))
+              OR (dt.status_angkut = 'selesai' AND DATE(dt.tgl_pengambilan) = CURDATE()))
           AND dt.id_jadwal IN (SELECT id_jadwal FROM jadwal_pengambilan WHERE is_active = 1)
         ORDER BY dt.tgl_pengambilan ASC
        LIMIT 100`,
@@ -142,7 +138,7 @@ async function getByPetugas(id_petugas) {
       if (validJadwalIds.length > 0) {
         const [jadwalDetails] = await db.query(
           `SELECT id_jadwal, 
-                  GROUP_CONCAT(DISTINCT hari_pengambilan ORDER BY hari_pengambilan SEPARATOR ',') AS hari_pengambilan
+              GROUP_CONCAT(DISTINCT hari_pengambilan ORDER BY hari_pengambilan SEPARATOR ',') AS hari_pengambilan
            FROM jadwal_pengambilan 
            WHERE id_jadwal IN (?)
            GROUP BY id_jadwal`,
@@ -175,64 +171,63 @@ async function getByPetugas(id_petugas) {
   }
 }
 
-// OPTIMIZED: Query yang lebih ringan untuk admin
 async function getAll() {
   try {
     // Query 1: Main - hanya JOIN critical tables
     const [rows] = await db.query(
-          `SELECT dt.id_daftar_tugas AS id,
-              dt.id_jadwal,
-              dt.id_tps,
-              dt.id_petugas,
-              dt.tgl_pengambilan,
-              dt.id_kendaraan,
-              dt.status_angkut,
-              dt.volume_sampah,
-              t.nama_tps,
-              p.nama,
-              k.nomor_kendaraan
-       FROM daftar_tugas dt
-       INNER JOIN tps t ON dt.id_tps = t.id_tps
-       LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
-       LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
-        WHERE (dt.status_angkut IN ('belum_diangkut', 'diangkut')
-               OR (dt.status_angkut = 'selesai' AND DATE(dt.tgl_pengambilan) = CURDATE()))
-          AND dt.id_jadwal IN (SELECT id_jadwal FROM jadwal_pengambilan WHERE is_active = 1)
-        ORDER BY dt.tgl_pengambilan ASC
-       LIMIT 1000`
+      `SELECT dt.id_daftar_tugas AS id,
+          dt.id_jadwal,
+          dt.id_tps,
+          dt.id_petugas,
+          dt.tgl_pengambilan,
+          dt.id_kendaraan,
+          dt.status_angkut,
+          dt.volume_sampah,
+          t.nama_tps,
+          p.nama,
+          k.nomor_kendaraan
+      FROM daftar_tugas dt
+      INNER JOIN tps t ON dt.id_tps = t.id_tps
+      LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
+      LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
+      WHERE (dt.status_angkut IN ('belum_diangkut', 'diangkut')
+              OR (dt.status_angkut = 'selesai' AND DATE(dt.tgl_pengambilan) = CURDATE()))
+        AND dt.id_jadwal IN (SELECT id_jadwal FROM jadwal_pengambilan WHERE is_active = 1)
+      ORDER BY dt.tgl_pengambilan ASC
+      LIMIT 1000`
+    );
+
+    if (rows.length > 0) {
+      const validJadwalIds = [...new Set(rows.map(r => r.id_jadwal).filter(id => id !== null))];
+      if (validJadwalIds.length > 0) {
+        const [jadwalDetails] = await db.query(
+          `SELECT id_jadwal,
+              GROUP_CONCAT(DISTINCT hari_pengambilan ORDER BY hari_pengambilan SEPARATOR ',') AS hari_pengambilan
+            FROM jadwal_pengambilan
+            WHERE id_jadwal IN (?)
+            GROUP BY id_jadwal`,
+          [validJadwalIds]
         );
 
-        if (rows.length > 0) {
-          const validJadwalIds = [...new Set(rows.map(r => r.id_jadwal).filter(id => id !== null))];
-          if (validJadwalIds.length > 0) {
-            const [jadwalDetails] = await db.query(
-                `SELECT id_jadwal,
-                    GROUP_CONCAT(DISTINCT hari_pengambilan ORDER BY hari_pengambilan SEPARATOR ',') AS hari_pengambilan
-                  FROM jadwal_pengambilan
-                  WHERE id_jadwal IN (?)
-                  GROUP BY id_jadwal`,
-                [validJadwalIds]
-            );
+        const jadwalMap = {};
+        jadwalDetails.forEach(jd => {
+          jadwalMap[jd.id_jadwal] = jd;
+        });
 
-            const jadwalMap = {};
-            jadwalDetails.forEach(jd => {
-              jadwalMap[jd.id_jadwal] = jd;
-            });
-
-            const daftarHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
-            rows.forEach(row => {
-              if (row.id_jadwal && jadwalMap[row.id_jadwal]) {
-                const hariStr = jadwalMap[row.id_jadwal].hari_pengambilan;
-                const hariArray = String(hariStr).split(',').map(Number);
-                row.hari_pengambilan = hariArray.map(h => daftarHari[h]).join(', ');
-              } else {
-                row.hari_pengambilan = row.id_jadwal ? "Jadwal Aktif" : "Jadwal Dihapus";
-              }
-            });
+        const daftarHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+        rows.forEach(row => {
+          if (row.id_jadwal && jadwalMap[row.id_jadwal]) {
+            const hariStr = jadwalMap[row.id_jadwal].hari_pengambilan;
+            const hariArray = String(hariStr).split(',').map(Number);
+            row.hari_pengambilan = hariArray.map(h => daftarHari[h]).join(', ');
           } else {
-            rows.forEach(row => row.hari_pengambilan = "Jadwal Dihapus");
+            row.hari_pengambilan = row.id_jadwal ? "Jadwal Aktif" : "Jadwal Dihapus";
           }
-        }
+        });
+      } else {
+        rows.forEach(row => row.hari_pengambilan = "Jadwal Dihapus");
+      }
+    }
     return rows;
   } catch (error) {
     console.error("Error in getAll:", error);
@@ -243,9 +238,9 @@ async function getAll() {
 async function updatePetugasByTpsToday(id_tps, id_petugas, id_jadwal) {
   await db.query(
     `UPDATE daftar_tugas
-     SET id_petugas = ?, id_jadwal = ?
-     WHERE id_tps = ?
-     AND tgl_pengambilan = CURDATE()`,
+      SET id_petugas = ?, id_jadwal = ?
+      WHERE id_tps = ?
+      AND tgl_pengambilan = CURDATE()`,
     [id_petugas, id_jadwal, id_tps]
   );
 }
@@ -255,8 +250,8 @@ async function syncTugasByTps(id_tps) {
     // 1. Ambil semua jadwal AKTIF untuk TPS ini
     const [activeSchedules] = await db.query(
       `SELECT id_jadwal, hari_pengambilan, id_petugas
-       FROM jadwal_pengambilan 
-       WHERE id_tps = ? AND is_active = 1`,
+        FROM jadwal_pengambilan 
+        WHERE id_tps = ? AND is_active = 1`,
       [id_tps]
     );
 
@@ -268,8 +263,8 @@ async function syncTugasByTps(id_tps) {
     // 2. Ambil semua tugas BELUM SELESAI untuk TPS ini
     const [tasks] = await db.query(
       `SELECT id_daftar_tugas, tgl_pengambilan 
-       FROM daftar_tugas 
-       WHERE id_tps = ? AND status_angkut != 'selesai'`,
+        FROM daftar_tugas 
+        WHERE id_tps = ? AND status_angkut != 'selesai'`,
       [id_tps]
     );
 
@@ -319,7 +314,7 @@ async function syncTugasByTps(id_tps) {
         const dateStr = formatDateLocal(targetDate);
         const [existing] = await db.query(
           `SELECT id_daftar_tugas FROM daftar_tugas
-           WHERE id_tps = ? AND tgl_pengambilan = ?`,
+            WHERE id_tps = ? AND tgl_pengambilan = ?`,
           [id_tps, dateStr]
         );
 
@@ -340,7 +335,7 @@ async function syncTugasByTps(id_tps) {
   }
 }
 
-// OPTIMIZED: Query untuk mendapatkan riwayat (history) yang selesai
+// Query untuk mendapatkan riwayat (history) yang selesai
 // Reduced JOINs pada main query untuk performa
 async function getCompletedByPetugas(id_petugas) {
   try {
@@ -358,14 +353,14 @@ async function getCompletedByPetugas(id_petugas) {
               t.nama_tps,
               k.nomor_kendaraan,
               p.nama
-       FROM daftar_tugas dt
-       INNER JOIN tps t ON dt.id_tps = t.id_tps
-       LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
-       LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
-       WHERE dt.id_petugas = ? 
-         AND dt.status_angkut = 'selesai'
-       ORDER BY dt.tgl_terakhir_diambil DESC
-       LIMIT 50`,
+      FROM daftar_tugas dt
+        INNER JOIN tps t ON dt.id_tps = t.id_tps
+        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
+        LEFT JOIN petugas p ON dt.id_petugas = p.id_petugas
+      WHERE dt.id_petugas = ? 
+        AND dt.status_angkut = 'selesai'
+      ORDER BY dt.tgl_terakhir_diambil DESC
+        LIMIT 50`,
       [id_petugas]
     );
 
@@ -399,7 +394,7 @@ async function getCompletedByPetugas(id_petugas) {
   }
 }
 
-// OPTIMIZED: Riwayat semua yang selesai - untuk admin
+// Riwayat semua yang selesai - untuk admin
 // Reduce JOINs untuk query efficiency
 async function getAllCompleted() {
   try {
@@ -417,13 +412,13 @@ async function getAllCompleted() {
               t.nama_tps,
               k.nomor_kendaraan,
               p.nama AS nama
-       FROM daftar_tugas dt
-       INNER JOIN tps t ON dt.id_tps = t.id_tps
-       LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
-       INNER JOIN petugas p ON dt.id_petugas = p.id_petugas
-        WHERE dt.status_angkut = 'selesai'
-        ORDER BY dt.tgl_terakhir_diambil DESC
-       LIMIT 100`
+      FROM daftar_tugas dt
+        INNER JOIN tps t ON dt.id_tps = t.id_tps
+        LEFT JOIN kendaraan k ON dt.id_kendaraan = k.id_kendaraan
+        INNER JOIN petugas p ON dt.id_petugas = p.id_petugas
+      WHERE dt.status_angkut = 'selesai'
+        ER BY dt.tgl_terakhir_diambil DESC
+      LIMIT 100`
     );
 
     // Query 2: Lazy load jadwal details
@@ -432,9 +427,10 @@ async function getAllCompleted() {
 
       const [jadwalDetails] = await db.query(
         `SELECT DISTINCT j.id_jadwal,
-                GROUP_CONCAT(j.hari_pengambilan ORDER BY j.hari_pengambilan SEPARATOR ',') AS hari_pengambilan
-                FROM jadwal_pengambilan j
-         WHERE j.id_jadwal IN (${jadwalIds.map(() => '?').join(',')})\n         GROUP BY j.id_jadwal`,
+              GROUP_CONCAT(j.hari_pengambilan ORDER BY j.hari_pengambilan SEPARATOR ',') AS hari_pengambilan
+              FROM jadwal_pengambilan j
+        WHERE j.id_jadwal IN (${jadwalIds.map(() => '?').join(',')})\n         
+        GROUP BY j.id_jadwal`,
         jadwalIds
       );
 

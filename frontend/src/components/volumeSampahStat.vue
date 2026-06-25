@@ -55,23 +55,6 @@
             <span class="material-icons">restart_alt</span>
           </button>
 
-          <!-- Periode -->
-          <!-- <div class="vol-filter-item">
-            <span class="vol-filter-label">Periode</span>
-            <div class="vol-period-tabs">
-              <button
-                class="vol-period-tab"
-                :class="{ active: filterChart === 'mingguan' }"
-                @click="filterChart = 'mingguan'"
-              >7 Hari</button>
-              <button
-                class="vol-period-tab"
-                :class="{ active: filterChart === 'bulanan' }"
-                @click="filterChart = 'bulanan'"
-              >Bulanan</button>
-            </div>
-          </div> -->
-
           <!-- TPS dipilih -->
           <div class="vol-filter-item">
             <span class="vol-filter-label">TPS dipilih</span>

@@ -10,11 +10,9 @@ async function loginUser(req, res){
         let role = "admin";
 
         if (user) {
-            // Jika kolom role ada di tabel admin, gunakan itu
             role = user.role || 'admin';
         } else {
             user = await petugas.findPetugas(username);
-            // Jika ditemukan di tabel petugas, gunakan role yang tersimpan (mis. 'petugas' atau 'kadus')
             role = user && user.role ? user.role : 'petugas';
         }
 

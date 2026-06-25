@@ -41,6 +41,7 @@ async function getAllTpsJadwal(req, res) {
 
     return res.json(data);
   } catch (error) {
+
     console.error("ERROR TPS:", error)
     return res.status(500).json({
       message: "Gagal mengambil data jadwal TPS"
@@ -50,9 +51,6 @@ async function getAllTpsJadwal(req, res) {
 
 async function getStatusTPS(req, res) {
   try {
-    // let { status } = req.query;
-    // let statusList = [];
-
     const ALLOWED_STATUS = ['normal', 'hampir_penuh', 'penuh'];
     const { status } = req.query;
     
@@ -63,7 +61,6 @@ async function getStatusTPS(req, res) {
         .filter(s => ALLOWED_STATUS.includes(s.trim()));
     }
 
-
     if (status) {
       statusList = status.split(',');
     }
@@ -71,7 +68,6 @@ async function getStatusTPS(req, res) {
     const data = await TpsModel.findStatusTPS(statusList);
 
     res.json(data);
-
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -108,7 +104,7 @@ async function updateTps(req, res) {
     }
 
     const foto = req.file
-      ? req.file.filename      // jika upload baru
+      ? req.file.filename
       : tpsLama.foto_tps; 
 
     const data = {
@@ -148,6 +144,7 @@ async function deleteTps(req, res) {
 async function getTpsMap(req, res) {
   try {
     const data = await TpsModel.findForMap();
+
     return res.json(data);
   } catch (error) {
     return res.status(500).json({
@@ -159,6 +156,7 @@ async function getTpsMap(req, res) {
 async function getTpsStatistics(req, res) {
   try {
     const data = await TpsModel.getStatistics();
+    
     return res.json(data);
   } catch (error) {
     return res.status(500).json({

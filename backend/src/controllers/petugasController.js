@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt')
 async function createPetugas(req, res) {
   try {
     const id_admin = req.user.id
-    const { role = 'petugas' } = req.body; // Default role 'petugas' jika tidak disediakan
+    const { role = 'petugas' } = req.body;
     const data = await petugasModel.create({
       ...req.body,
       role,
@@ -40,16 +40,16 @@ async function getPetugasById(req, res) {
     const data = await petugasModel.findById(req.user.id);
 
     if (!data) {
-        return res.status(404).json({
-            message: "Petugas tidak ditemukan"
-        });
+      return res.status(404).json({
+        message: "Petugas tidak ditemukan"
+      });
     }
 
     return res.json(data);
 
   } catch (error) {
     return res.status(500).json({
-        message: "Gagal mengambil data petugas"
+      message: "Gagal mengambil data petugas"
     });
   }
 }
@@ -75,12 +75,12 @@ async function updatePetugas(req, res) {
       username,
       password: hashedPassword ,
       status_petugas: status,
-      role: role || 'petugas' // Default 'petugas' jika tidak disediakan
+      role: role || 'petugas'
     })
 
     res.json({ message: 'Petugas berhasil diupdate' })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+      res.status(500).json({ message: err.message })
   }
 }
 
@@ -100,9 +100,9 @@ async function deletePetugas(req, res) {
 }
 
 module.exports = {
-    createPetugas,
-    getAllPetugas,
-    getPetugasById,
-    updatePetugas,
-    deletePetugas
+  createPetugas,
+  getAllPetugas,
+  getPetugasById,
+  updatePetugas,
+  deletePetugas
 }

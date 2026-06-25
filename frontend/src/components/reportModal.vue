@@ -44,21 +44,6 @@
           </div>
         </div>
 
-        <!-- Foto -->
-        <!-- <div class="form-group">
-          <label>Foto (Opsional)</label>
-          <div class="file-upload">
-            <input type="file" id="photoUpload" accept="image/*" @change="previewImage" />
-            <label for="photoUpload" class="file-upload-label">
-              <span class="material-icons">photo_camera</span>
-              <span id="fileLabel">{{ fileLabel }}</span>
-            </label>
-          </div>
-          <div class="image-preview" :class="{ show: imagePreview }">
-            <img :src="imagePreview" />
-          </div>
-        </div> -->
-
         <!-- Keterangan -->
         <div class="form-group">
           <label>Keterangan Tambahan</label>
@@ -119,20 +104,6 @@ async function fetchTps() {
 
   } catch (err) {
     console.error("Gagal ambil TPS:", err)
-  }
-}
-
-// Preview image foto, nonaktif dlu
-function previewImage(e) {
-  const file = e.target.files[0]
-
-  if (file) {
-    selectedFile.value = file
-    imagePreview.value = URL.createObjectURL(file)
-    fileLabel.value = file.name
-  } else {
-    imagePreview.value = null
-    fileLabel.value = 'Pilih foto'
   }
 }
 
