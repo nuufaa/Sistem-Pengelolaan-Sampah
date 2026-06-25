@@ -274,8 +274,6 @@ const totalTPSHampirPenuh = ref(0)
 const totalLaporan = ref(0)
 const rankingTPS = ref([])
 const timbulanPerKapita = ref([])
-// const selectedMonth = ref(new Date().getMonth() + 1)
-// const selectedYear = ref(new Date().getFullYear())
 
 const emit = defineEmits(['reportOpened', 'openScheduleModal', 'statusChanged', 'openLaporanModal', 'openVolumeSampahStatModal', 'openTimbulanModal'])
 const jadwal = ref({
@@ -459,7 +457,6 @@ const dusunList = computed(() => {
 })
 
 function openScheduleModal(desa) {
-  // Emit event to parent (home.vue) so the central modal and backdrop class are used
   emit('openScheduleModal', desa)
 }
 

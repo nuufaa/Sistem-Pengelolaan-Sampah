@@ -276,36 +276,11 @@ const filterPetugas = ref('')
 const filterHari = ref('')
 const filterTanggalDari = ref('')
 const filterTanggalSampai = ref('')
-
-// COMPUTED: Filter Logic
-// const filteredJadwal = computed(() => {
-//   return jadwalList.value.filter(j => {
-//     const q = searchQuery.value.toLowerCase()
-//     const matchSearch = !q ||
-//       j.nama_tps.toLowerCase().includes(q) ||
-//       j.nama.toLowerCase().includes(q)
-
-//     const matchTPS = !filterTPS.value || j.id_tps == filterTPS.value
-
-//     const matchPetugas = !filterPetugas.value || j.id_petugas == filterPetugas.value
-
-//     // hari_pengambilan bisa array atau string, cek keduanya
-//     const matchHari = filterHari.value === '' || (() => {
-//       const hariVal = Number(filterHari.value)
-//       if (Array.isArray(j.hari_pengambilan)) {
-//         return j.hari_pengambilan.map(Number).includes(hariVal)
-//       }
-//       return Number(j.hari_pengambilan) === hariVal
-//     })()
-
-//     return matchSearch && matchTPS && matchPetugas && matchHari
-//   })
-// })
 const filteredJadwal = computed(() => {
   return jadwalList.value.filter(j => {
     const q = searchQuery.value.toLowerCase()
 
-    // 🔥 SAFE DATE (tanpa ISO biar ga geser)
+    // SAFE DATE (tanpa ISO biar ga geser)
     const tgl = j.tgl_terakhir_diambil
       ? new Date(j.tgl_terakhir_diambil)
       : null
@@ -318,7 +293,7 @@ const filteredJadwal = computed(() => {
       ? new Date(filterTanggalSampai.value)
       : null
 
-    // 🔥 GLOBAL SEARCH (ANTI ERROR)
+    // GLOBAL SEARCH
     const matchSearch =
       !q ||
       Object.values(j).some(val =>
@@ -326,18 +301,18 @@ const filteredJadwal = computed(() => {
       ) ||
       formatDate(j.tgl_terakhir_diambil).toLowerCase().includes(q)
 
-    // 🔥 FILTER PETUGAS
+    // FILTER PETUGAS
     const matchPetugas =
       !filterPetugas.value || j.id_petugas == filterPetugas.value
 
-    // 🔥 FIX HARI (PASTIIN NUMBER)
+    // FIX HARI (PASTIIN NUMBER)
     const matchHari =
       filterHari.value === '' ||
       (Array.isArray(j.hari_pengambilan)
         ? j.hari_pengambilan.map(Number).includes(Number(filterHari.value))
         : Number(j.hari_pengambilan) === Number(filterHari.value))
 
-    // 🔥 FILTER TANGGAL (REAL DATE COMPARISON)
+    // FILTER TANGGAL (REAL DATE COMPARISON)
     const matchDate =
       (!tglDari || (tgl && tgl >= tglDari)) &&
       (!tglSampai || (tgl && tgl <= tglSampai))
@@ -357,21 +332,10 @@ const paginatedJadwal = computed(() => {
   return filteredJadwal.value.slice(start, end)
 })
 
-// Gabungkan watch yang sudah ada dengan watch filter baru
-// watch([searchQuery, filterTPS, filterPetugas, filterHari], () => {
-//   currentPage.value = 1
-// })
 watch([searchQuery, filterPetugas, filterHari, filterTanggalDari, filterTanggalSampai], () => {
   currentPage.value = 1
 })
 
-// function resetFilter() {
-//   searchQuery.value = ''
-//   filterTPS.value = ''
-//   filterPetugas.value = ''
-//   filterHari.value = ''
-//   currentPage.value = 1
-// }
 function resetFilter() {
   searchQuery.value = ''
   filterPetugas.value = ''
@@ -428,7 +392,7 @@ async function fetchUsedDays(id_tps, excludeDays = []) {
       return
     }
     const res = await api.get(`/api/jadwal/used-days/${id_tps}`)
-    // Filter out days that are currently being edited
+
     usedDays.value = (res.data.usedDays || []).filter(day => !excludeDays.includes(day))
   } catch (error) {
     if (error.name !== 'CanceledError') {

@@ -172,15 +172,8 @@ const props = defineProps({
   detail: Array,
   loading: Boolean
 })
-
-/* =======================
-   STATE
-======================= */
 const searchQuery = ref('')
 
-/* =======================
-   FORMAT HARI
-======================= */
 function formatHari(hari) {
   const hariMap = [
     'Senin',
@@ -199,9 +192,6 @@ function formatHari(hari) {
   return hariMap[Number(hari)] || '-'
 }
 
-/* =======================
-   FORMAT DATE
-======================= */
 function formatDate(date) {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('id-ID', {
@@ -211,9 +201,6 @@ function formatDate(date) {
   })
 }
 
-/* =======================
-   GLOBAL SEARCH
-======================= */
 const filteredDetail = computed(() => {
   return props.detail.filter(d => {
     const q = searchQuery.value.toLowerCase()

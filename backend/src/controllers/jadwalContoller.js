@@ -28,7 +28,6 @@ async function createJadwal(req, res) {
 
 async function getAllJadwal(req, res) {
   try {
-
     const data = await JadwalModel.findAll();
 
     return res.json(data);
@@ -43,26 +42,22 @@ async function getAllJadwal(req, res) {
 
 async function updateJadwal(req, res) {
   const id_tps = req.params.id || req.params.id_tps || req.body.id_tps;
-
-  const {
-    id_petugas,
-    hari_pengambilan,
-    jam_buang_mulai,
-    jam_buang_selesai,
-    jam_pengambilan_mulai,
-    jam_pengambilan_selesai
-  } = req.body;
+    const {
+      id_petugas,
+      hari_pengambilan,
+      jam_buang_mulai,
+      jam_buang_selesai,
+      jam_pengambilan_mulai,
+      jam_pengambilan_selesai
+    } = req.body;
 
   const id_admin = req.user.id;
-
-  console.log(`[updateJadwal] START - TPS: ${id_tps}, Petugas: ${id_petugas}, Admin: ${id_admin}`);
 
   if (!id_tps || !id_petugas) {
     return res.status(400).json({ error: "id_tps dan id_petugas wajib diisi" });
   }
 
   try {
-
     // Cek petugas lama untuk menentukan apakah perlu sync
     const [jadwalLama] = await db.query(
       `SELECT DISTINCT id_petugas FROM jadwal_pengambilan WHERE id_tps = ? LIMIT 1`,
@@ -109,7 +104,6 @@ async function deleteJadwal(req, res) {
       [ids]
     );
 
-    // Soft delete jadwal
     await JadwalModel.remove(req.params.id);
 
     // Sync daftar tugas untuk setiap TPS yang jadwalnya dihapus

@@ -95,8 +95,8 @@ async function findAll() {
       .split(',')
       .map(h => Number(h.trim()));
 
-    row.hari_pengambilan = hariArray; // untuk edit (checkbox)
-    row.hari_label = hariArray       // untuk display tabel
+    row.hari_pengambilan = hariArray;
+    row.hari_label = hariArray
       .map(h => daftarHari[h])
       .join(', ');
   });
@@ -206,7 +206,7 @@ async function updateTanggalTerakhir(id_jadwal) {
 
 async function remove(id) {
   const ids = id.split(",");
-  // Soft delete: hanya set is_active = 0 agar riwayat tugas tidak hilang
+  // hanya set is_active = 0 agar riwayat tugas tidak hilang
   await db.query(
     "UPDATE jadwal_pengambilan SET is_active = 0 WHERE id_jadwal IN (?)",
     [ids]

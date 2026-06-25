@@ -19,17 +19,16 @@ async function createAdmin({ username, password, nama, noTelp, role = 'admin' })
 async function updateAdmin({ id_admin, username, password, nama, noTelp, role }) {
     const [result] = await db.query(
         `UPDATE admin
-         SET username = ?,
-                 password = COALESCE(?, password),
-                 nama = ?,
-                 noTelp = COALESCE(?, noTelp),
-                 role = COALESCE(?, role)
-         WHERE id_admin = ?`,
+            SET username = ?,
+                password = COALESCE(?, password),
+                nama = ?,
+                noTelp = COALESCE(?, noTelp),
+                role = COALESCE(?, role)
+            WHERE id_admin = ?`,
         [username, password, nama, noTelp, role, id_admin]
     );
     return result.affectedRows > 0;
 }
-
 
 module.exports = {
     findAdmin,

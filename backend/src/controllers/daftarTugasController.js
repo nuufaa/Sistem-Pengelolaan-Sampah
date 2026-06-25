@@ -22,7 +22,6 @@ async function updateStatus(req, res) {
 
 async function updateLogbook(req, res) {
   try {
-    console.log('=== req.body ===', req.body)  // tambahkan ini
     const { id_kendaraan, tasksSelected } = req.body
     const id_petugas = req.user.id
 
@@ -31,6 +30,7 @@ async function updateLogbook(req, res) {
         message: "TPS harus dipilih"
       })
     }
+    
     await daftarTugasModel.addLogbook({
       id_kendaraan,
       tasksSelected,

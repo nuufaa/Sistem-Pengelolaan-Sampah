@@ -197,7 +197,6 @@ import api from '@/services/api'
 import Chart from 'chart.js/auto'
 import { TabSync } from '@/services/tabSync'
 
-// ── State ──────────────────────────────────────────────
 const loading = ref(true)
 
 const totalTPS = ref(0)

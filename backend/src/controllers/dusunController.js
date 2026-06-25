@@ -29,19 +29,14 @@ async function getAllDusun(req, res) {
     }
 }
 
-//Mengambil semua data Dusun
 async function getAllDusun(req, res) {
     try {
-
-        //Ambil data dari DusunModel
         const data = await DusunModel.findAll();
 
-        //Kirim data dalam format JSON
         return res.json(data);
 
     } catch (error) {
 
-        //Error response jika gagal
         return res.status(500).json({
             message: "Gagal mengambil data Dusun"
         });

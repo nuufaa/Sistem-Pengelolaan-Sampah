@@ -54,7 +54,7 @@
       <p class="login-role-desc">
         {{ role === 'petugas'
           ? 'Kelola jadwal & status pengambilan sampah'
-          : 'Kelola sistem & data desa'
+          : 'Lihat data desa'
         }}
       </p>
 

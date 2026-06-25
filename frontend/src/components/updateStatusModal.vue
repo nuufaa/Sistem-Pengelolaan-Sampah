@@ -117,13 +117,6 @@ const form = reactive({
   notes: ''
 })
 
-// function hariLabel(hariStr) {
-//   if (!hariStr) return '-'
-//   const labels = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu']
-//   const hariArray = hariStr.split(',').map(h => parseInt(h.trim()))
-//   return hariArray.map(idx => labels[idx] || '-').join(', ')
-// }
-
 watch(() => props.data, (val) => {
     if (!val) return
 

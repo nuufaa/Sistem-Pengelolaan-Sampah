@@ -18,8 +18,8 @@ async function getTotalLaporanBulanIni() {
   const [rows] = await db.query(`
     SELECT COUNT(*) as total
       FROM lapor
-      WHERE MONTH(tgl_laporan) = MONTH(CURRENT_DATE())
-      AND YEAR(tgl_laporan) = YEAR(CURRENT_DATE())
+    WHERE MONTH(tgl_laporan) = MONTH(CURRENT_DATE())
+    AND YEAR(tgl_laporan) = YEAR(CURRENT_DATE())
     `)
   return rows[0].total
 }
@@ -32,7 +32,7 @@ async function getTotalTPSPenuh() {
       SELECT id_tps, MAX(volume_sampah) AS vol
       FROM daftar_tugas
       WHERE DATE(tgl_terakhir_diambil) = CURDATE()
-         OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+        OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
       GROUP BY id_tps
     ) dt_today ON t.id_tps = dt_today.id_tps
     WHERE t.kapasitas > 0 AND ROUND(COALESCE(dt_today.vol, 0) / t.kapasitas * 100, 1) >= 80
@@ -48,7 +48,7 @@ async function getTotalTPSHampirPenuh() {
       SELECT id_tps, MAX(volume_sampah) AS vol
       FROM daftar_tugas
       WHERE DATE(tgl_terakhir_diambil) = CURDATE()
-         OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+        OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
       GROUP BY id_tps
     ) dt_today ON t.id_tps = dt_today.id_tps
     WHERE t.kapasitas > 0 
@@ -73,11 +73,11 @@ async function getStatusTPS() {
           END AS status_tps
         FROM tps t
         LEFT JOIN (
-          SELECT id_tps, MAX(volume_sampah) AS vol
+            ECT id_tps, MAX(volume_sampah) AS vol
           FROM daftar_tugas
-          WHERE DATE(tgl_terakhir_diambil) = CURDATE()
-            OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
-          GROUP BY id_tps
+            WHERE DATE(tgl_terakhir_diambil) = CURDATE()
+              OR (tgl_pengambilan = CURDATE() AND status_angkut != 'selesai')
+            GROUP BY id_tps
         ) dt_today ON t.id_tps = dt_today.id_tps
       ) AS sub
       GROUP BY status_tps;
@@ -89,9 +89,9 @@ async function getLaporan7Hari() {
   const [rows] = await db.query(`
     SELECT DATE(tgl_laporan) as tanggal, COUNT(*) as total
       FROM lapor
-      WHERE tgl_laporan >= CURDATE() - INTERVAL 6 DAY
-      GROUP BY DATE(tgl_laporan)
-      ORDER BY tanggal ASC
+    WHERE tgl_laporan >= CURDATE() - INTERVAL 6 DAY
+    GROUP BY DATE(tgl_laporan)
+    ORDER BY tanggal ASC
     `)
   return rows
 }
@@ -156,28 +156,6 @@ async function getProgressTugas(id_petugas) {
   );
   return rows[0].total
 }
-
-//statistik di home
-// async function getVolumeSampah() {
-
-//   const [rows] = await db.query(`
-//     SELECT
-//       t.nama_tps,
-//       COALESCE(SUM(dt.volume_sampah), 0) AS total_volume,
-//       t.kapasitas,
-//       DATE(COALESCE(dt.tgl_terakhir_diambil, dt.tgl_pengambilan)) AS tanggal,
-//       ROUND(COALESCE(SUM(dt.volume_sampah), 0) / t.kapasitas * 100, 1) AS persentase
-//     FROM tps t
-//     LEFT JOIN daftar_tugas dt 
-//       ON t.id_tps = dt.id_tps 
-//       AND dt.status_angkut = 'selesai'
-//       AND dt.tgl_terakhir_diambil >= CURDATE() - INTERVAL 6 DAY
-          
-//       GROUP BY tanggal, t.id_tps
-//       ORDER BY tanggal ASC;
-//     `);
-//   return rows;
-// }
 
 async function getVolumeSampah() {
   const [rows] = await db.query(`
